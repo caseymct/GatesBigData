@@ -1,0 +1,19 @@
+<p_l>
+	<company id="c1">
+		<revenue> 20B </revenue>
+		<gross_margin id="gm1">  
+			<gm> 2B </gm>
+			<details_url> www.google.com </details_url>
+		</gross_margin>
+		<op_ex id="op1">
+			<opex_value> 1B </opex_value>
+			<opex_details> www.google.com </opex_details>
+		</op_ex>
+		<opm id="opm1">
+			<opm_value> 1B </opm_value>
+			<opm_details> www.google.com </opm_details>
+		</opm>
+	</company>
+</p_l>
+		
+

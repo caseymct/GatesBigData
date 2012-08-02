@@ -1,0 +1,26 @@
+{
+  "name": "p_l",
+  "children" : [
+   {
+    "name": "company",
+    "children" : [
+      { "name" : "revenue", "children" : [ { "name" : "'20B'" } ] },
+      { "name" : "gross_margin",
+        "children" : [
+            { "name" : "2B", "details" : "http://www.cnn.com" }
+        ]
+      },
+      { "name" : "op_ex",
+        "children" : [
+            { "name" : "1B", "details" : "http://www.google.com" }
+        ]
+      },
+      { "name" : "opm",
+        "children" : [
+            { "name" : "1B", "details" : "http://www.nytimes.com" }
+        ]
+      }
+    ]
+    }
+  ]
+}

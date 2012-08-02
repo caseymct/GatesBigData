@@ -1,0 +1,56 @@
+
+#search_input {
+    width: 300px;
+}
+
+#selectCollectionNamesButton {
+    float: right;
+    width: 275px;
+}
+
+pre {
+    border: solid 1px #000;
+    background-color: #ccc;
+    padding: 10px;
+    margin: 10px;
+}
+
+.yui-menu-button em.yui-button-label {
+    font-style: normal;
+    display: block;
+    text-align: left;
+    white-space: nowrap;
+    width: 5em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+
+}
+
+li.yui-button-selectedmenuitem {
+    background: url("../images/checkbox.png") left center no-repeat;
+}
+
+.search-result-div {
+    padding: 5px;
+    border: 1px solid blue;
+    border-radius: 15px;
+    margin: 10px;
+    float: top;
+}
+
+.search-result-header {
+    font-size : 16px;
+    font-weight : bold;
+    color : #4682b4;
+}
+
+.search-result-inner-container-label {
+    float : left;
+    width: 20%;
+}
+
+.search-result-inner-container {
+    float : left;
+    width: 80%;
+}

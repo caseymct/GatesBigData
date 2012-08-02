@@ -1,0 +1,35 @@
+<groups xmlns="http://www.isdc.ro/wro">
+    <group name="default">
+        <group-ref>yui</group-ref>
+        <css>/static/css/default.css</css>
+        <js>/static/js/default.js</js>
+    </group>
+
+    <group name="yui">
+        <css>/static/js/yui/2.9/reset/reset-min.css</css>
+        <css>/static/js/yui/2.9/menu/assets/skins/sam/menu.css</css>
+        <css>/static/js/yui/2.9/button/assets/skins/sam/button.css</css>
+        <css>/static/js/yui/2.9/fonts/fonts-min.css</css>
+        <css>/static/js/yui/2.9/button/assets/skins/sam/button.css</css>
+        <css>/static/js/yui/2.9/container/assets/skins/sam/container.css</css>
+        <css>/static/js/yui/2.9/datatable/assets/skins/sam/datatable.css</css>
+        <css>/static/js/yui/2.9/paginator/assets/skins/sam/paginator.css</css>
+        <css>/static/css/buttons.css</css>
+
+        <js>/static/js/yui/2.9/yahoo-dom-event/yahoo-dom-event.js</js>
+        <js>/static/js/yui/2.9/container/container_core-min.js</js>
+        <js>/static/js/yui/2.9/menu/menu-min.js</js>
+        <js>/static/js/yui/2.9/element/element-min.js</js>
+        <js>/static/js/yui/2.9/button/button-min.js</js>
+        <js>/static/js/yui/2.9/connection/connection-min.js</js>
+        <js>/static/js/yui/2.9/json/json-min.js</js>
+        <js>/static/js/yui/2.9/paginator/paginator-min.js</js>
+        <js>/static/js/yui/2.9/container/container_core-min.js</js>
+        <js>/static/js/yui/2.9/container/container-min.js</js>
+        <js>/static/js/yui/2.9/datasource/datasource-min.js</js>
+        <js>/static/js/yui/2.9/datatable/datatable-min.js</js>
+        <js>/static/js/yui/2.9/uploader/uploader-min.js</js>
+        <js>/static/js/yui/2.9/tabview/tabview-min.js</js>
+        <js>/static/js/yui/2.9/paginator/paginator-min.js</js>
+    </group>
+</groups>
