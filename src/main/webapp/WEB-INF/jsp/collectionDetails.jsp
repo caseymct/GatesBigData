@@ -18,12 +18,16 @@
             <div class="yui-content">
                 <div id="webtab">
                     <div class = "row">
-                        <label for="datasource_name">Name: </label>
+                        <label for="datasource_name"><span class = "red">*</span>Name: </label>
                         <input id="datasource_name" type = "text" value="epic"/>
                     </div>
                     <div class = "row">
-                        <label for="datasource_url">Url: </label>
+                        <label for="datasource_url"><span class = "red">*</span>Url: </label>
                         <input id="datasource_url" type = "text" value="http://epic.cs.colorado.edu"/>
+                    </div>
+                    <div class = "row">
+                        <label for="add_failed_docs">Add failed docs: </label>
+                        <input id="add_failed_docs" type = "checkbox"/>
                     </div>
                     <div class="buttons">
                         <a href="#" class="button small" id="create">Create</a>

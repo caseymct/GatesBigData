@@ -27,6 +27,11 @@
             </div>
         </div>
 
+        <div class="row" id= "filter_by_datasource_div">
+            <label for="filter_by_datasource">Filter by datasource:</label>
+            <select id = "filter_by_datasource"></select>
+        </div>
+
         <div class="buttons">
             <a href="#" class="button small" id="submit">Submit</a>
             <a href="#" class="button small" id="cancel">Cancel</a>
@@ -40,6 +45,12 @@
 
     <script type="text/javascript">
     (function() {
+
+ //       http://localhost:8989/collections/epic/search?filter[data_source_name][]=EPIC&q=disaster
+ //       http://localhost:8989/collections/epic/search?filter[data_source_name][]=Xfile+test&q=disaster
+ //       http://localhost:8989/collections/epic/search?filter[author_display][]=Leysia+Palen&q=disaster
+ //       http://localhost:8989/collections/epic/search?filter[author_display][]=Leysia+Palen&filter[data_source_name][]=EPIC&q=disaster
+
         var Dom = YAHOO.util.Dom,
             Event = YAHOO.util.Event,
             Connect = YAHOO.util.Connect,
@@ -66,6 +77,22 @@
                 alert("Could not retrieve collection names.");
             }
         });
+
+        /*Connect.asyncRequest('GET', '<c:url value="/collection/collectionNames" />', {
+            success : function(o) {
+                var result = Json.parse(o.responseText);
+
+                for(var i = 0; i < result.names.length; i++) {
+                    var el = document.createElement('option');
+                    el.text = result.names[i];
+                    el.value = result.names[i];
+                    Dom.get("collection_name_select").add(el);
+                }
+            },
+            failure : function(o) {
+                alert("Could not retrieve collection names.");
+            }
+        });*/
 
         var setLastModified = function(doc) {
             return doc.hasOwnProperty("lastModified") ? doc.lastModified : "No value";
