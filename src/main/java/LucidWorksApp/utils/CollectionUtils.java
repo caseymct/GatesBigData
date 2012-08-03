@@ -5,6 +5,7 @@ import net.sf.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 
@@ -46,5 +47,11 @@ public class CollectionUtils extends Utils {
     public static String deleteIndexForCollection(String collectionName) {
         String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + INDEX_ENDPOINT;
         return HttpClientUtils.httpDeleteRequest(url);
+    }
+
+    public static String createCollection(HashMap<String, Object> properties) {
+        String url = SERVER + COLLECTIONS_ENDPOINT;
+        String result = HttpClientUtils.httpPostRequest(url, JsonParsingUtils.constructJsonStringFromProperties(properties));
+        return result;
     }
 }

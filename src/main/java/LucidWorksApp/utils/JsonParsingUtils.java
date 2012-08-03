@@ -4,7 +4,9 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -69,5 +71,13 @@ public class JsonParsingUtils {
         }
 
         return null;
+    }
+
+    public static String constructJsonStringFromProperties(HashMap<String, Object> properties) {
+        JSONObject jsonObject = new JSONObject();
+        for(Map.Entry<String, Object> entry : properties.entrySet()) {
+            jsonObject.put(entry.getKey(), entry.getValue().toString());
+        }
+        return jsonObject.toString();
     }
 }

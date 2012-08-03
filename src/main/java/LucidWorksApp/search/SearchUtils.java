@@ -1,6 +1,7 @@
 package LucidWorksApp.search;
 
 import LucidWorksApp.utils.HttpClientUtils;
+import LucidWorksApp.utils.Utils;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -12,15 +13,14 @@ import org.apache.solr.common.SolrDocumentList;
 import java.net.MalformedURLException;
 
 
-public class SearchUtils {
+public class SearchUtils extends Utils {
 
-    private static String SOLR_SERVER = "http://localhost:8888";
     private static String SOLR_ENDPOINT = "/solr";
     private static String LUCID_ENDPOINT = "/lucid";
 
 
     public static String lucidEndpointSearch(String collectionName, String queryParams) {
-        String url = SOLR_SERVER + SOLR_ENDPOINT + "/" + collectionName + LUCID_ENDPOINT;
+        String url = SERVER + SOLR_ENDPOINT + "/" + collectionName + LUCID_ENDPOINT;
         queryParams += "&wt=json&role=DEFAULT";
 
         System.out.println("Full request " + url + queryParams);
@@ -28,7 +28,7 @@ public class SearchUtils {
     }
 
     public static void solrSearch(String collectionName, String queryString) {
-        String url = SOLR_SERVER + SOLR_ENDPOINT + "/" + collectionName;
+        String url = SERVER + SOLR_ENDPOINT + "/" + collectionName;
 
         try {
             //SolrServer server = new HttpSolrServer(url);

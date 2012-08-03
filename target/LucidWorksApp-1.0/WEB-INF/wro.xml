@@ -14,6 +14,7 @@
         <css>/static/js/yui/2.9/container/assets/skins/sam/container.css</css>
         <css>/static/js/yui/2.9/datatable/assets/skins/sam/datatable.css</css>
         <css>/static/js/yui/2.9/paginator/assets/skins/sam/paginator.css</css>
+        <css>/static/js/yui/2.9/tabview/assets/skins/sam/tabview.css</css>
         <css>/static/css/buttons.css</css>
 
         <js>/static/js/yui/2.9/yahoo-dom-event/yahoo-dom-event.js</js>

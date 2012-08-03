@@ -18,12 +18,16 @@
             <div class="yui-content">
                 <div id="webtab">
                     <div class = "row">
-                        <label for="datasource_name">Name: </label>
+                        <label for="datasource_name"><span class = "red">*</span>Name: </label>
                         <input id="datasource_name" type = "text" value="epic"/>
                     </div>
                     <div class = "row">
-                        <label for="datasource_url">Url: </label>
+                        <label for="datasource_url"><span class = "red">*</span>Url: </label>
                         <input id="datasource_url" type = "text" value="http://epic.cs.colorado.edu"/>
+                    </div>
+                    <div class = "row">
+                        <label for="add_failed_docs">Add failed docs: </label>
+                        <input id="add_failed_docs" type = "checkbox"/>
                     </div>
                     <div class="buttons">
                         <a href="#" class="button small" id="create">Create</a>
@@ -99,20 +103,23 @@
                                      "url" : Dom.get("datasource_url").value,
                                      "crawler" : "lucid.aperture",
                                      "crawl_depth" : 5,
-                                     "type" : "web" }
+                                     "category" : "Web" }
                 };
-
-                console.log("Sending " + YAHOO.lang.JSON.stringify(newdatasourceinfo));
 
                 Connect.initHeader('Content-Type', 'application/json');
                 Connect.setDefaultPostHeader('application/json');
                 Connect.asyncRequest('POST', '<c:url value="/datasource/create" />', {
                     success:function(o) {
-                        alert("Success!");
-                        window.location.reload();
+                        debugger;
+                        if (o.responseText.match("ERROR") != null) {
+                            alert(o.responseText);
+                        } else {
+                            window.location.reload();
+                        }
                     },
                     failure:function(e) {
-                        alert("Problem encountered adding data!" + e);
+                        alert("Problem encountered adding data!");
+                        console.log(e);
                     }
                 }, YAHOO.lang.JSON.stringify(newdatasourceinfo));
             });

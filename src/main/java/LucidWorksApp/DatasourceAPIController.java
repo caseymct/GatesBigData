@@ -83,10 +83,11 @@ public class DatasourceAPIController extends APIController {
         String collectionName = (String) newDataSource.get("collectionName");
         HashMap<String, Object> properties = (HashMap<String, Object>) newDataSource.get("properties");
 
-        DatasourceUtils.createDatasource(collectionName, properties);
+        String result = DatasourceUtils.createDatasource(collectionName, properties);
+
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>("", httpHeaders, OK);
+        return new ResponseEntity<String>(result, httpHeaders, OK);
     }
 
 }

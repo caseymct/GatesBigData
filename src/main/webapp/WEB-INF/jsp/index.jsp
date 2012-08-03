@@ -3,9 +3,25 @@
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
 <layout:main>
+    <link rel="stylesheet" type="text/css" href="<c:url value="/static/css/index.css"/>" />
+
     <h2>Collections</h2>
 
     <div id="results_table"></div>
+
+    <form id="create_collection_form">
+        <div id="create_new_collection_div">
+            <h3 id="create_new_collection_header">Create new collection</h3>
+            <div class="row">
+                <label for="new_collection_name" id = "new_collection_name_label"><span class="red">*</span>Name: </label>
+                <input id="new_collection_name" type="text"/>
+            </div>
+            <div class="buttons">
+                <a href="#" class="button small" id="create">Create</a>
+            </div>
+            <div class = "row"></div>
+        </div>
+    </form>
 
     <script type="text/javascript">
     (function() {
@@ -49,6 +65,31 @@
             })
         });
 
+        Event.addListener("create", "click", function(e) {
+            Event.stopEvent(e);
+
+            var newcollectioninfo =  { "collectionName" : Dom.get("new_collection_name").value };
+
+            Connect.initHeader('Content-Type', 'application/json');
+            Connect.setDefaultPostHeader('application/json');
+            Connect.asyncRequest('POST', '<c:url value="/collection/create" />' , {
+                success: function (o) {
+                    var result = Json.parse(o.responseText);
+                    if (result.hasOwnProperty("errors")) {
+                        var errmsg = "Error message : " + result.errors[0].message + "\n" +
+                                     "Error key : " + result.errors[0].key + "\n" +
+                                     "Error code : " + result.errors[0].code;
+                        alert(errmsg);
+                    } else {
+                        window.location.reload();
+                    }
+                },
+                failure: function (e) {
+                    alert("Could not create new collection");
+                    console.log(e);
+                }
+            }, YAHOO.lang.JSON.stringify(newcollectioninfo));
+        });
 
     })();
     </script>

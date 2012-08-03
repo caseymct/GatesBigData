@@ -52,15 +52,6 @@
             var collectionName = window.location.href.split('/').pop();
             Dom.get("collection_name").innerHTML = collectionName + " collection details";
 
-            Connect.asyncRequest('GET', '<c:url value="/datasource/topleveldetails" />' + "?collection=" + collectionName, {
-                success : function(o) {
-                    var result = Json.parse(o.responseText);
-                },
-                failure : function (o) {
-                    alert("Could not retrieve datasource details");
-                }
-            });
-
             var dataSource = new YAHOO.util.XHRDataSource('<c:url value="/datasource/topleveldetails" />' + "?collection=" + collectionName);
             dataSource.responseSchema = {
                 resultsList:'datasources',
@@ -103,24 +94,28 @@
                                      "url" : Dom.get("datasource_url").value,
                                      "crawler" : "lucid.aperture",
                                      "crawl_depth" : 5,
-                                     "type" : "web" }
+                                     "category" : "Web" }
                 };
-
-                console.log("Sending " + YAHOO.lang.JSON.stringify(newdatasourceinfo));
 
                 Connect.initHeader('Content-Type', 'application/json');
                 Connect.setDefaultPostHeader('application/json');
                 Connect.asyncRequest('POST', '<c:url value="/datasource/create" />', {
                     success:function(o) {
-                        alert("Success!");
-                        window.location.reload();
+                        var result = Json.parse(o.responseText);
+                        if (result.hasOwnProperty("errors")) {
+                            var errmsg = "Error message : " + result.errors[0].message + "\n" +
+                                    "Error key : " + result.errors[0].key + "\n" +
+                                    "Error code : " + result.errors[0].code;
+                            alert(errmsg);
+                        } else {
+                            window.location.reload();
+                        }
                     },
                     failure:function(e) {
-                        alert("Problem encountered adding data!" + e);
+                        alert("Problem encountered adding data: " + e.statusText);
                     }
                 }, YAHOO.lang.JSON.stringify(newdatasourceinfo));
             });
-
 
         })();
 

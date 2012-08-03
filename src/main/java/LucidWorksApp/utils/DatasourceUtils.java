@@ -1,12 +1,11 @@
 package LucidWorksApp.utils;
 
-import net.sf.json.JSON;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -87,15 +86,45 @@ public class DatasourceUtils extends Utils {
         return namesAndIds;
     }
 
+    public static List<String> getExistingNamesAndDatasources(String collectionName, String datasourceCategory) {
+        List<String> namesAndDatasources = new ArrayList<String>();
+        String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + DATASOURCES_ENDPOINT;
+
+        JSONArray jsonArray = JSONArray.fromObject(HttpClientUtils.httpGetRequest(url));
+        for(Object o : jsonArray) {
+            JSONObject jsonObject = (JSONObject) o;
+            String category = (String) jsonObject.get("category");
+
+            if (category.equals(datasourceCategory)) {
+                namesAndDatasources.add((String) jsonObject.get("name"));
+
+                if (category.equals("Web") || category.equals("Jdbc")) {
+                    String u = (String) jsonObject.get("url");
+                    if (u.endsWith("/")) {
+                        u = u.substring(0, u.length()-1);
+                    }
+                    namesAndDatasources.add(u);
+                } else if (category.equals("Filesystem")) {
+                    namesAndDatasources.add((String) jsonObject.get("path"));
+                }
+            }
+        }
+        return namesAndDatasources;
+    }
+
     public static String createDatasource(String collectionName, HashMap<String, Object> properties) {
         String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + DATASOURCES_ENDPOINT;
 
-        JSONObject jsonObject = new JSONObject();
-        for(Map.Entry<String, Object> entry : properties.entrySet()) {
-            jsonObject.put(entry.getKey(), entry.getValue().toString());
+        // is there a way to get a better error message off the server?
+        /*
+        List<String> existingNamesAndDatasources = getExistingNamesAndDatasources(collectionName, (String) properties.get("category"));
+        if (existingNamesAndDatasources.contains((String) properties.get("name"))) {
+            return "ERROR: Datasource with this name already exists";
         }
-
-        String result = HttpClientUtils.httpPostRequest(url, jsonObject.toString());
-        return result;
+        if (existingNamesAndDatasources.contains((String) properties.get("url"))) {
+            return "ERROR: Datasource with this uri already exists";
+        }
+        */
+        return HttpClientUtils.httpPostRequest(url, JsonParsingUtils.constructJsonStringFromProperties(properties));
     }
 }
