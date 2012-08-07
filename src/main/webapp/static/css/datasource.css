@@ -1,0 +1,34 @@
+/* Classes */
+
+.results_table {
+    padding: 2px;
+    border-radius: 15px;
+    margin: 5px;
+    float: left;
+}
+
+.results_table_border {
+    border: 1px solid black;
+}
+
+.datasource_results_div {
+    padding: 2px;
+    border-radius: 15px;
+    margin: 5px;
+}
+
+.datasource_child_div {
+    float : left;
+    width : 300px;
+}
+
+/* IDs */
+#add_new_datasource {
+    float: left;
+    margin-top: 5px;
+}
+
+#new_datasource_type {
+    float: left;
+    margin-top: 10px;
+}

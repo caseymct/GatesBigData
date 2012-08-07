@@ -18,7 +18,8 @@ public class CollectionUtils extends Utils {
             "total_disk_space", "total_disk_bytes");
 
     public static List<String> getCollectionNames() {
-        String json = HttpClientUtils.httpGetRequest(SERVER + COLLECTIONS_ENDPOINT);
+        String url = SERVER + COLLECTIONS_ENDPOINT;
+        String json = HttpClientUtils.httpGetRequest(url);
 
         return convertObjectListToStringList(JsonParsingUtils.getPropertiesFromDataSourceJson("name", json));
     }

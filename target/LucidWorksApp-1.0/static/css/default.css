@@ -151,6 +151,10 @@ form div.form-buttons {
     color : red;
 }
 
+.clearboth {
+    clear: both;
+}
+
 #header {
     height:35px;
     background:#333 url('../images/tile.png') repeat-x;

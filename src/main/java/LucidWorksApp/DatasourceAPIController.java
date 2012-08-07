@@ -1,8 +1,7 @@
 package LucidWorksApp;
 
-import LucidWorksApp.utils.CollectionUtils;
-import LucidWorksApp.utils.CrawlingUtils;
-import LucidWorksApp.utils.DatasourceUtils;
+import LucidWorksApp.utils.*;
+import net.sf.json.JSONObject;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -18,9 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static java.util.Collections.singletonList;
 import static org.springframework.http.HttpStatus.OK;
@@ -30,9 +27,10 @@ import static org.springframework.http.HttpStatus.OK;
 public class DatasourceAPIController extends APIController {
 
     public static final String PARAM_COLLECTION_NAME = "collection";
+    public static final String PARAM_DATASOURCE_ID = "datasourceId";
 
     @RequestMapping(value="/topleveldetails", method = RequestMethod.GET)
-    public ResponseEntity<String> getDatasourceDetails(@RequestParam(value = PARAM_COLLECTION_NAME, required = true) String collectionName) throws IOException {
+    public ResponseEntity<String> getAllDatasources(@RequestParam(value = PARAM_COLLECTION_NAME, required = true) String collectionName) throws IOException {
 
         StringWriter writer = new StringWriter();
         JsonFactory f = new JsonFactory();
@@ -47,18 +45,26 @@ public class DatasourceAPIController extends APIController {
             g.writeStringField("name", "None");
             g.writeStringField("crawl_state", "None");
             g.writeNumberField("docs", 0);
+            g.writeStringField("type", "None");
+            g.writeStringField("url", "None");
+            g.writeNumberField("id", -1);
             g.writeEndObject();
         } else {
             for(Map.Entry entry : dataSourceNamesAndIds.entrySet()) {
-                String datasourceName = (String) entry.getKey();
                 Integer datasourceId = (Integer) entry.getValue();
 
                 g.writeStartObject();
-                g.writeStringField("name", datasourceName);
-                g.writeStringField("crawl_state",
-                        (String) DatasourceUtils.getDataSourceStatusProperty(collectionName, datasourceId, "crawl_state"));
-                Object nDocs = DatasourceUtils.getDataSourceHistoryProperty(collectionName, datasourceId, "num_total");
-                g.writeNumberField("docs", nDocs != null ? (Integer) nDocs : 0);
+                Utils.writeValueByType("name", entry.getKey(), g);
+
+                for(Map.Entry dsEntry : DatasourceUtils.getDataSourceProperties(collectionName,
+                        datasourceId, Arrays.asList("type", "url", "id")).entrySet()) {
+                    Utils.writeValueByType((String) dsEntry.getKey(), dsEntry.getValue(), g);
+                }
+
+                Utils.writeValueByType("crawl_state",
+                        DatasourceUtils.getDataSourceStatusProperty(collectionName, datasourceId, "crawl_state"), g);
+                Utils.writeValueByType("docs",
+                        DatasourceUtils.getDataSourceHistoryProperty(collectionName, datasourceId, "num_total"), g);
 
                 //  g.writeNumberField("dataSources", DatasourceUtils.getNumberOfDataSources(name));
                 //  g.writeStringField("crawling", CrawlingUtils.getCrawlerStatus(name));
@@ -75,7 +81,18 @@ public class DatasourceAPIController extends APIController {
         return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
     }
 
-    @RequestMapping(value="/create", method = RequestMethod.POST)
+    @RequestMapping(value="/datasourcedetails", method = RequestMethod.GET)
+    public ResponseEntity<String> getDatasourceDetails(@RequestParam(value = PARAM_COLLECTION_NAME, required = true) String collectionName,
+                                                       @RequestParam(value = PARAM_DATASOURCE_ID, required = true) Integer datasourceId) throws IOException {
+
+        String result = DatasourceUtils.getAllDataSourceProperties(collectionName, datasourceId);
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        return new ResponseEntity<String>(result, httpHeaders, OK);
+    }
+
+        @RequestMapping(value="/create", method = RequestMethod.POST)
     public ResponseEntity<String> createDatasource(@RequestBody String body) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         ObjectMapper mapper = new ObjectMapper();
         Map<String, Object> newDataSource = mapper.readValue(body, TypeFactory.mapType(HashMap.class, String.class, Object.class));
@@ -90,4 +107,13 @@ public class DatasourceAPIController extends APIController {
         return new ResponseEntity<String>(result, httpHeaders, OK);
     }
 
+    @RequestMapping(value = "/delete", method = RequestMethod.DELETE)
+    public ResponseEntity<String> deleteDatassource(@RequestParam(value = PARAM_COLLECTION_NAME, required = true) String collectionName,
+                                                    @RequestParam(value = PARAM_DATASOURCE_ID, required = true) Integer datasourceId) {
+        String result = DatasourceUtils.deleteDatasource(collectionName, datasourceId.toString());
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        return new ResponseEntity<String>(result, httpHeaders, OK);
+    }
 }

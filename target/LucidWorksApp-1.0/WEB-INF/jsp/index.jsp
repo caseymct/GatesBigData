@@ -74,7 +74,15 @@
             Connect.setDefaultPostHeader('application/json');
             Connect.asyncRequest('POST', '<c:url value="/collection/create" />' , {
                 success: function (o) {
-                    window.location.reload();
+                    var result = Json.parse(o.responseText);
+                    if (result.hasOwnProperty("errors")) {
+                        var errmsg = "Error message : " + result.errors[0].message + "\n" +
+                                     "Error key : " + result.errors[0].key + "\n" +
+                                     "Error code : " + result.errors[0].code;
+                        alert(errmsg);
+                    } else {
+                        window.location.reload();
+                    }
                 },
                 failure: function (e) {
                     alert("Could not create new collection");

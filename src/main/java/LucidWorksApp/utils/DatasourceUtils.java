@@ -24,21 +24,28 @@ public class DatasourceUtils extends Utils {
         return JSONArray.fromObject(response).size();
     }
 
-    public static String getDataSourceProperties(String collectionName) {
+    public static String getPropertiesForAllDataSources(String collectionName) {
         String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + DATASOURCES_ENDPOINT;
 
         return HttpClientUtils.httpGetRequest(url);
     }
 
-    public static Object getDataSourceProperty(String collectionName, int datasourceId, String propertyName) {
-        //Properties : commit_on_finish, verify_access, sql_select_statement, mapping, collection, type,
-        // password, url, crawler, nested_queries, id, username, category, delta_sql_query, name, commit_within,
-        // primary_key, driver, max_docs
+    public static String getAllDataSourceProperties(String collectionName, int datasourceId) {
         String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + DATASOURCES_ENDPOINT + "/" + datasourceId;
-        String properties = HttpClientUtils.httpGetRequest(url);
+        return HttpClientUtils.httpGetRequest(url);
+    }
 
+    public static HashMap<String, Object> getDataSourceProperties(String collectionName, int datasourceId, List<String> properties) {
 
-        return JsonParsingUtils.getPropertyFromJsonString(propertyName, properties);
+        String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + DATASOURCES_ENDPOINT + "/" + datasourceId;
+        String allProperties = HttpClientUtils.httpGetRequest(url);
+        HashMap<String, Object> ret = new HashMap<String, Object>();
+
+        for(String property : properties) {
+            Object val = JsonParsingUtils.getPropertyFromJsonString(property, allProperties);
+            ret.put(property, (val == null) ? "" : val);
+        }
+        return ret;
     }
 
     public static Object getDataSourceStatusProperty(String collectionName, int datasourceId, String propertyName) {
@@ -48,7 +55,6 @@ public class DatasourceUtils extends Utils {
         String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + DATASOURCES_ENDPOINT +
                 "/" + datasourceId + "/status";
         String properties = HttpClientUtils.httpGetRequest(url);
-
 
         return JsonParsingUtils.getPropertyFromJsonString(propertyName, properties);
     }
@@ -86,45 +92,15 @@ public class DatasourceUtils extends Utils {
         return namesAndIds;
     }
 
-    public static List<String> getExistingNamesAndDatasources(String collectionName, String datasourceCategory) {
-        List<String> namesAndDatasources = new ArrayList<String>();
-        String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + DATASOURCES_ENDPOINT;
-
-        JSONArray jsonArray = JSONArray.fromObject(HttpClientUtils.httpGetRequest(url));
-        for(Object o : jsonArray) {
-            JSONObject jsonObject = (JSONObject) o;
-            String category = (String) jsonObject.get("category");
-
-            if (category.equals(datasourceCategory)) {
-                namesAndDatasources.add((String) jsonObject.get("name"));
-
-                if (category.equals("Web") || category.equals("Jdbc")) {
-                    String u = (String) jsonObject.get("url");
-                    if (u.endsWith("/")) {
-                        u = u.substring(0, u.length()-1);
-                    }
-                    namesAndDatasources.add(u);
-                } else if (category.equals("Filesystem")) {
-                    namesAndDatasources.add((String) jsonObject.get("path"));
-                }
-            }
-        }
-        return namesAndDatasources;
-    }
-
     public static String createDatasource(String collectionName, HashMap<String, Object> properties) {
         String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + DATASOURCES_ENDPOINT;
 
-        // is there a way to get a better error message off the server?
-        /*
-        List<String> existingNamesAndDatasources = getExistingNamesAndDatasources(collectionName, (String) properties.get("category"));
-        if (existingNamesAndDatasources.contains((String) properties.get("name"))) {
-            return "ERROR: Datasource with this name already exists";
-        }
-        if (existingNamesAndDatasources.contains((String) properties.get("url"))) {
-            return "ERROR: Datasource with this uri already exists";
-        }
-        */
         return HttpClientUtils.httpPostRequest(url, JsonParsingUtils.constructJsonStringFromProperties(properties));
+    }
+
+    public static String deleteDatasource(String collectionName, String datasourceId) {
+        String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + DATASOURCES_ENDPOINT + "/" + datasourceId;
+
+        return HttpClientUtils.httpDeleteRequest(url);
     }
 }
