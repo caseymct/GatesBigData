@@ -2,449 +2,27 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="cd327029-d758-4c29-b719-28e5d07bbed1" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/datasourceDetails.jsp" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/datasourceTypes/webdatasource.jsp" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/webapp/static/css/datasource.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/images/bg.jpg" afterPath="$PROJECT_DIR$/src/main/webapp/static/images/bg.jpg" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/images/blue_button_bg.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/images/blue_button_bg.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/images/calbtn.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/images/calbtn.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/images/checkbox.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/images/checkbox.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/images/globe.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/images/globe.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/images/header.jpg" afterPath="$PROJECT_DIR$/src/main/webapp/static/images/header.jpg" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/images/logo_100_100.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/images/logo_100_100.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/images/sprite.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/images/sprite.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/images/tile.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/images/tile.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/ajax-loader.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/ajax-loader.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/asc.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/asc.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/back-h.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/back-h.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/back-v.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/back-v.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/bar-h.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/bar-h.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/bar-v.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/bar-v.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/bg-h.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/bg-h.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/bg-v.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/bg-v.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/blankimage.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/blankimage.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/check0.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/check0.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/check1.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/check1.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/check2.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/check2.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/desc.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/desc.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/dt-arrow-dn.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/dt-arrow-dn.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/dt-arrow-up.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/dt-arrow-up.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/editor-knob.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/editor-knob.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/editor-sprite-active.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/editor-sprite-active.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/editor-sprite.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/editor-sprite.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/header_background.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/header_background.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/hue_bg.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/hue_bg.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/layout_sprite.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/layout_sprite.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/loading.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/loading.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/menu-button-arrow-disabled.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/menu-button-arrow-disabled.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/menu-button-arrow.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/menu-button-arrow.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/menubaritem_submenuindicator.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/menubaritem_submenuindicator.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/menubaritem_submenuindicator_disabled.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/menubaritem_submenuindicator_disabled.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/menuitem_checkbox.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/menuitem_checkbox.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/menuitem_checkbox_disabled.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/menuitem_checkbox_disabled.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/menuitem_submenuindicator.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/menuitem_submenuindicator.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/menuitem_submenuindicator_disabled.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/menuitem_submenuindicator_disabled.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/picker_mask.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/picker_mask.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/split-button-arrow-active.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/split-button-arrow-active.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/split-button-arrow-disabled.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/split-button-arrow-disabled.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/split-button-arrow-focus.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/split-button-arrow-focus.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/split-button-arrow-hover.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/split-button-arrow-hover.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/split-button-arrow.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/split-button-arrow.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/sprite.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/sprite.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/sprite.psd" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/sprite.psd" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/treeview-loading.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/treeview-loading.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/treeview-sprite.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/treeview-sprite.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/wait.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/wait.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/assets/skins/sam/menu-button-arrow-disabled.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/assets/skins/sam/menu-button-arrow-disabled.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/assets/skins/sam/menu-button-arrow.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/assets/skins/sam/menu-button-arrow.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/assets/skins/sam/split-button-arrow-active.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/assets/skins/sam/split-button-arrow-active.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/assets/skins/sam/split-button-arrow-disabled.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/assets/skins/sam/split-button-arrow-disabled.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/assets/skins/sam/split-button-arrow-focus.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/assets/skins/sam/split-button-arrow-focus.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/assets/skins/sam/split-button-arrow-hover.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/assets/skins/sam/split-button-arrow-hover.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/assets/skins/sam/split-button-arrow.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/assets/skins/sam/split-button-arrow.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/calendar/assets/calgrad.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/calendar/assets/calgrad.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/calendar/assets/callt.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/calendar/assets/callt.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/calendar/assets/calrt.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/calendar/assets/calrt.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/calendar/assets/calx.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/calendar/assets/calx.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/carousel/assets/ajax-loader.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/carousel/assets/ajax-loader.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/carousel/assets/skins/sam/ajax-loader.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/carousel/assets/skins/sam/ajax-loader.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/charts/assets/charts.swf" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/charts/assets/charts.swf" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/colorpicker/assets/hue_thumb.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/colorpicker/assets/hue_thumb.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/colorpicker/assets/picker_mask.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/colorpicker/assets/picker_mask.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/colorpicker/assets/picker_thumb.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/colorpicker/assets/picker_thumb.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/colorpicker/assets/skins/sam/hue_bg.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/colorpicker/assets/skins/sam/hue_bg.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/colorpicker/assets/skins/sam/picker_mask.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/colorpicker/assets/skins/sam/picker_mask.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/connection/connection.swf" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/connection/connection.swf" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/assets/alrt16_1.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/assets/alrt16_1.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/assets/blck16_1.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/assets/blck16_1.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/assets/close12_1.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/assets/close12_1.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/assets/hlp16_1.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/assets/hlp16_1.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/assets/info16_1.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/assets/info16_1.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/assets/tip16_1.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/assets/tip16_1.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/assets/warn16_1.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/assets/warn16_1.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datatable/assets/skins/sam/dt-arrow-dn.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datatable/assets/skins/sam/dt-arrow-dn.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datatable/assets/skins/sam/dt-arrow-up.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datatable/assets/skins/sam/dt-arrow-up.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/assets/skins/sam/blankimage.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/assets/skins/sam/blankimage.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/assets/skins/sam/editor-knob.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/assets/skins/sam/editor-knob.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/assets/skins/sam/editor-sprite-active.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/assets/skins/sam/editor-sprite-active.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/assets/skins/sam/editor-sprite.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/assets/skins/sam/editor-sprite.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/layout/assets/skins/sam/layout_sprite.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/layout/assets/skins/sam/layout_sprite.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menu_down_arrow.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menu_down_arrow.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menu_down_arrow_disabled.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menu_down_arrow_disabled.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menu_up_arrow.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menu_up_arrow.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menu_up_arrow_disabled.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menu_up_arrow_disabled.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menubaritem_submenuindicator.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menubaritem_submenuindicator.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menubaritem_submenuindicator_disabled.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menubaritem_submenuindicator_disabled.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menubaritem_submenuindicator_selected.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menubaritem_submenuindicator_selected.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menuitem_checkbox.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menuitem_checkbox.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menuitem_checkbox_disabled.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menuitem_checkbox_disabled.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menuitem_checkbox_selected.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menuitem_checkbox_selected.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menuitem_submenuindicator.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menuitem_submenuindicator.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menuitem_submenuindicator_disabled.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menuitem_submenuindicator_disabled.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menuitem_submenuindicator_selected.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menuitem_submenuindicator_selected.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/skins/sam/menubaritem_submenuindicator.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/skins/sam/menubaritem_submenuindicator.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/skins/sam/menubaritem_submenuindicator_disabled.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/skins/sam/menubaritem_submenuindicator_disabled.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/skins/sam/menuitem_checkbox.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/skins/sam/menuitem_checkbox.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/skins/sam/menuitem_checkbox_disabled.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/skins/sam/menuitem_checkbox_disabled.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/skins/sam/menuitem_submenuindicator.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/skins/sam/menuitem_submenuindicator.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/skins/sam/menuitem_submenuindicator_disabled.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/skins/sam/menuitem_submenuindicator_disabled.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profilerviewer/assets/skins/sam/asc.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profilerviewer/assets/skins/sam/asc.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profilerviewer/assets/skins/sam/desc.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profilerviewer/assets/skins/sam/desc.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profilerviewer/assets/skins/sam/header_background.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profilerviewer/assets/skins/sam/header_background.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profilerviewer/assets/skins/sam/wait.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profilerviewer/assets/skins/sam/wait.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/progressbar/assets/skins/sam/back-h.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/progressbar/assets/skins/sam/back-h.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/progressbar/assets/skins/sam/back-v.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/progressbar/assets/skins/sam/back-v.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/progressbar/assets/skins/sam/bar-h.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/progressbar/assets/skins/sam/bar-h.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/progressbar/assets/skins/sam/bar-v.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/progressbar/assets/skins/sam/bar-v.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/resize/assets/skins/sam/layout_sprite.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/resize/assets/skins/sam/layout_sprite.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/bg-fader.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/bg-fader.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/bg-h.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/bg-h.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/bg-v-e.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/bg-v-e.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/bg-v.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/bg-v.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/left-thumb.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/left-thumb.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/right-thumb.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/right-thumb.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/skins/sam/bg-h.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/skins/sam/bg-h.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/skins/sam/bg-v.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/skins/sam/bg-v.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/thumb-bar.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/thumb-bar.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/thumb-e.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/thumb-e.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/thumb-fader.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/thumb-fader.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/thumb-n.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/thumb-n.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/thumb-s.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/thumb-s.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/thumb-w.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/thumb-w.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/swfstore/swfstore.swf" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/swfstore/swfstore.swf" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/tabview/assets/loading.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/tabview/assets/loading.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/assets/skins/sam/check0.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/assets/skins/sam/check0.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/assets/skins/sam/check1.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/assets/skins/sam/check1.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/assets/skins/sam/check2.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/assets/skins/sam/check2.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/assets/skins/sam/loading.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/assets/skins/sam/loading.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/assets/skins/sam/treeview-loading.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/assets/skins/sam/treeview-loading.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/assets/skins/sam/treeview-sprite.gif" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/assets/skins/sam/treeview-sprite.gif" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/uploader/assets/selectFileButton.png" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/uploader/assets/selectFileButton.png" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/uploader/assets/uploader.swf" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/uploader/assets/uploader.swf" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/api/SolrAPIController.java" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/datasourceTypes/importcsv.jsp" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/webapp/static/css/collection.css" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/java/LucidWorksApp/search/SearchUtils.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/search/SolrUtils.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/LucidWorksApp/APIController.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/APIController.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/LucidWorksApp/CollectionAPIController.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/CollectionAPIController.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/LucidWorksApp/DatasourceAPIController.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/DatasourceAPIController.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/LucidWorksApp/SearchAPIController.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/SearchAPIController.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/LucidWorksApp/search/SearchUtils.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/search/SearchUtils.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/CollectionUtils.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/CollectionUtils.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/CrawlingUtils.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/CrawlingUtils.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/DatasourceUtils.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/DatasourceUtils.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/FieldUtils.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/FieldUtils.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/HttpClientUtils.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/HttpClientUtils.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/JsonParsingUtils.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/JsonParsingUtils.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/Utils.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/Utils.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/resources/META-INF/resourcebundles/Error.properties" afterPath="$PROJECT_DIR$/src/main/resources/META-INF/resourcebundles/Error.properties" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/resources/META-INF/resourcebundles/Main.properties" afterPath="$PROJECT_DIR$/src/main/resources/META-INF/resourcebundles/Main.properties" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/resources/META-INF/spring/config-context.xml" afterPath="$PROJECT_DIR$/src/main/resources/META-INF/spring/config-context.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/resources/META-INF/spring/messages-context.xml" afterPath="$PROJECT_DIR$/src/main/resources/META-INF/spring/messages-context.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/resources/META-INF/spring/servlet/api-context.xml" afterPath="$PROJECT_DIR$/src/main/resources/META-INF/spring/servlet/api-context.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/resources/META-INF/spring/servlet/controller-context.xml" afterPath="$PROJECT_DIR$/src/main/resources/META-INF/spring/servlet/controller-context.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/resources/META-INF/spring/servlet/view-context.xml" afterPath="$PROJECT_DIR$/src/main/resources/META-INF/spring/servlet/view-context.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/resources/META-INF/spring/wro-context.xml" afterPath="$PROJECT_DIR$/src/main/resources/META-INF/spring/wro-context.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/resources/wro.properties" afterPath="$PROJECT_DIR$/src/main/resources/wro.properties" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/collectionDetails.jsp" afterPath="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/collectionDetails.jsp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/datasourceDetails.jsp" afterPath="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/datasourceDetails.jsp" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/index.jsp" afterPath="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/index.jsp" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/search.jsp" afterPath="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/search.jsp" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/WEB-INF/tags/layout/main.tag" afterPath="$PROJECT_DIR$/src/main/webapp/WEB-INF/tags/layout/main.tag" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/WEB-INF/web.xml" afterPath="$PROJECT_DIR$/src/main/webapp/WEB-INF/web.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/WEB-INF/wro.xml" afterPath="$PROJECT_DIR$/src/main/webapp/WEB-INF/wro.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/css/buttons.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/css/buttons.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/css/default.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/css/default.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/css/index.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/css/index.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/css/search.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/css/search.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/data/flare.json" afterPath="$PROJECT_DIR$/src/main/webapp/static/data/flare.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/data/p_l.json" afterPath="$PROJECT_DIR$/src/main/webapp/static/data/p_l.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/data/p_l.xml" afterPath="$PROJECT_DIR$/src/main/webapp/static/data/p_l.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/data/test1.json.converted" afterPath="$PROJECT_DIR$/src/main/webapp/static/data/test1.json.converted" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/data/test1.json" afterPath="$PROJECT_DIR$/src/main/webapp/static/data/test1.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/d3/d3.layout.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/d3/d3.layout.js" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/default.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/default.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/animation/animation-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/animation/animation-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/animation/animation-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/animation/animation-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/animation/animation.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/animation/animation.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/autocomplete.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/autocomplete.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/button.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/button.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/calendar.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/calendar.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/carousel.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/carousel.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/colorpicker.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/colorpicker.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/container.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/container.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/datatable.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/datatable.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/editor.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/editor.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/imagecropper.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/imagecropper.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/layout.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/layout.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/logger.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/logger.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/menu.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/menu.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/paginator.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/paginator.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/profilerviewer.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/profilerviewer.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/progressbar.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/progressbar.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/resize.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/resize.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/simpleeditor.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/simpleeditor.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/slider.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/slider.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/tabview.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/tabview.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/treeview.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/treeview.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/yuitest.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/assets/skins/sam/yuitest.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/autocomplete/assets/autocomplete-core.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/autocomplete/assets/autocomplete-core.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/autocomplete/assets/skins/sam/autocomplete-skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/autocomplete/assets/skins/sam/autocomplete-skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/autocomplete/assets/skins/sam/autocomplete.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/autocomplete/assets/skins/sam/autocomplete.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/autocomplete/autocomplete-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/autocomplete/autocomplete-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/autocomplete/autocomplete-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/autocomplete/autocomplete-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/autocomplete/autocomplete.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/autocomplete/autocomplete.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/base/base-min.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/base/base-min.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/base/base.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/base/base.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/assets/button-core.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/assets/button-core.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/assets/skins/sam/button-skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/assets/skins/sam/button-skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/assets/skins/sam/button.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/assets/skins/sam/button.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/button-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/button-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/button-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/button-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/button.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/button/button.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/calendar/assets/calendar-core.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/calendar/assets/calendar-core.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/calendar/assets/calendar.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/calendar/assets/calendar.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/calendar/assets/skins/sam/calendar-skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/calendar/assets/skins/sam/calendar-skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/calendar/assets/skins/sam/calendar.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/calendar/assets/skins/sam/calendar.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/calendar/calendar-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/calendar/calendar-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/calendar/calendar-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/calendar/calendar-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/calendar/calendar.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/calendar/calendar.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/carousel/assets/carousel-core.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/carousel/assets/carousel-core.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/carousel/assets/skins/sam/carousel-skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/carousel/assets/skins/sam/carousel-skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/carousel/assets/skins/sam/carousel.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/carousel/assets/skins/sam/carousel.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/carousel/carousel-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/carousel/carousel-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/carousel/carousel-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/carousel/carousel-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/carousel/carousel.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/carousel/carousel.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/charts/charts-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/charts/charts-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/charts/charts-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/charts/charts-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/charts/charts.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/charts/charts.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/colorpicker/assets/colorpicker-core.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/colorpicker/assets/colorpicker-core.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/colorpicker/assets/skins/sam/colorpicker-skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/colorpicker/assets/skins/sam/colorpicker-skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/colorpicker/assets/skins/sam/colorpicker.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/colorpicker/assets/skins/sam/colorpicker.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/colorpicker/colorpicker-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/colorpicker/colorpicker-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/colorpicker/colorpicker-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/colorpicker/colorpicker-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/colorpicker/colorpicker.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/colorpicker/colorpicker.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/connection/connection-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/connection/connection-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/connection/connection-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/connection/connection-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/connection/connection.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/connection/connection.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/connection/connection_core-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/connection/connection_core-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/connection/connection_core-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/connection/connection_core-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/connection/connection_core.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/connection/connection_core.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/assets/container-core.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/assets/container-core.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/assets/container.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/assets/container.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/assets/skins/sam/container-skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/assets/skins/sam/container-skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/assets/skins/sam/container.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/assets/skins/sam/container.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/container-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/container-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/container-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/container-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/container.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/container.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/container_core-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/container_core-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/container_core-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/container_core-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/container_core.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/container/container_core.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/cookie/cookie-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/cookie/cookie-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/cookie/cookie-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/cookie/cookie-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/cookie/cookie.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/cookie/cookie.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datasource/datasource-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datasource/datasource-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datasource/datasource-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datasource/datasource-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datasource/datasource.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datasource/datasource.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datatable/assets/datatable-core.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datatable/assets/datatable-core.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datatable/assets/datatable.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datatable/assets/datatable.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datatable/assets/skins/sam/datatable-skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datatable/assets/skins/sam/datatable-skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datatable/assets/skins/sam/datatable.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datatable/assets/skins/sam/datatable.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datatable/datatable-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datatable/datatable-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datatable/datatable-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datatable/datatable-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datatable/datatable.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datatable/datatable.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datemath/datemath-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datemath/datemath-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datemath/datemath-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datemath/datemath-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datemath/datemath.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/datemath/datemath.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/dom/dom-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/dom/dom-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/dom/dom-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/dom/dom-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/dom/dom.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/dom/dom.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/dragdrop/dragdrop-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/dragdrop/dragdrop-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/dragdrop/dragdrop-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/dragdrop/dragdrop-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/dragdrop/dragdrop.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/dragdrop/dragdrop.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/assets/editor-core.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/assets/editor-core.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/assets/simpleeditor-core.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/assets/simpleeditor-core.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/assets/skins/sam/editor-skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/assets/skins/sam/editor-skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/assets/skins/sam/editor.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/assets/skins/sam/editor.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/assets/skins/sam/simpleeditor-skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/assets/skins/sam/simpleeditor-skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/assets/skins/sam/simpleeditor.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/assets/skins/sam/simpleeditor.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/editor-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/editor-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/editor-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/editor-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/editor.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/editor.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/simpleeditor-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/simpleeditor-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/simpleeditor-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/simpleeditor-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/simpleeditor.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/editor/simpleeditor.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/element-delegate/element-delegate-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/element-delegate/element-delegate-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/element-delegate/element-delegate-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/element-delegate/element-delegate-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/element-delegate/element-delegate.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/element-delegate/element-delegate.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/element/element-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/element/element-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/element/element-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/element/element-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/element/element.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/element/element.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event-delegate/event-delegate-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event-delegate/event-delegate-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event-delegate/event-delegate-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event-delegate/event-delegate-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event-delegate/event-delegate.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event-delegate/event-delegate.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event-mouseenter/event-mouseenter-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event-mouseenter/event-mouseenter-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event-mouseenter/event-mouseenter-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event-mouseenter/event-mouseenter-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event-mouseenter/event-mouseenter.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event-mouseenter/event-mouseenter.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event-simulate/event-simulate-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event-simulate/event-simulate-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event-simulate/event-simulate-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event-simulate/event-simulate-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event-simulate/event-simulate.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event-simulate/event-simulate.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event/event-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event/event-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event/event-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event/event-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event/event.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/event/event.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/fonts/fonts-min.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/fonts/fonts-min.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/fonts/fonts.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/fonts/fonts.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/get/get-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/get/get-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/get/get-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/get/get-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/get/get.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/get/get.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/grids/grids-min.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/grids/grids-min.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/grids/grids.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/grids/grids.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/history/assets/blank.html" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/history/assets/blank.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/history/history-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/history/history-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/history/history-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/history/history-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/history/history.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/history/history.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/imagecropper/assets/imagecropper-core.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/imagecropper/assets/imagecropper-core.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/imagecropper/assets/skins/sam/imagecropper-skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/imagecropper/assets/skins/sam/imagecropper-skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/imagecropper/assets/skins/sam/imagecropper.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/imagecropper/assets/skins/sam/imagecropper.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/imagecropper/imagecropper-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/imagecropper/imagecropper-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/imagecropper/imagecropper-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/imagecropper/imagecropper-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/imagecropper/imagecropper.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/imagecropper/imagecropper.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/imageloader/imageloader-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/imageloader/imageloader-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/imageloader/imageloader-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/imageloader/imageloader-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/imageloader/imageloader.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/imageloader/imageloader.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/json/json-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/json/json-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/json/json-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/json/json-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/json/json.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/json/json.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/layout/assets/layout-core.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/layout/assets/layout-core.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/layout/assets/skins/sam/layout-skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/layout/assets/skins/sam/layout-skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/layout/assets/skins/sam/layout.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/layout/assets/skins/sam/layout.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/layout/layout-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/layout/layout-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/layout/layout-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/layout/layout-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/layout/layout.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/layout/layout.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/logger/assets/logger-core.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/logger/assets/logger-core.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/logger/assets/logger.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/logger/assets/logger.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/logger/assets/skins/sam/logger-skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/logger/assets/skins/sam/logger-skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/logger/assets/skins/sam/logger.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/logger/assets/skins/sam/logger.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/logger/logger-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/logger/logger-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/logger/logger-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/logger/logger-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/logger/logger.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/logger/logger.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menu-core.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menu-core.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menu.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/menu.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/skins/sam/menu-skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/skins/sam/menu-skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/skins/sam/menu.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/assets/skins/sam/menu.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/menu-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/menu-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/menu-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/menu-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/menu.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/menu/menu.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/paginator/assets/paginator-core.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/paginator/assets/paginator-core.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/paginator/assets/skins/sam/paginator-skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/paginator/assets/skins/sam/paginator-skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/paginator/assets/skins/sam/paginator.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/paginator/assets/skins/sam/paginator.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/paginator/paginator-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/paginator/paginator-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/paginator/paginator-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/paginator/paginator-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/paginator/paginator.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/paginator/paginator.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profiler/profiler-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profiler/profiler-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profiler/profiler-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profiler/profiler-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profiler/profiler.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profiler/profiler.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profilerviewer/assets/profilerviewer-core.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profilerviewer/assets/profilerviewer-core.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profilerviewer/assets/skins/sam/profilerviewer-skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profilerviewer/assets/skins/sam/profilerviewer-skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profilerviewer/assets/skins/sam/profilerviewer.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profilerviewer/assets/skins/sam/profilerviewer.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profilerviewer/profilerviewer-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profilerviewer/profilerviewer-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profilerviewer/profilerviewer-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profilerviewer/profilerviewer-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profilerviewer/profilerviewer.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/profilerviewer/profilerviewer.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/progressbar/assets/progressbar-core.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/progressbar/assets/progressbar-core.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/progressbar/assets/skins/sam/progressbar-skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/progressbar/assets/skins/sam/progressbar-skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/progressbar/assets/skins/sam/progressbar.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/progressbar/assets/skins/sam/progressbar.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/progressbar/progressbar-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/progressbar/progressbar-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/progressbar/progressbar-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/progressbar/progressbar-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/progressbar/progressbar.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/progressbar/progressbar.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/reset-fonts-grids/reset-fonts-grids.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/reset-fonts-grids/reset-fonts-grids.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/reset-fonts/reset-fonts.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/reset-fonts/reset-fonts.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/reset/reset-min.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/reset/reset-min.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/reset/reset.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/reset/reset.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/resize/assets/resize-core.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/resize/assets/resize-core.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/resize/assets/skins/sam/resize-skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/resize/assets/skins/sam/resize-skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/resize/assets/skins/sam/resize.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/resize/assets/skins/sam/resize.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/resize/resize-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/resize/resize-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/resize/resize-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/resize/resize-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/resize/resize.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/resize/resize.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/selector/selector-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/selector/selector-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/selector/selector-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/selector/selector-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/selector/selector.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/selector/selector.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/skins/sam/slider-skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/skins/sam/slider-skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/skins/sam/slider.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/skins/sam/slider.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/slider-core.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/slider-core.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/slider-skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/assets/slider-skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/slider-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/slider-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/slider-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/slider-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/slider.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/slider/slider.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/storage/storage-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/storage/storage-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/storage/storage-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/storage/storage-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/storage/storage.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/storage/storage.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/stylesheet/stylesheet-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/stylesheet/stylesheet-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/stylesheet/stylesheet-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/stylesheet/stylesheet-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/stylesheet/stylesheet.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/stylesheet/stylesheet.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/swf/swf-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/swf/swf-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/swf/swf-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/swf/swf-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/swf/swf.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/swf/swf.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/swfdetect/swfdetect-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/swfdetect/swfdetect-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/swfdetect/swfdetect-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/swfdetect/swfdetect-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/swfdetect/swfdetect.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/swfdetect/swfdetect.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/swfstore/swfstore-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/swfstore/swfstore-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/swfstore/swfstore-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/swfstore/swfstore-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/swfstore/swfstore.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/swfstore/swfstore.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/tabview/assets/border_tabs.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/tabview/assets/border_tabs.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/tabview/assets/skin-sam.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/tabview/assets/skin-sam.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/tabview/assets/skins/sam/tabview-skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/tabview/assets/skins/sam/tabview-skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/tabview/assets/skins/sam/tabview.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/tabview/assets/skins/sam/tabview.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/tabview/assets/tabview-core.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/tabview/assets/tabview-core.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/tabview/assets/tabview.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/tabview/assets/tabview.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/tabview/tabview-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/tabview/tabview-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/tabview/tabview-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/tabview/tabview-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/tabview/tabview.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/tabview/tabview.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/assets/skins/sam/treeview-skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/assets/skins/sam/treeview-skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/assets/skins/sam/treeview.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/assets/skins/sam/treeview.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/assets/treeview-core.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/assets/treeview-core.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/treeview-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/treeview-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/treeview-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/treeview-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/treeview.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/treeview/treeview.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/uploader/uploader-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/uploader/uploader-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/uploader/uploader-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/uploader/uploader-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/uploader/uploader.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/uploader/uploader.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/utilities/utilities.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/utilities/utilities.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yahoo-dom-event/yahoo-dom-event.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yahoo-dom-event/yahoo-dom-event.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yahoo/yahoo-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yahoo/yahoo-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yahoo/yahoo-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yahoo/yahoo-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yahoo/yahoo.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yahoo/yahoo.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuiloader-dom-event/yuiloader-dom-event.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuiloader-dom-event/yuiloader-dom-event.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuiloader/yuiloader-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuiloader/yuiloader-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuiloader/yuiloader-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuiloader/yuiloader-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuiloader/yuiloader.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuiloader/yuiloader.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuitest/assets/skins/sam/yuitest-skin.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuitest/assets/skins/sam/yuitest-skin.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuitest/assets/skins/sam/yuitest.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuitest/assets/skins/sam/yuitest.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuitest/assets/testlogger.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuitest/assets/testlogger.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuitest/assets/yuitest-core.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuitest/assets/yuitest-core.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuitest/yuitest-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuitest/yuitest-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuitest/yuitest-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuitest/yuitest-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuitest/yuitest.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuitest/yuitest.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuitest/yuitest_core-debug.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuitest/yuitest_core-debug.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuitest/yuitest_core-min.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuitest/yuitest_core-min.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuitest/yuitest_core.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/yui/2.9/yuitest/yuitest_core.js" />
     </list>
     <ignored path="LucidWorksApp.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -457,14 +35,13 @@
   <component name="ChangesViewManager" flattened_view="true" show_ignored="false" />
   <component name="CreatePatchCommitExecutor">
     <option name="PATCH_PATH" value="" />
-    <option name="REVERSE_PATCH" value="false" />
   </component>
   <component name="DaemonCodeAnalyzer">
     <disable_hints />
   </component>
   <component name="DebuggerManager">
     <line_breakpoints>
-      <breakpoint url="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/CollectionUtils.java" line="54" class="LucidWorksApp.utils.CollectionUtils" package="LucidWorksApp.utils">
+      <breakpoint url="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/CollectionAPIController.java" line="109" class="LucidWorksApp.CollectionAPIController" package="LucidWorksApp">
         <option name="ENABLED" value="true" />
         <option name="LOG_ENABLED" value="false" />
         <option name="LOG_EXPRESSION_ENABLED" value="false" />
@@ -477,7 +54,33 @@
         <option name="CONDITION" value="" />
         <option name="LOG_MESSAGE" value="" />
       </breakpoint>
-      <breakpoint url="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/DatasourceAPIController.java" line="87" class="LucidWorksApp.DatasourceAPIController" package="LucidWorksApp">
+      <breakpoint url="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/search/SolrUtils.java" line="66" class="LucidWorksApp.search.SolrUtils" package="LucidWorksApp.search">
+        <option name="ENABLED" value="true" />
+        <option name="LOG_ENABLED" value="false" />
+        <option name="LOG_EXPRESSION_ENABLED" value="false" />
+        <option name="SUSPEND_POLICY" value="SuspendAll" />
+        <option name="COUNT_FILTER_ENABLED" value="false" />
+        <option name="COUNT_FILTER" value="0" />
+        <option name="CONDITION_ENABLED" value="false" />
+        <option name="CLASS_FILTERS_ENABLED" value="false" />
+        <option name="INSTANCE_FILTERS_ENABLED" value="false" />
+        <option name="CONDITION" value="" />
+        <option name="LOG_MESSAGE" value="" />
+      </breakpoint>
+      <breakpoint url="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/search/SolrUtils.java" line="41" class="LucidWorksApp.search.SolrUtils" package="LucidWorksApp.search">
+        <option name="ENABLED" value="true" />
+        <option name="LOG_ENABLED" value="false" />
+        <option name="LOG_EXPRESSION_ENABLED" value="false" />
+        <option name="SUSPEND_POLICY" value="SuspendAll" />
+        <option name="COUNT_FILTER_ENABLED" value="false" />
+        <option name="COUNT_FILTER" value="0" />
+        <option name="CONDITION_ENABLED" value="false" />
+        <option name="CLASS_FILTERS_ENABLED" value="false" />
+        <option name="INSTANCE_FILTERS_ENABLED" value="false" />
+        <option name="CONDITION" value="" />
+        <option name="LOG_MESSAGE" value="" />
+      </breakpoint>
+      <breakpoint url="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/SearchAPIController.java" line="35" class="LucidWorksApp.SearchAPIController" package="LucidWorksApp">
         <option name="ENABLED" value="true" />
         <option name="LOG_ENABLED" value="false" />
         <option name="LOG_EXPRESSION_ENABLED" value="false" />
@@ -531,46 +134,30 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="index.jsp" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/index.jsp">
+      <file leaf-file-name="SolrUtils.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/search/SolrUtils.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="76" column="20" selection-start="3148" selection-end="3641" vertical-scroll-proportion="-12.333333">
+            <state line="50" column="0" selection-start="2032" selection-end="2032" vertical-scroll-proportion="0.0">
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="APIController.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/APIController.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="2" column="0" selection-start="24" selection-end="24" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="index.css" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/webapp/static/css/index.css">
+      <file leaf-file-name="search.jsp" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/search.jsp">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="16" column="49" selection-start="305" selection-end="305" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="collectionDetails.jsp" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/collectionDetails.jsp">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="68" column="9" selection-start="3059" selection-end="3059" vertical-scroll-proportion="0.57653064">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="CollectionAPIController.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/CollectionAPIController.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="99" column="53" selection-start="4069" selection-end="4069" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="CollectionUtils.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/CollectionUtils.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="54" column="0" selection-start="2415" selection-end="2415" vertical-scroll-proportion="0.0">
+            <state line="145" column="33" selection-start="6602" selection-end="6602" vertical-scroll-proportion="-12.5">
               <folding />
             </state>
           </provider>
@@ -579,7 +166,7 @@
       <file leaf-file-name="HttpClientUtils.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/HttpClientUtils.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="59" column="33" selection-start="1929" selection-end="1929" vertical-scroll-proportion="0.0">
+            <state line="19" column="31" selection-start="671" selection-end="671" vertical-scroll-proportion="0.0">
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -587,19 +174,28 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="pom.xml" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pom.xml">
+      <file leaf-file-name="FieldUtils.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/FieldUtils.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="114" column="55" selection-start="4104" selection-end="4104" vertical-scroll-proportion="-12.461538">
+            <state line="1" column="0" selection-start="29" selection-end="29" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="DatasourceUtils.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/DatasourceUtils.java">
+      <file leaf-file-name="SearchAPIController.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/SearchAPIController.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="126" column="10" selection-start="5734" selection-end="5734" vertical-scroll-proportion="0.0">
+            <state line="35" column="0" selection-start="1587" selection-end="1587" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="SolrAPIController.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/api/SolrAPIController.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="29" column="64" selection-start="1423" selection-end="1423" vertical-scroll-proportion="0.0">
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -607,13 +203,29 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="DatasourceAPIController.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/DatasourceAPIController.java">
+      <file leaf-file-name="importcsv.jsp" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/datasourceTypes/importcsv.jsp">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="87" column="0" selection-start="3957" selection-end="3957" vertical-scroll-proportion="0.0">
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
+            <state line="55" column="61" selection-start="2366" selection-end="2366" vertical-scroll-proportion="-10.458333">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="datasourceDetails.jsp" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/datasourceDetails.jsp">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="34" column="61" selection-start="1486" selection-end="1486" vertical-scroll-proportion="0.34701493">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="default.js" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/webapp/static/js/default.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="59" column="21" selection-start="1901" selection-end="1901" vertical-scroll-proportion="0.0">
+              <folding />
             </state>
           </provider>
         </entry>
@@ -626,29 +238,27 @@
     </FindUsagesManager>
   </component>
   <component name="Git.Settings">
-    <option name="CHECKOUT_INCLUDE_TAGS" value="false" />
-    <option name="UPDATE_CHANGES_POLICY" value="STASH" />
-    <option name="LINE_SEPARATORS_CONVERSION" value="ASK" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/src/main/webapp/static/js/default.js" />
-        <option value="$PROJECT_DIR$/src/main/webapp/WEB-INF/wro.xml" />
-        <option value="$PROJECT_DIR$/src/main/webapp/static/css/default.css" />
-        <option value="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/search.jsp" />
-        <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/SearchAPIController.java" />
-        <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/search/SearchUtils.java" />
-        <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/JsonParsingUtils.java" />
-        <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/CollectionUtils.java" />
-        <option value="$PROJECT_DIR$/src/main/webapp/static/css/index.css" />
+        <option value="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/index.jsp" />
         <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/DatasourceAPIController.java" />
         <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/CollectionAPIController.java" />
-        <option value="$PROJECT_DIR$/pom.xml" />
-        <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/HttpClientUtils.java" />
-        <option value="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/index.jsp" />
-        <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/DatasourceUtils.java" />
         <option value="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/collectionDetails.jsp" />
+        <option value="$PROJECT_DIR$/src/main/resources/META-INF/spring/servlet/controller-context.xml" />
+        <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/SolrAPIController.java" />
+        <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/api/SolrAPIController.java" />
+        <option value="$PROJECT_DIR$/src/main/webapp/static/js/default.js" />
+        <option value="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/datasourceTypes/importcsv.jsp" />
+        <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/search/SolrUtils.java" />
+        <option value="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/search.jsp" />
+        <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/SearchAPIController.java" />
+        <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/APIController.java" />
+        <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/HttpClientUtils.java" />
+        <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/FieldUtils.java" />
+        <option value="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/datasourceDetails.jsp" />
       </list>
     </option>
   </component>
@@ -666,6 +276,40 @@
     <option name="LAST_EDITED_MODULE_NAME" />
     <option name="LAST_EDITED_TAB_NAME" />
   </component>
+  <component name="ProjectFrameBounds">
+    <option name="x" value="257" />
+    <option name="y" value="1081" />
+    <option name="width" value="1480" />
+    <option name="height" value="1029" />
+  </component>
+  <component name="ProjectInspectionProfilesVisibleTreeState">
+    <entry key="Project Default">
+      <profile-state>
+        <expanded-state>
+          <State>
+            <id />
+          </State>
+          <State>
+            <id>Android</id>
+          </State>
+          <State>
+            <id>Error handling</id>
+          </State>
+          <State>
+            <id>LintAndroid</id>
+          </State>
+          <State>
+            <id>PerformanceLintAndroid</id>
+          </State>
+        </expanded-state>
+        <selected-state>
+          <State>
+            <id>Abstraction issues</id>
+          </State>
+        </selected-state>
+      </profile-state>
+    </entry>
+  </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
     <OptionsSetting value="true" id="Remove" />
@@ -673,6 +317,8 @@
     <OptionsSetting value="true" id="Update" />
     <OptionsSetting value="true" id="Status" />
     <OptionsSetting value="true" id="Edit" />
+    <OptionsSetting value="true" id="Undo Check Out" />
+    <OptionsSetting value="true" id="Get Latest Version" />
     <ConfirmationsSetting value="0" id="Add" />
     <ConfirmationsSetting value="0" id="Remove" />
   </component>
@@ -692,7 +338,16 @@
       <sortByType />
     </navigator>
     <panes>
-      <pane id="PackagesPane" />
+      <pane id="Scope">
+        <subPane subId="Project Files">
+          <PATH>
+            <PATH_ELEMENT USER_OBJECT="Root">
+              <option name="myItemId" value="" />
+              <option name="myItemType" value="" />
+            </PATH_ELEMENT>
+          </PATH>
+        </subPane>
+      </pane>
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -971,14 +626,44 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="main" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="java" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="LucidWorksApp" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="api" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="LucidWorksApp" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="LucidWorksApp" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
               <option name="myItemId" value=".idea" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
         </subPane>
       </pane>
+      <pane id="PackagesPane" />
       <pane id="Favorites" />
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -986,7 +671,7 @@
     <property name="GoToFile.includeJavaFiles" value="false" />
     <property name="project.structure.proportion" value="0.0" />
     <property name="options.splitter.main.proportions" value="0.3" />
-    <property name="options.lastSelected" value="MavenSettings" />
+    <property name="options.lastSelected" value="editor.preferences.appearance" />
     <property name="MemberChooser.sorted" value="false" />
     <property name="recentsLimit" value="5" />
     <property name="project.structure.side.proportion" value="0.0" />
@@ -996,8 +681,8 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="MemberChooser.showClasses" value="true" />
     <property name="GoToClass.includeLibraries" value="false" />
-    <property name="options.searchVisible" value="true" />
     <property name="options.splitter.details.proportions" value="0.2" />
+    <property name="options.searchVisible" value="true" />
   </component>
   <component name="RunManager" selected="Remote.jetty">
     <configuration default="true" type="Remote" factoryName="Remote">
@@ -1013,7 +698,17 @@
         <option name="PhingTarget" enabled="false" />
       </method>
     </configuration>
-    <configuration default="true" type="FlexUnitRunConfigurationType" factoryName="FlexUnit" adl_options="" air_descriptor_path="" air_program_params="" air_publisher_id="" air_root_dir_path="" air_run_mode="AppDescriptor" browser_family="FIREFOX" class_name="" debugger_sdk="Module SDK" html_or_swf_file_path="" launcher_type="OSDefault" main_class_name="" method_name="" module_name="" output_log_level="" package_name="" player_path="/Applications/Flash Player Debugger.app" port="0" run_mode="HtmlOrSwfFile" run_trusted="false" scope="Class" socket_policy_port="0" url_to_launch="http://">
+    <configuration default="true" type="FlexUnitRunConfigurationType" factoryName="FlexUnit" class_name="" method_name="" output_log_level="" package_name="" scope="Class">
+      <option name="BCName" value="" />
+      <option name="launcherParameters">
+        <LauncherParameters>
+          <option name="browserFamily" value="FIREFOX" />
+          <option name="launcherType" value="OSDefault" />
+          <option name="playerPath" value="/Applications/Flash Player Debugger.app" />
+        </LauncherParameters>
+      </option>
+      <option name="moduleName" value="" />
+      <option name="trusted" value="true" />
       <method>
         <option name="AntTarget" enabled="false" />
         <option name="BuildArtifacts" enabled="false" />
@@ -1042,7 +737,7 @@
       </method>
     </configuration>
     <configuration default="true" type="Application" factoryName="Application">
-      <extension name="coverage" enabled="false" merge="false" />
+      <extension name="coverage" enabled="false" merge="false" runner="idea" />
       <option name="MAIN_CLASS_NAME" />
       <option name="VM_PARAMETERS" />
       <option name="PROGRAM_PARAMETERS" />
@@ -1063,7 +758,7 @@
       </method>
     </configuration>
     <configuration default="true" type="JUnit" factoryName="JUnit">
-      <extension name="coverage" enabled="false" merge="false" />
+      <extension name="coverage" enabled="false" merge="false" runner="idea" />
       <module name="" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" />
@@ -1112,6 +807,24 @@
     </configuration>
   </component>
   <component name="ShelveChangesManager" show_recycled="false" />
+  <component name="SvnConfiguration" maxAnnotateRevisions="500" myUseAcceleration="nothing" myAutoUpdateAfterCommit="false" cleanupOnStartRun="false">
+    <option name="USER" value="" />
+    <option name="PASSWORD" value="" />
+    <option name="mySSHConnectionTimeout" value="30000" />
+    <option name="mySSHReadTimeout" value="30000" />
+    <option name="LAST_MERGED_REVISION" />
+    <option name="MERGE_DRY_RUN" value="false" />
+    <option name="MERGE_DIFF_USE_ANCESTRY" value="true" />
+    <option name="UPDATE_LOCK_ON_DEMAND" value="false" />
+    <option name="IGNORE_SPACES_IN_MERGE" value="false" />
+    <option name="DETECT_NESTED_COPIES" value="true" />
+    <option name="CHECK_NESTED_FOR_QUICK_MERGE" value="false" />
+    <option name="IGNORE_SPACES_IN_ANNOTATE" value="true" />
+    <option name="SHOW_MERGE_SOURCES_IN_ANNOTATE" value="true" />
+    <option name="FORCE_UPDATE" value="false" />
+    <option name="IGNORE_EXTERNALS" value="false" />
+    <myIsUseDefaultProxy>false</myIsUseDefaultProxy>
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="cd327029-d758-4c29-b719-28e5d07bbed1" name="Default" comment="" />
@@ -1121,31 +834,39 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="90" y="29" width="1292" height="813" extended-state="0" />
+    <frame x="257" y="1081" width="1480" height="1029" extended-state="0" />
     <editor active="false" />
     <layout>
+      <window_info id="Data Sources" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Phing Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="JetGradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.33518776" sideWeight="0.99477047" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.21806167" sideWeight="0.9880534" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="IDEtalk Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
       <window_info id="IDEtalk" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.32929516" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
       <window_info id="Web" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Dependency Viewer" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.35835913" sideWeight="0.66481227" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24022347" sideWeight="0.67070484" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Phing Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.30785564" sideWeight="0.9992464" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Dependency Viewer" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
     </layout>
+  </component>
+  <component name="VcsContentAnnotationSettings">
+    <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
     <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="true" />
@@ -1171,8 +892,17 @@
     <option name="SHOW_ONLY_CHANGED_IN_SELECTION_DIFF" value="true" />
     <option name="CHECK_COMMIT_MESSAGE_SPELLING" value="true" />
     <option name="DEFAULT_PATCH_EXTENSION" value="patch" />
+    <option name="SHORT_DIFF_HORISONTALLY" value="true" />
+    <option name="SHORT_DIFF_EXTRA_LINES" value="2" />
+    <option name="SOFT_WRAPS_IN_SHORT_DIFF" value="true" />
+    <option name="INCLUDE_TEXT_INTO_PATCH" value="false" />
+    <option name="INCLUDE_TEXT_INTO_SHELF" value="false" />
+    <option name="CREATE_PATCH_EXPAND_DETAILS_DEFAULT" value="true" />
+    <option name="SHOW_FILE_HISTORY_DETAILS" value="true" />
+    <option name="SHOW_VCS_ERROR_NOTIFICATIONS" value="true" />
     <option name="FORCE_NON_EMPTY_COMMENT" value="false" />
-    <option name="LAST_COMMIT_MESSAGE" />
+    <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="false" />
+    <option name="LAST_COMMIT_MESSAGE" value="Updated for CSV import" />
     <option name="MAKE_NEW_CHANGELIST_ACTIVE" value="true" />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_FILES_UP_TO_DATE_BEFORE_COMMIT" value="false" />
@@ -1185,6 +915,41 @@
     <option name="UPDATE_GROUP_BY_CHANGELIST" value="false" />
     <option name="SHOW_FILE_HISTORY_AS_TREE" value="false" />
     <option name="FILE_HISTORY_SPLITTER_PROPORTION" value="0.6" />
+    <MESSAGE value="Updated for CSV import" />
+  </component>
+  <component name="VssConfiguration">
+    <option name="CLIENT_PATH" value="" />
+    <option name="SRCSAFEINI_PATH" value="" />
+    <option name="USER_NAME" value="" />
+    <option name="PWD" value="" />
+    <CheckoutOptions>
+      <option name="COMMENT" value="" />
+      <option name="DO_NOT_GET_LATEST_VERSION" value="false" />
+      <option name="REPLACE_WRITABLE" value="false" />
+      <option name="RECURSIVE" value="false" />
+    </CheckoutOptions>
+    <CheckinOptions>
+      <option name="COMMENT" value="" />
+      <option name="KEEP_CHECKED_OUT" value="false" />
+      <option name="RECURSIVE" value="false" />
+    </CheckinOptions>
+    <AddOptions>
+      <option name="STORE_ONLY_LATEST_VERSION" value="false" />
+      <option name="CHECK_OUT_IMMEDIATELY" value="false" />
+    </AddOptions>
+    <UndocheckoutOptions>
+      <option name="MAKE_WRITABLE" value="false" />
+      <option name="REPLACE_LOCAL_COPY" value="2" />
+      <option name="RECURSIVE" value="false" />
+    </UndocheckoutOptions>
+    <GetOptions>
+      <option name="REPLACE_WRITABLE" value="0" />
+      <option name="MAKE_WRITABLE" value="false" />
+      <option name="ANSWER_NEGATIVELY" value="false" />
+      <option name="ANSWER_POSITIVELY" value="false" />
+      <option name="RECURSIVE" value="false" />
+      <option name="VERSION" />
+    </GetOptions>
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager />
@@ -1194,120 +959,123 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/Utils.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="12" column="13" selection-start="255" selection-end="255" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/search/SearchUtils.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="25" column="30" selection-start="921" selection-end="921" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/JsonParsingUtils.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="80" column="37" selection-start="3060" selection-end="3060" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$MAVEN_REPOSITORY$/org/springframework/spring-webmvc/3.0.5.RELEASE/spring-webmvc-3.0.5.RELEASE.jar!/org/springframework/web/servlet/DispatcherServlet.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="97" column="19" selection-start="6504" selection-end="6504" vertical-scroll-proportion="-10.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$MAVEN_REPOSITORY$/org/springframework/spring-webmvc/3.0.5.RELEASE/spring-webmvc-3.0.5.RELEASE.jar!/org/springframework/web/servlet/FrameworkServlet.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="91" column="28" selection-start="5543" selection-end="5543" vertical-scroll-proportion="-14.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$MAVEN_REPOSITORY$/org/springframework/spring-web/3.0.5.RELEASE/spring-web-3.0.5.RELEASE.jar!/org/springframework/web/filter/OncePerRequestFilter.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="10" column="22" selection-start="427" selection-end="427" vertical-scroll-proportion="0.35340315">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/webapp/static/css/index.css">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="16" column="49" selection-start="305" selection-end="305" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$MAVEN_REPOSITORY$/org/springframework/spring-web/3.0.5.RELEASE/spring-web-3.0.5.RELEASE.jar!/org/springframework/web/bind/annotation/support/HandlerMethodInvoker.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="22" column="34" selection-start="1974" selection-end="1974" vertical-scroll-proportion="0.35185185">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/CollectionAPIController.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="99" column="53" selection-start="4069" selection-end="4069" vertical-scroll-proportion="0.0">
+        <state line="109" column="0" selection-start="4522" selection-end="4522" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/CollectionUtils.java">
+    <entry file="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/datasourceTypes/webdatasource.jsp">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="54" column="0" selection-start="2415" selection-end="2415" vertical-scroll-proportion="0.0">
+        <state line="11" column="8" selection-start="388" selection-end="837" vertical-scroll-proportion="-6.875">
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pom.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="114" column="55" selection-start="4104" selection-end="4104" vertical-scroll-proportion="-12.461538">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/HttpClientUtils.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="59" column="33" selection-start="1929" selection-end="1929" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/DatasourceUtils.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="126" column="10" selection-start="5734" selection-end="5734" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/DatasourceAPIController.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="87" column="0" selection-start="3957" selection-end="3957" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/index.jsp">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="76" column="20" selection-start="3148" selection-end="3641" vertical-scroll-proportion="-12.333333">
+        <state line="68" column="12" selection-start="2754" selection-end="3498" vertical-scroll-proportion="-8.333333">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/collectionDetails.jsp">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="68" column="9" selection-start="3059" selection-end="3059" vertical-scroll-proportion="0.57653064">
+        <state line="79" column="16" selection-start="3560" selection-end="3695" vertical-scroll-proportion="-11.25">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/org/springframework/spring-web/3.0.5.RELEASE/spring-web-3.0.5.RELEASE.jar!/org/springframework/web/bind/annotation/support/HandlerMethodInvoker.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="22" column="34" selection-start="1974" selection-end="1974" vertical-scroll-proportion="0.34670946">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/resources/META-INF/spring/servlet/controller-context.xml">
+      <provider editor-type-id="com.intellij.spring.perspectives.SpringBeansStructureEditorProvider">
+        <state />
+      </provider>
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="24" column="138" selection-start="1506" selection-end="1506" vertical-scroll-proportion="-16.363636">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/webapp/static/js/default.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="59" column="21" selection-start="1901" selection-end="1901" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/search.jsp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="145" column="33" selection-start="6602" selection-end="6602" vertical-scroll-proportion="-12.5">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/api/SolrAPIController.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="29" column="64" selection-start="1423" selection-end="1423" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/SearchAPIController.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="35" column="0" selection-start="1587" selection-end="1587" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/search/SolrUtils.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="50" column="0" selection-start="2032" selection-end="2032" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/APIController.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="2" column="0" selection-start="24" selection-end="24" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/HttpClientUtils.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="19" column="31" selection-start="671" selection-end="671" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/FieldUtils.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="1" column="0" selection-start="29" selection-end="29" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/datasourceTypes/importcsv.jsp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="55" column="61" selection-start="2366" selection-end="2366" vertical-scroll-proportion="-10.458333">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/datasourceDetails.jsp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="34" column="61" selection-start="1486" selection-end="1486" vertical-scroll-proportion="0.34701493">
           <folding />
         </state>
       </provider>
@@ -1331,7 +1099,7 @@
       </state>
       <state key="FacetStructureConfigurable.UI">
         <settings>
-          <last-edited>Android</last-edited>
+          <last-edited>Spring</last-edited>
           <splitter-proportions>
             <option name="proportions">
               <list>

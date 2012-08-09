@@ -1,9 +1,6 @@
 package LucidWorksApp;
 
-import LucidWorksApp.search.SearchUtils;
-import LucidWorksApp.utils.CollectionUtils;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
+import LucidWorksApp.search.SolrUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -12,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.IOException;
-import java.io.StringWriter;
 
 import static java.util.Collections.singletonList;
 import static org.springframework.http.HttpStatus.OK;
@@ -36,18 +32,12 @@ public class SearchAPIController extends APIController {
         if (start != null) {
             queryParams += "&start=" + start;
         }
-        /*
-        StringWriter writer = new StringWriter();
-        JsonFactory f = new JsonFactory();
-        JsonGenerator g = f.createJsonGenerator(writer);
 
-        g.writeStartObject();
-        g.writeEndObject();
-        g.close();
-        */
+        SolrUtils.solrSearch(collectionName, queryString);
+
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
         //return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
-        return new ResponseEntity<String>(SearchUtils.lucidEndpointSearch(collectionName, queryParams), httpHeaders, OK);
+        return new ResponseEntity<String>(SolrUtils.lucidEndpointSearch(collectionName, queryParams), httpHeaders, OK);
     }
 }

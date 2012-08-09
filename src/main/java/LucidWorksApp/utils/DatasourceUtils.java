@@ -3,7 +3,6 @@ package LucidWorksApp.utils;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -95,7 +94,7 @@ public class DatasourceUtils extends Utils {
     public static String createDatasource(String collectionName, HashMap<String, Object> properties) {
         String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + DATASOURCES_ENDPOINT;
 
-        return HttpClientUtils.httpPostRequest(url, JsonParsingUtils.constructJsonStringFromProperties(properties));
+        return HttpClientUtils.httpJsonPostRequest(url, JsonParsingUtils.constructJsonStringFromProperties(properties));
     }
 
     public static String deleteDatasource(String collectionName, String datasourceId) {

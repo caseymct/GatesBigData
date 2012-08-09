@@ -78,22 +78,6 @@
             }
         });
 
-        /*Connect.asyncRequest('GET', '<c:url value="/collection/collectionNames" />', {
-            success : function(o) {
-                var result = Json.parse(o.responseText);
-
-                for(var i = 0; i < result.names.length; i++) {
-                    var el = document.createElement('option');
-                    el.text = result.names[i];
-                    el.value = result.names[i];
-                    Dom.get("collection_name_select").add(el);
-                }
-            },
-            failure : function(o) {
-                alert("Could not retrieve collection names.");
-            }
-        });*/
-
         var setLastModified = function(doc) {
             return doc.hasOwnProperty("lastModified") ? doc.lastModified : "No value";
         };
@@ -159,6 +143,7 @@
                     LWA.ui.removeDivChildNodes("search_results");
 
                     for(i = 0; i < docs.length; i++) {
+                        debugger;
                         containerDiv = LWA.ui.createDomElement("div", searchResults, [ { key : "class", value : "search-result-div" }]);
                         childDiv = LWA.ui.createDomElement("div", containerDiv, []);
 

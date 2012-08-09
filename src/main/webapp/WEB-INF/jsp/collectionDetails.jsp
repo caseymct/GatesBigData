@@ -4,14 +4,21 @@
 
 <layout:main>
     <link rel="stylesheet" type="text/css" href="<c:url value="/static/css/datasource.css"/>" />
+    <link rel="stylesheet" type="text/css" href="<c:url value="/static/css/collection.css"/>" />
 
     <h2 id = "collection_name">Collection details</h2>
+
+    <a href="#" class="button delete" id="delete_collection">Delete collection</a>
+
+
     <div id="results_table_container">
+        <div><b>Epic datasources:</b></div>
         <div id="results_table"></div>
 
         <a href="#" class="button add" id="add_new_datasource">Add datasource</a>
         <select id="new_datasource_type">
-            <option value="web">Web</option>
+            <option value="web">Web Crawl</option>
+            <option value="importcsv">Import CSV to Solr</option>
         </select>
     </div>
     <div class="clearboth"></div>
@@ -25,6 +32,7 @@
                 DataTable = YAHOO.widget.DataTable;
 
             var collectionName = window.location.href.split('/').pop();
+            var urlParams = "?collection=" + collectionName;
             Dom.get("collection_name").innerHTML = collectionName + " collection details";
 
             var dataSource = new YAHOO.util.XHRDataSource('<c:url value="/datasource/topleveldetails" />' + "?collection=" + collectionName);
@@ -68,15 +76,46 @@
                 Event.stopEvent(e);
                 var sel = Dom.get("new_datasource_type");
                 var datasourceType = sel.options[sel.selectedIndex].value;
-                console.log(datasourceType);
-                window.location = '<c:url value="/collection/" />' + collectionName + "/type/" + datasourceType +
-                    "/datasource/new";
 
+                window.location = '<c:url value="/collection/" />' + collectionName + "/type/" + datasourceType +
+                    "/datasource/-1";
+
+            });
+
+
+            var handleYes = function() {
+                Connect.asyncRequest('DELETE', '<c:url value="/collection/delete" />' + urlParams, {
+                    success: function (o) {
+                        if (o.responseText == "") {
+                            window.location = '<c:url value="/" />';
+                        } else {
+                            LWA.ui.alertErrors(o);
+                        }
+                    },
+                    failure: function (e) {
+                        alert("Could not delete");
+                    }
+                });
+                this.hide();
+            };
+
+            LWA.ui.confirmDelete.cfg.queueProperty("buttons", [
+                { text: "Yes", handler: handleYes },
+                { text: "Cancel", handler: LWA.ui.confirmDeleteHandleNo, isDefault:true}
+            ]);
+
+            LWA.ui.confirmDelete.render(Dom.get("content"));
+
+            Event.addListener("delete_collection", "click", function (e) {
+                Event.stopEvent(e);
+
+                console.log("showing...");
+                LWA.ui.confirmDelete.show();
             });
 
         })();
 
     </script>
-    <!--<script type="text/javascript" src='<c:url value="../datasource/webTabView"/>'></script>-->
+
 
 </layout:main>

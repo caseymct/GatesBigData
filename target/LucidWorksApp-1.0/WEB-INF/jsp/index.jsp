@@ -74,13 +74,7 @@
             Connect.setDefaultPostHeader('application/json');
             Connect.asyncRequest('POST', '<c:url value="/collection/create" />' , {
                 success: function (o) {
-                    var result = Json.parse(o.responseText);
-                    if (result.hasOwnProperty("errors")) {
-                        var errmsg = "Error message : " + result.errors[0].message + "\n" +
-                                     "Error key : " + result.errors[0].key + "\n" +
-                                     "Error code : " + result.errors[0].code;
-                        alert(errmsg);
-                    } else {
+                    if (!LWA.ui.alertErrors(o)) {
                         window.location.reload();
                     }
                 },

@@ -1,21 +1,12 @@
 package LucidWorksApp.utils;
 
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
 
 public class CollectionUtils extends Utils {
-
-    private static List<String> collectionDetailProperties = Arrays.asList(
-            "free_disk_space", "index_last_modified", "index_has_deletions", "data_dir", "index_size",
-            "index_directory", "collection_name", "index_is_optimized", "index_size_bytes", "free_disk_bytes",
-            "index_max_doc", "index_num_docs", "index_version", "index_is_current", "root_dir", "instance_dir",
-            "total_disk_space", "total_disk_bytes");
 
     public static List<String> getCollectionNames() {
         String url = SERVER + COLLECTIONS_ENDPOINT;
@@ -33,11 +24,7 @@ public class CollectionUtils extends Utils {
         String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + INFO_ENDPOINT;
         String collectionDetails = HttpClientUtils.httpGetRequest(url);
 
-        if (collectionDetailProperties.contains(propertyName)) {
-            return JsonParsingUtils.getPropertyFromJsonString(propertyName, collectionDetails);
-        }
-
-        return null;
+        return JsonParsingUtils.getPropertyFromJsonString(propertyName, collectionDetails);
     }
 
     public static String getAllCollectionProperties(String collectionName) {
@@ -50,9 +37,12 @@ public class CollectionUtils extends Utils {
         return HttpClientUtils.httpDeleteRequest(url);
     }
 
+    public static String deleteCollection(String collectionName) {
+        return HttpClientUtils.httpDeleteRequest(SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName);
+    }
+
     public static String createCollection(HashMap<String, Object> properties) {
-        String url = SERVER + COLLECTIONS_ENDPOINT;
-        String result = HttpClientUtils.httpPostRequest(url, JsonParsingUtils.constructJsonStringFromProperties(properties));
-        return result;
+        return HttpClientUtils.httpJsonPostRequest(SERVER + COLLECTIONS_ENDPOINT,
+                JsonParsingUtils.constructJsonStringFromProperties(properties));
     }
 }

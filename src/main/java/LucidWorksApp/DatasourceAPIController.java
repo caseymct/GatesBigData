@@ -26,7 +26,7 @@ import static org.springframework.http.HttpStatus.OK;
 @RequestMapping("/datasource")
 public class DatasourceAPIController extends APIController {
 
-    public static final String PARAM_COLLECTION_NAME = "collection";
+
     public static final String PARAM_DATASOURCE_ID = "datasourceId";
 
     @RequestMapping(value="/topleveldetails", method = RequestMethod.GET)
@@ -92,7 +92,7 @@ public class DatasourceAPIController extends APIController {
         return new ResponseEntity<String>(result, httpHeaders, OK);
     }
 
-        @RequestMapping(value="/create", method = RequestMethod.POST)
+    @RequestMapping(value="/create", method = RequestMethod.POST)
     public ResponseEntity<String> createDatasource(@RequestBody String body) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         ObjectMapper mapper = new ObjectMapper();
         Map<String, Object> newDataSource = mapper.readValue(body, TypeFactory.mapType(HashMap.class, String.class, Object.class));

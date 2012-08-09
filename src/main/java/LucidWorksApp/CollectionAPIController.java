@@ -28,6 +28,7 @@ import static org.springframework.http.HttpStatus.OK;
 @RequestMapping("/collection")
 public class CollectionAPIController extends APIController {
 
+
     @RequestMapping(value="/index", method = RequestMethod.GET)
     public String test(ModelMap modelMap) throws IOException {
         modelMap.addAttribute("test", "test");
@@ -97,6 +98,16 @@ public class CollectionAPIController extends APIController {
         properties.put("name", collectionName);
 
         String result = CollectionUtils.createCollection(properties);
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        return new ResponseEntity<String>(result, httpHeaders, OK);
+    }
+
+    @RequestMapping(value="/delete", method = RequestMethod.DELETE)
+    public ResponseEntity<String> deleteCollection(@RequestParam(value = PARAM_COLLECTION_NAME, required = true) String collectionName) {
+        System.out.println("here");
+        String result = CollectionUtils.deleteCollection(collectionName);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));

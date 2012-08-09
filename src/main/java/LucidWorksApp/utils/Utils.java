@@ -16,7 +16,8 @@ import java.util.List;
  */
 public class Utils {
     public static final String COLLECTIONS_ENDPOINT = "/api/collections";
-    public static final String SERVER = "http://denlx006.dn.gates.com:8888";
+    //public static final String SERVER = "http://denlx006.dn.gates.com:8888";
+    public static final String SERVER = "http://localhost:8888";
     public static final String COLLECTIONS_TEMPLATES_ENDPOINT = "/api/collectiontemplates";
     public static final String DATASOURCES_ENDPOINT = "/datasources";
     public static final String INFO_ENDPOINT = "/info";

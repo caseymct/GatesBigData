@@ -28,12 +28,35 @@ LWA.ui = {};
     };
 
     LWA.ui.alertErrors = function(o) {
-        var result = Json.parse(o.responseText);
-        if (result.hasOwnProperty("errors")) {
-            var errmsg = "Error message : " + result.errors[0].message + "\n" +
-                "Error key : " + result.errors[0].key + "\n" +
-                "Error code : " + result.errors[0].code;
-            alert(errmsg);
+        try {
+            var result = YAHOO.lang.JSON.parse(o.responseText);
+
+            if (result.hasOwnProperty("errors")) {
+                var errmsg = "Error message : " + result.errors[0].message + "\n" +
+                    "Error key : " + result.errors[0].key + "\n" +
+                    "Error code : " + result.errors[0].code;
+                alert(errmsg);
+                return true;
+            }
+        } catch (e) {
+            return false;
         }
+        return false;
     };
+
+    LWA.ui.confirmDelete = new YAHOO.widget.Dialog("dlg", {
+        width: "20em",
+        fixedcenter: true,
+        modal: true,
+        visible: false,
+        draggable: false
+    });
+
+    LWA.ui.confirmDelete.setHeader("Warning!");
+    LWA.ui.confirmDelete.setBody("Are you sure you want to delete this item?");
+    LWA.ui.confirmDelete.cfg.setProperty("icon", YAHOO.widget.SimpleDialog.ICON_WARN);
+    LWA.ui.confirmDeleteHandleNo = function() { this.hide(); };
+    LWA.ui.confirmDelete.render(YAHOO.util.Dom.get("content"));
+
+
 })();

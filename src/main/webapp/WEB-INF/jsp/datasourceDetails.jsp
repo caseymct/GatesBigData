@@ -28,17 +28,6 @@
             var collectionName = url[url.indexOf("collection") + 1];
             var urlParams = "?collection=" + collectionName + "&datasourceId=" + datasourceId;
 
-            var confirmDelete = new Dialog("dlg", {
-                width: "20em",
-                fixedcenter: true,
-                modal: true,
-                visible: false,
-                draggable: false
-            });
-
-            confirmDelete.setHeader("Warning!");
-            confirmDelete.setBody("Are you sure you want to delete this item?");
-            confirmDelete.cfg.setProperty("icon", YAHOO.widget.SimpleDialog.ICON_WARN);
             var handleYes = function() {
                 Connect.asyncRequest('DELETE', '<c:url value="/datasource/delete" />' + urlParams, {
                     success: function (o) {
@@ -50,21 +39,17 @@
                     },
                     failure: function (e) {
                         alert("Could not delete");
-                        console.log(e);
                     }
                 });
                 this.hide();
             };
-            var handleNo = function() {
-                this.hide();
-            };
-            var myButtons = [
-                { text: "Yes", handler: handleYes },
-                { text: "Cancel", handler: handleNo, isDefault:true}
-            ];
 
-            confirmDelete.cfg.queueProperty("buttons", myButtons);
-            confirmDelete.render(Dom.get("content"));
+            LWA.ui.confirmDelete.cfg.queueProperty("buttons", [
+                { text: "Yes", handler: handleYes },
+                { text: "Cancel", handler: LWA.ui.confirmDeleteHandleNo, isDefault:true}
+            ]);
+
+            LWA.ui.confirmDelete.render(Dom.get("content"));
 
             var buildTable = function(result) {
                 var keys = Object.keys(result);

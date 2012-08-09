@@ -1,12 +1,5 @@
 package LucidWorksApp.utils;
 
-/**
- * Created by IntelliJ IDEA.
- * User: caseymctaggart
- * Date: 7/26/12
- * Time: 3:02 PM
- * To change this template use File | Settings | File Templates.
- */
 public class FieldUtils extends Utils {
 
     public static String createFieldJsonBlock(String fieldName, String defaultValue) {
@@ -26,7 +19,7 @@ public class FieldUtils extends Utils {
         String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + "/fields";
 
         if (!fieldExists(fieldName, url + "/" + fieldName)) {
-            return HttpClientUtils.httpPostRequest(url, FieldUtils.createFieldJsonBlock(fieldName, fieldValue));
+            return HttpClientUtils.httpJsonPostRequest(url, FieldUtils.createFieldJsonBlock(fieldName, fieldValue));
         }
         return "";
     }
