@@ -2,15 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="cd327029-d758-4c29-b719-28e5d07bbed1" name="Default" comment="">
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/java/LucidWorksApp/APIController.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/api/APIController.java" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/java/LucidWorksApp/CollectionAPIController.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/api/CollectionAPIController.java" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/java/LucidWorksApp/DatasourceAPIController.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/api/DatasourceAPIController.java" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/src/main/java/LucidWorksApp/SearchAPIController.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/api/SearchAPIController.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/LucidWorksApp/api/SolrAPIController.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/api/SolrAPIController.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/LucidWorksApp/search/SolrUtils.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/search/SolrUtils.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/resources/META-INF/spring/servlet/controller-context.xml" afterPath="$PROJECT_DIR$/src/main/resources/META-INF/spring/servlet/controller-context.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/search.jsp" afterPath="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/search.jsp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/css/search.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/css/search.css" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/js/default.js" afterPath="$PROJECT_DIR$/src/main/webapp/static/js/default.js" />
     </list>
     <ignored path="LucidWorksApp.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -42,20 +37,7 @@
         <option name="CONDITION" value="" />
         <option name="LOG_MESSAGE" value="" />
       </breakpoint>
-      <breakpoint url="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/search/SolrUtils.java" line="77" class="LucidWorksApp.search.SolrUtils" package="LucidWorksApp.search">
-        <option name="ENABLED" value="true" />
-        <option name="LOG_ENABLED" value="false" />
-        <option name="LOG_EXPRESSION_ENABLED" value="false" />
-        <option name="SUSPEND_POLICY" value="SuspendAll" />
-        <option name="COUNT_FILTER_ENABLED" value="false" />
-        <option name="COUNT_FILTER" value="0" />
-        <option name="CONDITION_ENABLED" value="false" />
-        <option name="CLASS_FILTERS_ENABLED" value="false" />
-        <option name="INSTANCE_FILTERS_ENABLED" value="false" />
-        <option name="CONDITION" value="" />
-        <option name="LOG_MESSAGE" value="" />
-      </breakpoint>
-      <breakpoint url="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/api/SearchAPIController.java" line="54" class="LucidWorksApp.api.SearchAPIController" package="LucidWorksApp.api">
+      <breakpoint url="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/search/SolrUtils.java" line="96" class="LucidWorksApp.search.SolrUtils" package="LucidWorksApp.search">
         <option name="ENABLED" value="true" />
         <option name="LOG_ENABLED" value="false" />
         <option name="LOG_EXPRESSION_ENABLED" value="false" />
@@ -109,12 +91,13 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="SolrUtils.java" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="SolrUtils.java" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/search/SolrUtils.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="49" column="0" selection-start="1949" selection-end="1949" vertical-scroll-proportion="0.0">
+            <state line="60" column="14" selection-start="2282" selection-end="2282" vertical-scroll-proportion="0.30782312">
               <folding>
                 <element signature="imports" expanded="true" />
+                <element signature="e#1545#1553#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -123,7 +106,7 @@
       <file leaf-file-name="SearchAPIController.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/api/SearchAPIController.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="53" column="22" selection-start="2683" selection-end="2683" vertical-scroll-proportion="0.0">
+            <state line="54" column="0" selection-start="2684" selection-end="2684" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -152,16 +135,25 @@
       <file leaf-file-name="search.css" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/webapp/static/css/search.css">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+            <state line="51" column="23" selection-start="868" selection-end="868" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="search.jsp" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="search.jsp" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/search.jsp">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="147" column="49" selection-start="6774" selection-end="6774" vertical-scroll-proportion="0.53608245">
+            <state line="120" column="1" selection-start="4942" selection-end="4942" vertical-scroll-proportion="-0.375">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="default.js" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/webapp/static/js/default.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="79" column="28" selection-start="2521" selection-end="2521" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -191,15 +183,6 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="importcsv.jsp" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/datasourceTypes/importcsv.jsp">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="55" column="61" selection-start="2366" selection-end="2366" vertical-scroll-proportion="-10.458333">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="datasourceDetails.jsp" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/datasourceDetails.jsp">
           <provider selected="true" editor-type-id="text-editor">
@@ -219,14 +202,19 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GradleLocalSettings">
+    <option name="expandStates">
+      <map>
+        <entry key="LucidWorksApp" value="true" />
+      </map>
+    </option>
+  </component>
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/DatasourceAPIController.java" />
         <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/CollectionAPIController.java" />
         <option value="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/collectionDetails.jsp" />
         <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/SolrAPIController.java" />
-        <option value="$PROJECT_DIR$/src/main/webapp/static/js/default.js" />
         <option value="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/datasourceTypes/importcsv.jsp" />
         <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/SearchAPIController.java" />
         <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/APIController.java" />
@@ -235,9 +223,11 @@
         <option value="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/datasourceDetails.jsp" />
         <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/api/SolrAPIController.java" />
         <option value="$PROJECT_DIR$/src/main/resources/META-INF/spring/servlet/controller-context.xml" />
-        <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/search/SolrUtils.java" />
         <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/api/SearchAPIController.java" />
+        <option value="$PROJECT_DIR$/src/main/webapp/static/js/default.js" />
         <option value="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/search.jsp" />
+        <option value="$PROJECT_DIR$/src/main/webapp/static/css/search.css" />
+        <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/search/SolrUtils.java" />
       </list>
     </option>
   </component>
@@ -256,8 +246,8 @@
     <option name="LAST_EDITED_TAB_NAME" />
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="257" />
-    <option name="y" value="1081" />
+    <option name="x" value="74" />
+    <option name="y" value="1093" />
     <option name="width" value="1480" />
     <option name="height" value="1029" />
   </component>
@@ -655,6 +645,36 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
+              <option name="myItemId" value="search" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="LucidWorksApp" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="LucidWorksApp" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="main" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="java" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="LucidWorksApp" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
               <option name="myItemId" value="api" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
@@ -852,16 +872,16 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="257" y="1081" width="1480" height="1029" extended-state="0" />
+    <frame x="74" y="1093" width="1480" height="1029" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Data Sources" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="JetGradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="JetGradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32960895" sideWeight="0.72136563" order="-1" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3072687" sideWeight="0.9992464" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.1486784" sideWeight="0.9992464" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.27863437" sideWeight="0.9880534" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.29845816" sideWeight="0.9880534" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="IDEtalk Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
@@ -873,7 +893,7 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24022347" sideWeight="0.72136563" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.24022347" sideWeight="0.70154184" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Phing Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -991,13 +1011,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/webapp/static/js/default.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="59" column="21" selection-start="1901" selection-end="1901" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/api/APIController.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="2" column="0" selection-start="28" selection-end="28" vertical-scroll-proportion="0.0">
@@ -1055,18 +1068,37 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/search/SolrUtils.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="49" column="0" selection-start="1949" selection-end="1949" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/api/CollectionAPIController.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="52" column="83" selection-start="1836" selection-end="1836" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/api/SearchAPIController.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="54" column="0" selection-start="2684" selection-end="2684" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/webapp/static/js/default.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="79" column="28" selection-start="2521" selection-end="2521" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/search.jsp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="120" column="1" selection-start="4942" selection-end="4942" vertical-scroll-proportion="-0.375">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/webapp/static/css/search.css">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="51" column="23" selection-start="868" selection-end="868" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
@@ -1080,24 +1112,13 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/webapp/static/css/search.css">
+    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/search/SolrUtils.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/api/SearchAPIController.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="53" column="22" selection-start="2683" selection-end="2683" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/search.jsp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="147" column="49" selection-start="6774" selection-end="6774" vertical-scroll-proportion="0.53608245">
-          <folding />
+        <state line="60" column="14" selection-start="2282" selection-end="2282" vertical-scroll-proportion="0.30782312">
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#1545#1553#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

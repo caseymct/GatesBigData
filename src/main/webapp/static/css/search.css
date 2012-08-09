@@ -48,6 +48,7 @@ li.yui-button-selectedmenuitem {
 .search-result-inner-container-label {
     float : left;
     width: 20%;
+    font-weight: bold;
 }
 
 .search-result-inner-container {

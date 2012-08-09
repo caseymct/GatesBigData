@@ -1,8 +1,10 @@
 var LWA = {};
 LWA.ui = {};
+LWA.util = {};
 
 (function() {
 
+    /* UI and Dom functionality */
     LWA.ui.removeDivChildNodes = function(divName) {
         var div = Dom.get(divName);
 
@@ -74,5 +76,10 @@ LWA.ui = {};
     LWA.ui.confirmDeleteHandleNo = function() { this.hide(); };
     LWA.ui.confirmDelete.render(YAHOO.util.Dom.get("content"));
 
+
+    /* Utility functions */
+    LWA.util.stripBrackets = function(s) {
+        return (typeof s == "string") ? s.replace(/^\[|\]$/g, '') : s;
+    };
 
 })();

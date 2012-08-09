@@ -59,7 +59,7 @@
             ButtonGroup = YAHOO.widget.ButtonGroup;
 
         var sortType = "lastModified", sortTypeButtonGroup = new ButtonGroup("sort_type_buttongroup");
-        var changeSortType = function (o) { sortType = o.newValue.get("value"); }
+        var changeSortType = function (o) { sortType = o.newValue.get("value"); };
         sortTypeButtonGroup.on("checkedButtonChange", changeSortType);
 
         Connect.asyncRequest('GET', '<c:url value="/collection/collectionNames" />', {
@@ -78,12 +78,10 @@
             }
         });
 
-        var setLastModified = function(doc) {
-            return doc.hasOwnProperty("lastModified") ? doc.lastModified : "No value";
-        };
         var setHrefAttribute = function(a, doc) {
             a.setAttribute("href", doc.id.match(/http*/) ? doc.id : "file:///" + doc.id);
         };
+
         var getHighlightedText = function(index, highlighting, queryTerms) {
             if (highlighting.hasOwnProperty(index)) {
                 var body = highlighting[index].body[0];
@@ -91,6 +89,78 @@
                 return body;
             }
             return "";
+        };
+
+        /* Sort keys so that title and author come first */
+        var sortKeys = function(unsortedkeys) {
+            var sortedkeys = [];
+
+            var titleindex = unsortedkeys.indexOf("title");
+            if (titleindex!= -1) {
+                sortedkeys.push("title");
+                unsortedkeys.splice(titleindex, 1);
+            }
+
+            var authorindex = unsortedkeys.indexOf("author");
+            if (authorindex != -1) {
+                sortedkeys.push("author");
+                unsortedkeys.splice(authorindex, 1);
+            }
+
+            var creatorindex = unsortedkeys.indexOf("creator");
+            if (creatorindex != -1) {
+                sortedkeys.push("creator");
+                unsortedkeys.splice(creatorindex, 1);
+            }
+            return sortedkeys.concat(unsortedkeys.sort());
+        };
+
+        var buildSearchResultHtml = function(result) {
+            var docs = result.response.docs,
+                highlighting = result.highlighting,
+                searchResults = Dom.get("search_results"),
+                i, j, containerDiv, childDiv, innerContainerDiv, titleAnchor, titleAnchorText;
+
+            LWA.ui.removeDivChildNodes("search_results");
+
+            for(i = 0; i < docs.length; i++) {
+                containerDiv = LWA.ui.createDomElement("div", searchResults, [
+                    { key : "class", value : "search-result-div" } ]);
+
+                var sortedkeys = sortKeys(Object.keys(docs[i]));
+
+                for(j = 0; j < sortedkeys.length; j++) {
+                    var key = sortedkeys[j];
+                    innerContainerDiv = LWA.ui.createDomElement("div", containerDiv, []);
+
+                    if (key == "title" && docs[i].hasOwnProperty("id")) {
+                        childDiv = LWA.ui.createDomElement("div", containerDiv, []);
+                        titleAnchor = LWA.ui.createDomElement("a", childDiv, [
+                            { key : "class", value: "search-result-header" },
+                            { key : "id", value : "titleanchor" + i },
+                            { key : "style", value: "color: steelblue" }, { key : "target", value : "_blank" }]);
+                        setHrefAttribute(titleAnchor, docs[i]);
+                        titleAnchor.appendChild(document.createTextNode(LWA.util.stripBrackets(docs[i].title)));
+
+                    } else {
+                        LWA.ui.createDomElement("div", innerContainerDiv, [
+                            { key : "text", value : key },
+                            { key : "class", value : "search-result-inner-container-label" } ]);
+
+                        LWA.ui.createDomElement("div", innerContainerDiv, [
+                            { key : "text", value : LWA.util.stripBrackets(docs[i][key]) },
+                            { key : "id", value : key + i },
+                            { key: "class", value : "search-result-inner-container" } ]);
+                    }
+                }
+                /*
+                 LWA.ui.createDomElement("div", innerContainerDiv, [
+                 { key : "text", value : getHighlightedText(docs[i].id, highlighting) },
+                 { key : "id", value : "highlighting" + i },
+                 { key: "class", value : "search-result-inner-container" } ]);
+                 */
+                LWA.ui.createDomElement("div", containerDiv, [ { key: "style", value : "clear:both" } ]);
+            }
         };
 
         Event.addListener("submit", "click", function (e) {
@@ -108,15 +178,20 @@
                 Connect.asyncRequest('GET', '<c:url value="/search/solrquery" />' + urlParams + "&start=" + newState.records[0], {
                     success: function(o) {
                         var result = Json.parse(o.responseText);
+                        buildSearchResultHtml(result);
+                        /*
                         var i, docs = result.response.docs;
+
                         for(i = 0; i < docs.length; i++) {
-                            Dom.get("datasourcetype" + i).innerHTML = docs[i].data_source_type;
-                            setHrefAttribute(Dom.get("titleanchor" + i), docs[i]);
-                            Dom.get("titleanchor" + i).innerHTML = docs[i].title[0];
-                            Dom.get("lastmodified" + i).innerHTML = setLastModified(docs[i]);
-                            Dom.get("mimetype" + i).innerHTML = docs[i].mimeType;
-                            Dom.get("id" + i).innerHTML = docs[i].id;
-                        }
+                            for(var key in docs[i]) {
+                                if (key == "title" && docs[i].hasOwnProperty("id")) {
+                                    setHrefAttribute(Dom.get("titleanchor" + i), docs[i]);
+                                } else {
+                                    console.log(key + i);
+                                    Dom.get(key + i).innerHTML = stripBrackets(docs[i][key]);
+                                }
+                            }
+                        }  */
                     }
                 });
 
@@ -136,76 +211,7 @@
 
                     Dom.get("num_found").innerHTML = (numFound == 1) ? "Found 1 document" : "Found " + numFound + " documents";
 
-                    var docs = result.response.docs, highlighting = result.highlighting,
-                        searchResults = Dom.get("search_results"),
-                        i, containerDiv, childDiv, innerContainerDiv, titleAnchor, titleAnchorText;
-
-                    LWA.ui.removeDivChildNodes("search_results");
-
-                    for(i = 0; i < docs.length; i++) {
-                        containerDiv = LWA.ui.createDomElement("div", searchResults, [ { key : "class", value : "search-result-div" }]);
-
-                        for(var key in docs[i]) {
-                            innerContainerDiv = LWA.ui.createDomElement("div", containerDiv, []);
-                            LWA.ui.createDomElement("div", innerContainerDiv, [
-                                { key : "text", value : key },
-                                { key : "class", value : "search-result-inner-container-label" } ]);
-                            LWA.ui.createDomElement("div", innerContainerDiv, [
-                                { key : "text", value : docs[i][key] },
-                                { key : "id", value : key + i },
-                                { key: "class", value : "search-result-inner-container" } ]);
-                        }
-                        //childDiv = LWA.ui.createDomElement("div", containerDiv, []);
-                    //    titleAnchor = LWA.ui.createDomElement("a", childDiv, [ { key : "class", value: "search-result-header" },
-                    //        { key : "id", value : "titleanchor" + i },
-                    //        { key : "style", value: "color: steelblue" }, { key : "target", value : "_blank" },
-                    //        { key : "href", value: docs[i].id.match(/http*/) ? docs[i].id : "file:///" + docs[i].id } ]);
-                    /*    titleAnchorText = document.createTextNode(docs[i].title[0]);
-		                titleAnchor.appendChild(titleAnchorText);
-
-                        innerContainerDiv = LWA.ui.createDomElement("div", containerDiv, []);
-                        LWA.ui.createDomElement("div", innerContainerDiv, [ { key : "text", value : "Data source type: " },
-                            { key: "class", value : "search-result-inner-container-label" } ]);
-                        LWA.ui.createDomElement("div", innerContainerDiv, [ { key : "text", value : docs[i].data_source_type },
-                                { key : "id", value : "datasourcetype" + i },
-                                { key: "class", value : "search-result-inner-container" }]);
-
-                        innerContainerDiv = LWA.ui.createDomElement("div", containerDiv, []);
-                        LWA.ui.createDomElement("div", innerContainerDiv, [ { key : "text", value : "Last modified:" },
-                            { key: "class", value : "search-result-inner-container-label" } ]);
-                        LWA.ui.createDomElement("div", innerContainerDiv, [
-                           // { key : "text", value : docs[i].hasOwnProperty("lastModified") ? docs[i].lastModified : "No value" },
-                            { key : "text", value : setLastModified(docs[i]) },
-                            { key : "id", value : "lastmodified" + i },
-                            { key : "class", value : "search-result-inner-container" } ]);
-
-                        innerContainerDiv = LWA.ui.createDomElement("div", containerDiv, []);
-                        LWA.ui.createDomElement("div", innerContainerDiv, [ { key : "text", value : "Mime type:" },
-                                { key: "class", value : "search-result-inner-container-label" } ]);
-                        LWA.ui.createDomElement("div", innerContainerDiv, [ { key : "text", value : docs[i].mimeType },
-                                { key : "id", value : "mimetype" + i },
-                                { key: "class", value : "search-result-inner-container" } ]);
-
-                        innerContainerDiv = LWA.ui.createDomElement("div", containerDiv, []);
-                        LWA.ui.createDomElement("div", innerContainerDiv, [ { key : "text", value : "Id:" },
-                                { key: "class", value : "search-result-inner-container-label" } ]);
-                        LWA.ui.createDomElement("div", innerContainerDiv, [ { key : "text", value : docs[i].id },
-                                { key : "id", value : "id" + i },
-                                { key: "class", value : "search-result-inner-container" } ]);
-
-
-                        innerContainerDiv = LWA.ui.createDomElement("div", containerDiv, []);
-                        LWA.ui.createDomElement("div", innerContainerDiv, [ { key : "text", value : "Matching text:" },
-                                { key: "class", value : "search-result-inner-container-label" } ]);
-                        LWA.ui.createDomElement("div", innerContainerDiv, [
-                                { key : "text", value : getHighlightedText(docs[i].id, highlighting) },
-                                { key : "id", value : "highlighting" + i },
-                                { key: "class", value : "search-result-inner-container" } ]);
-                        */
-                        LWA.ui.createDomElement("div", containerDiv, [ { key: "style", value : "clear:both" } ]);
-                    }
-
-
+                    buildSearchResultHtml(result);
                 },
                 failure : function(o) {
                     alert("Could not connect.");

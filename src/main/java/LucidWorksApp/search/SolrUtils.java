@@ -13,6 +13,11 @@ import org.codehaus.jackson.JsonGenerator;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class SolrUtils extends Utils {
@@ -20,6 +25,7 @@ public class SolrUtils extends Utils {
     private static String SOLR_ENDPOINT = "/solr";
     private static String LUCID_ENDPOINT = "/lucid";
     private static String UPDATECSV_ENDPOINT = "/update/csv";
+    private static Pattern fieldNamesToIgnore = Pattern.compile("^(attr|_).*|.*(version|batch|body).*");
 
     public static String lucidEndpointSearch(String collectionName, String queryParams) {
         String url = SERVER + SOLR_ENDPOINT + "/" + collectionName + LUCID_ENDPOINT;
@@ -27,6 +33,19 @@ public class SolrUtils extends Utils {
 
         System.out.println("Full request " + url + queryParams);
         return HttpClientUtils.httpGetRequest(url + queryParams);
+    }
+
+    private static List<String> getFieldNameSubset(Collection<String> fieldNames) {
+        List<String> fieldNamesSubset = new ArrayList<String>();
+
+
+        for(String fieldName : fieldNames) {
+            Matcher m = fieldNamesToIgnore.matcher(fieldName);
+            if (!m.matches()) {
+                fieldNamesSubset.add(fieldName);
+            }
+        }
+        return fieldNamesSubset;
     }
 
     public static void solrSearch(String collectionName, String queryString, int start, JsonGenerator g) throws IOException {
@@ -49,7 +68,7 @@ public class SolrUtils extends Utils {
 
             for (SolrDocument doc : docs) {
                 g.writeStartObject();
-                for(String fieldName : doc.getFieldNames()) {
+                for(String fieldName : getFieldNameSubset(doc.getFieldNames())) {
                     Utils.writeValueByType(fieldName, doc.getFieldValue(fieldName), g);
                 }
                 g.writeEndObject();

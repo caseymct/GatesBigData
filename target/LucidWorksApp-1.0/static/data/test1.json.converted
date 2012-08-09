@@ -1,8 +1,0 @@
-{"name" : "Company A",  "children" : [
- { "name" : "Revenue", "children" : [ { "name" : "20B" } ] }
- { "name" : "Gross Margin", "children" : [ { "name" : "2B" } ] }
- { "name" : "Opex", "children" : [ { "name" : "1B" } ] }
- { "name" : "Operating Margin", "children" : [ { "name" : "1B" } ] }
-    
-  ]
-}
