@@ -1,5 +1,6 @@
-package LucidWorksApp;
+package LucidWorksApp.api;
 
+import LucidWorksApp.api.APIController;
 import LucidWorksApp.utils.*;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
@@ -18,7 +19,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static java.util.Collections.singletonList;

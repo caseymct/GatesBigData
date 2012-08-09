@@ -22,6 +22,7 @@
     <mvc:view-controller path="/collection/{collectionName}" view-name="collectionDetails"/>
     <mvc:view-controller path="/collection/{collectionName}/datasource/{datasourceId}" view-name="datasourceDetails"/>
     <mvc:view-controller path="/collection/{collectionName}/type/web/datasource/{datasourceId}" view-name="datasourceTypes/webdatasource"/>
-    <!--<bean id="collectionAPIController" class="LucidWorksApp.CollectionAPIController" />-->
+    <mvc:view-controller path="/collection/{collectionName}/type/importcsv/datasource/{datasourceId}" view-name="datasourceTypes/importcsv"/>
+
 
 </beans>

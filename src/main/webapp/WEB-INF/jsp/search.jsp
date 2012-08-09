@@ -10,7 +10,7 @@
     <form id = "search_form">
         <div class = "row" id="search_div">
             <label for="search_input">Query terms: </label>
-            <input id="search_input" type = "text"/>
+            <input id="search_input" type = "text" value="*"/>
         </div>
 
         <div class="row" id = "collection_name">
@@ -105,7 +105,7 @@
 
             var handlePagination = function (newState) {
 
-                Connect.asyncRequest('GET', '<c:url value="/search/query" />' + urlParams + "&start=" + newState.records[0], {
+                Connect.asyncRequest('GET', '<c:url value="/search/solrquery" />' + urlParams + "&start=" + newState.records[0], {
                     success: function(o) {
                         var result = Json.parse(o.responseText);
                         var i, docs = result.response.docs;
@@ -126,7 +126,7 @@
             pag.subscribe('changeRequest', handlePagination);
 
             //http://localhost:8080/LucidWorksApp/search/query?query=disaster&collection=epic
-            Connect.asyncRequest('GET', '<c:url value="/search/query" />' + urlParams, {
+            Connect.asyncRequest('GET', '<c:url value="/search/solrquery" />' + urlParams, {
                 success : function(o) {
 
                     var result = Json.parse(o.responseText);
@@ -143,15 +143,24 @@
                     LWA.ui.removeDivChildNodes("search_results");
 
                     for(i = 0; i < docs.length; i++) {
-                        debugger;
                         containerDiv = LWA.ui.createDomElement("div", searchResults, [ { key : "class", value : "search-result-div" }]);
-                        childDiv = LWA.ui.createDomElement("div", containerDiv, []);
 
-                        titleAnchor = LWA.ui.createDomElement("a", childDiv, [ { key : "class", value: "search-result-header" },
-                            { key : "id", value : "titleanchor" + i },
-                            { key : "style", value: "color: steelblue" }, { key : "target", value : "_blank" },
-                            { key : "href", value: docs[i].id.match(/http*/) ? docs[i].id : "file:///" + docs[i].id } ]);
-                        titleAnchorText = document.createTextNode(docs[i].title[0]);
+                        for(var key in docs[i]) {
+                            innerContainerDiv = LWA.ui.createDomElement("div", containerDiv, []);
+                            LWA.ui.createDomElement("div", innerContainerDiv, [
+                                { key : "text", value : key },
+                                { key : "class", value : "search-result-inner-container-label" } ]);
+                            LWA.ui.createDomElement("div", innerContainerDiv, [
+                                { key : "text", value : docs[i][key] },
+                                { key : "id", value : key + i },
+                                { key: "class", value : "search-result-inner-container" } ]);
+                        }
+                        //childDiv = LWA.ui.createDomElement("div", containerDiv, []);
+                    //    titleAnchor = LWA.ui.createDomElement("a", childDiv, [ { key : "class", value: "search-result-header" },
+                    //        { key : "id", value : "titleanchor" + i },
+                    //        { key : "style", value: "color: steelblue" }, { key : "target", value : "_blank" },
+                    //        { key : "href", value: docs[i].id.match(/http*/) ? docs[i].id : "file:///" + docs[i].id } ]);
+                    /*    titleAnchorText = document.createTextNode(docs[i].title[0]);
 		                titleAnchor.appendChild(titleAnchorText);
 
                         innerContainerDiv = LWA.ui.createDomElement("div", containerDiv, []);
@@ -192,7 +201,7 @@
                                 { key : "text", value : getHighlightedText(docs[i].id, highlighting) },
                                 { key : "id", value : "highlighting" + i },
                                 { key: "class", value : "search-result-inner-container" } ]);
-
+                        */
                         LWA.ui.createDomElement("div", containerDiv, [ { key: "style", value : "clear:both" } ]);
                     }
 

@@ -1,4 +1,4 @@
-package LucidWorksApp;
+package LucidWorksApp.api;
 
 
 public abstract class APIController {

@@ -1,8 +1,6 @@
 package LucidWorksApp.api;
 
-import LucidWorksApp.APIController;
 import LucidWorksApp.search.SolrUtils;
-import LucidWorksApp.utils.HttpClientUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;

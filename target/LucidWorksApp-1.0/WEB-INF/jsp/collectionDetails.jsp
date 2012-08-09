@@ -17,7 +17,8 @@
 
         <a href="#" class="button add" id="add_new_datasource">Add datasource</a>
         <select id="new_datasource_type">
-            <option value="web">Web</option>
+            <option value="web">Web Crawl</option>
+            <option value="importcsv">Import CSV to Solr</option>
         </select>
     </div>
     <div class="clearboth"></div>
@@ -31,6 +32,7 @@
                 DataTable = YAHOO.widget.DataTable;
 
             var collectionName = window.location.href.split('/').pop();
+            var urlParams = "?collection=" + collectionName;
             Dom.get("collection_name").innerHTML = collectionName + " collection details";
 
             var dataSource = new YAHOO.util.XHRDataSource('<c:url value="/datasource/topleveldetails" />' + "?collection=" + collectionName);
@@ -74,16 +76,15 @@
                 Event.stopEvent(e);
                 var sel = Dom.get("new_datasource_type");
                 var datasourceType = sel.options[sel.selectedIndex].value;
-                console.log(datasourceType);
+
                 window.location = '<c:url value="/collection/" />' + collectionName + "/type/" + datasourceType +
-                    "/datasource/new";
+                    "/datasource/-1";
 
             });
 
 
             var handleYes = function() {
-                console.log("deleting!");
-                Connect.asyncRequest('DELETE', '<c:url value="/collection/delete" />' + "&collection=" + collectionName, {
+                Connect.asyncRequest('DELETE', '<c:url value="/collection/delete" />' + urlParams, {
                     success: function (o) {
                         if (o.responseText == "") {
                             window.location = '<c:url value="/" />';
@@ -93,19 +94,18 @@
                     },
                     failure: function (e) {
                         alert("Could not delete");
-                        console.log(e);
                     }
                 });
                 this.hide();
             };
 
-
-            var myButtons = [
+            LWA.ui.confirmDelete.cfg.queueProperty("buttons", [
                 { text: "Yes", handler: handleYes },
                 { text: "Cancel", handler: LWA.ui.confirmDeleteHandleNo, isDefault:true}
-            ];
-            LWA.ui.confirmDelete.cfg.queueProperty("buttons", myButtons);
-            LWA.ui.confirmDelete.render(YAHOO.util.Dom.get("content"));
+            ]);
+
+            LWA.ui.confirmDelete.render(Dom.get("content"));
+
             Event.addListener("delete_collection", "click", function (e) {
                 Event.stopEvent(e);
 

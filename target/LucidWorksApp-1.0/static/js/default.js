@@ -44,6 +44,22 @@ LWA.ui = {};
         return false;
     };
 
+    LWA.ui.checkXmlReturnValue = function (o) {
+        var dp = new DOMParser();
+        var xDoc = dp.parseFromString(o.responseText, "text/xml");
+
+        if (xDoc.getElementsByTagName("lst").length > 0) {
+            var childNodes = xDoc.getElementsByTagName("lst")[0].childNodes;
+
+            if (childNodes.length > 1 && childNodes[0].nodeName.match("int") && childNodes[0].textContent.match("0")) {
+                return true;
+            }
+        } else {
+            alert("Could not add file: \n" + xDoc.getElementsByTagName("title")[0].textContent);
+        }
+        return false;
+    };
+
     LWA.ui.confirmDelete = new YAHOO.widget.Dialog("dlg", {
         width: "20em",
         fixedcenter: true,

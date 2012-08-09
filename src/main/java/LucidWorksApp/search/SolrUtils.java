@@ -9,7 +9,9 @@ import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
+import org.codehaus.jackson.JsonGenerator;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 
 
@@ -27,7 +29,7 @@ public class SolrUtils extends Utils {
         return HttpClientUtils.httpGetRequest(url + queryParams);
     }
 
-    public static void solrSearch(String collectionName, String queryString) {
+    public static void solrSearch(String collectionName, String queryString, int start, JsonGenerator g) throws IOException {
         String url = SERVER + SOLR_ENDPOINT + "/" + collectionName;
 
         try {
@@ -36,15 +38,24 @@ public class SolrUtils extends Utils {
             SolrQuery query = new SolrQuery();
 
             query.setQuery(queryString);
-            query.addSortField("relevance", SolrQuery.ORDER.desc);
-            QueryResponse rsp = server.query( query );
+            query.setStart(start);
+            //query.addSortField("relevance", SolrQuery.ORDER.desc);
+            QueryResponse rsp = server.query(query);
             SolrDocumentList docs = rsp.getResults();
-            for (SolrDocument doc : docs) {
-                System.out.println((String)doc.getFieldValue("id")+": ");
-                System.out.println(doc.getFieldValue("title"));
-                System.out.println(doc.getFieldValue("body"));
 
+            g.writeNumberField("start", start);
+            g.writeNumberField("numFound", docs.getNumFound());
+            g.writeArrayFieldStart("docs");
+
+            for (SolrDocument doc : docs) {
+                g.writeStartObject();
+                for(String fieldName : doc.getFieldNames()) {
+                    Utils.writeValueByType(fieldName, doc.getFieldValue(fieldName), g);
+                }
+                g.writeEndObject();
             }
+            g.writeEndArray();
+
         } catch (MalformedURLException e) {
             System.out.println(e.getMessage());
         } catch (SolrServerException e) {

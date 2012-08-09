@@ -1,7 +1,7 @@
-package LucidWorksApp;
+package LucidWorksApp.api;
 
+import LucidWorksApp.api.APIController;
 import LucidWorksApp.utils.*;
-import net.sf.json.JSONObject;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.ObjectMapper;
