@@ -46,7 +46,7 @@ LWA.util = {};
         return false;
     };
 
-    LWA.ui.checkXmlReturnValue = function (o) {
+    LWA.util.checkXmlReturnValue = function (o) {
         var dp = new DOMParser();
         var xDoc = dp.parseFromString(o.responseText, "text/xml");
 

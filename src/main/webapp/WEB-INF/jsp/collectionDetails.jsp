@@ -23,8 +23,10 @@
     </div>
     <div class="clearboth"></div>
 
+
     <script type="text/javascript">
         (function() {
+            //TODO: add total # docs
             var Dom       = YAHOO.util.Dom,
                 Event     = YAHOO.util.Event,
                 Connect   = YAHOO.util.Connect,

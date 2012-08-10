@@ -20,7 +20,7 @@
                 <input id="file" type = "text"/>
             </div>
             <div class = "row">
-                <label for="is_local"><span class = "red">*</span>Local: </label>
+                <label for="is_local"><span class = "red">*</span>File is on server: </label>
                 <input id="is_local" type = "checkbox" selected/>
             </div>
         </div>
@@ -44,7 +44,7 @@
 
             Dom.get("collection_header").innerHTML = "Collection " + collectionName;
 
-            Event.addListener("create", "click", function(e) {
+            Event.addListener("import", "click", function(e) {
                 Event.stopEvent(e);
 
                 var urlParams = "?file=" + Dom.get("file").value + "&local=" + Dom.get("is_local").checked +
@@ -52,7 +52,7 @@
 
                 Connect.asyncRequest('GET', '<c:url value="/solr/update/csv" />' + urlParams, {
                     success: function (o) {
-                        if (LWA.checkXmlReturnValue(o)) {
+                        if (LWA.util.checkXmlReturnValue(o)) {
                             window.location = '<c:url value="/collection/" />' + collectionName;
                         }
                     },

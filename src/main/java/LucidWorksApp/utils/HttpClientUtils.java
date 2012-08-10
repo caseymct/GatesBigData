@@ -72,6 +72,9 @@ public class HttpClientUtils {
             //        ContentType.create("text/plain", "UTF-8"));
 
             File file = new File(fileName);
+            if (!file.exists()) {
+                return "<title>File not found: " + fileName + "</title>";
+            }
 
             InputStreamEntity reqEntity = new InputStreamEntity(new FileInputStream(file), -1);
             reqEntity.setContentType("binary/octet-stream");

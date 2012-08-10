@@ -92,8 +92,8 @@ public class SolrUtils extends Utils {
         */
 
         String url = SERVER + SOLR_ENDPOINT + "/" + collectionName + UPDATECSV_ENDPOINT;
-        String urlParams = "?commit=true&f.categories.split=true";
-
+        String urlParams = "?commit=true&f.categories.split=true&stream.file=" +
+                fileName + "&stream.contentType=text/csv";
         return HttpClientUtils.httpGetRequest(url + urlParams);
     }
 
@@ -104,6 +104,13 @@ public class SolrUtils extends Utils {
 
         //curl http://localhost:8983/solr/update/csv --data-binary @books.csv -H 'Content-type:text/plain; charset=utf-8'
 
+
+        //SolrServer server = new CommonsHttpSolrServer(SERVER + SOLR_ENDPOINT);
+        // ContentStreamUpdateRequest req = new ContentStreamUpdateRequest("/update/csv");
+        // req.addFile(new File(filename));
+        // req.setAction(AbstractUpdateRequest.ACTION.COMMIT, true, true);
+        // NamedList result = server.request(req);
+        // System.out.println("Result: " + result);
 
         return HttpClientUtils.httpBinaryDataPostRequest(url + urlParams, fileName);
     }
