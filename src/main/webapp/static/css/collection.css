@@ -2,11 +2,28 @@
 Classes
 */
 
+.smallmargin {
+    margin: 5px;
+}
 
 /*
 IDs
 */
 
+#datasource_container {
+    margin-top : 20px;
+}
+
 #results_table_container {
-    padding-top : 20px;
+    border: 1px solid gray;
+    border-radius: 5px;
+}
+
+#edit_collection_div {
+    margin-top: 15px;
+}
+
+#collection_info {
+    border: 1px solid gray;
+    border-radius: 5px;
 }

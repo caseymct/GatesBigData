@@ -80,7 +80,7 @@
                         alert(errmsg);
                     } else {
 
-                        buildTable(result);
+                        LWA.ui.buildTable(result, "results_table");
                     }
                 },
                 failure: function (e) {

@@ -1,12 +1,4 @@
 
-#search_input {
-    width: 300px;
-}
-
-#selectCollectionNamesButton {
-    float: right;
-    width: 275px;
-}
 
 pre {
     border: solid 1px #000;
@@ -27,8 +19,34 @@ pre {
 
 }
 
+.yui-skin-sam .yui-button button, .yui-skin-sam .yui-button a, .yui-skin-sam .yui-button a:visited {
+    padding: 0 4px;
+}
+
+.yui-skin-sam .yui-button {
+    margin: 0px;
+}
+
 li.yui-button-selectedmenuitem {
     background: url("../images/checkbox.png") left center no-repeat;
+}
+
+
+.yui-overlay {
+    /*position:absolute;*/
+    background:#fff;
+    border:1px dotted black;
+    border-radius: 5px;
+    padding:5px;
+    margin:10px;
+}
+
+.yui-overlay .hd {
+    padding:5px;
+}
+
+.yui-overlay .bd {
+    padding:5px;
 }
 
 .search-result-div {
@@ -47,11 +65,66 @@ li.yui-button-selectedmenuitem {
 
 .search-result-inner-container-label {
     float : left;
-    width: 20%;
+    width: 30%;
     font-weight: bold;
 }
 
 .search-result-inner-container {
     float : left;
-    width: 80%;
+    width: 70%;
+}
+
+.facet_option_div {
+    border: 1px solid black;
+    float: left;
+    border-radius: 5px;
+    margin: 2px;
+    padding: 5px 15px 5px 5px;
+    background-color: lightgray;
+}
+
+#facet_options {
+    padding: 20px 0px 10px 0px;
+}
+
+#search_input {
+    width: 300px;
+}
+
+#selectCollectionNamesButton {
+    float: right;
+    width: 275px;
+}
+
+#search_result_container {
+    float: left;
+    width: 70%;
+}
+
+#facet_container {
+    float: left;
+}
+
+#show_overlay {
+    margin-left : 10px;
+    font-weight: bold;
+    visibility: hidden;
+}
+
+#num_found {
+    font-weight: bold;
+}
+
+#tree_view {
+    margin: 5px 0px 0px 5px;
+}
+
+#sort_ascdesc_buttongroup_label {
+    float: right;
+    width: 60px;
+    padding-right: 10px;
+}
+
+#sort_type_buttongroup_label {
+    padding-right: 15px;
 }

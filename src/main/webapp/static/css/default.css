@@ -290,3 +290,16 @@ a:hover {
   font-size: 12px;
   color: #999;
 }
+
+.info_details_results_div {
+    padding: 2px;
+    border-radius: 15px;
+    margin: 5px;
+    font-size: 12px;
+}
+
+.info_details_child_div {
+    float : left;
+    width : 300px;
+    font-size: 12px;
+}

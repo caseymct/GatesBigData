@@ -104,10 +104,27 @@ public class CollectionAPIController extends APIController {
         return new ResponseEntity<String>(result, httpHeaders, OK);
     }
 
+    @RequestMapping(value="/info", method = RequestMethod.GET)
+    public ResponseEntity<String> collectionInfo(@RequestParam(value = PARAM_COLLECTION_NAME, required = true) String collectionName) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        return new ResponseEntity<String>(CollectionUtils.getCollectionInfo(collectionName), httpHeaders, OK);
+    }
+
     @RequestMapping(value="/delete", method = RequestMethod.DELETE)
     public ResponseEntity<String> deleteCollection(@RequestParam(value = PARAM_COLLECTION_NAME, required = true) String collectionName) {
         System.out.println("here");
         String result = CollectionUtils.deleteCollection(collectionName);
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        return new ResponseEntity<String>(result, httpHeaders, OK);
+    }
+
+    @RequestMapping(value="/empty", method = RequestMethod.DELETE)
+    public ResponseEntity<String> emptyCollection(@RequestParam(value = PARAM_COLLECTION_NAME, required = true) String collectionName) {
+        String result = CollectionUtils.deleteIndexForCollection(collectionName);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));

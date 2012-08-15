@@ -27,6 +27,8 @@ public class SearchAPIController extends APIController {
     public static final String PARAM_COLLECTION_NAME = "collection";
     public static final String PARAM_START = "start";
     public static final String PARAM_SORT_TYPE = "sort";
+    public static final String PARAM_SORT_ORDER = "order";
+    public static final String PARAM_FQ = "fq";
 
     @RequestMapping(value="/query", method = RequestMethod.GET)
     public ResponseEntity<String> execLucidQuery(@RequestParam(value = PARAM_QUERY, required = true) String queryString,
@@ -47,7 +49,9 @@ public class SearchAPIController extends APIController {
     public ResponseEntity<String> execSolrQuery(@RequestParam(value = PARAM_QUERY, required = true) String queryString,
                                             @RequestParam(value = PARAM_COLLECTION_NAME, required = true) String collectionName,
                                             @RequestParam(value = PARAM_SORT_TYPE, required = true) String sortType,
-                                            @RequestParam(value = PARAM_START, required = false) Integer start) throws IOException {
+                                            @RequestParam(value = PARAM_SORT_ORDER, required = true) String sortOrder,
+                                            @RequestParam(value = PARAM_START, required = false) Integer start,
+                                            @RequestParam(value = PARAM_FQ, required = false) String fq) throws IOException {
 
         if (start == null) {
             start = 0;
@@ -59,7 +63,7 @@ public class SearchAPIController extends APIController {
         g.writeStartObject();
         g.writeObjectFieldStart("response");
 
-        SolrUtils.solrSearch(collectionName, queryString, start, g);
+        SolrUtils.solrSearch(collectionName, queryString, sortType, sortOrder, start, fq, g);
 
         g.writeEndObject();
         g.close();

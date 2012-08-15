@@ -122,9 +122,20 @@ a.up-big {
     font-size: 16px;
     padding: 10px 15px;
 }
+
 a.down-big {
     background: url(../images/sprite.png)  15px -163px no-repeat #f3f3f3;
     width: 18px;
     font-size: 16px;
     padding: 10px 15px;
+}
+
+a.down-big-overlay {
+    background: url(../images/sprite.png)  15px -163px no-repeat #f3f3f3;
+    padding: 10px 45px;
+}
+
+a.up-big-overlay {
+    background: url(../images/sprite.png)  15px -128px no-repeat #f3f3f3;
+    padding: 10px 45px;
 }

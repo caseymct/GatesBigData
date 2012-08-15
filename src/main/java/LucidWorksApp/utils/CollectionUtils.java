@@ -15,6 +15,11 @@ public class CollectionUtils extends Utils {
         return convertObjectListToStringList(JsonParsingUtils.getPropertiesFromDataSourceJson("name", json));
     }
 
+    public static String getCollectionInfo(String collectionName) {
+        String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + "/info";
+        return HttpClientUtils.httpGetRequest(url);
+    }
+
     public static String getCollectionInstanceDir(String collectionName) {
         String collectionDetails = HttpClientUtils.httpGetRequest(SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName);
         return (String) JSONObject.fromObject(collectionDetails).get("instance_dir");
@@ -34,7 +39,8 @@ public class CollectionUtils extends Utils {
 
     public static String deleteIndexForCollection(String collectionName) {
         String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + INDEX_ENDPOINT;
-        return HttpClientUtils.httpDeleteRequest(url);
+        String urlParams = "?key=iaccepttherisk";
+        return HttpClientUtils.httpDeleteRequest(url + urlParams);
     }
 
     public static String deleteCollection(String collectionName) {
