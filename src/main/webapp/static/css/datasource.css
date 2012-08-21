@@ -32,3 +32,20 @@
     float: left;
     margin-top: 10px;
 }
+
+#csvimported {
+    border: 1px solid grey;
+    width: 500px;
+    border-radius: 3px;
+    padding: 5px;
+    margin: 10px;
+}
+
+#csvimported_header {
+    font-weight : bold;
+    margin: 10px;
+}
+
+#webdatasource_header {
+    font-weight : bold;
+}

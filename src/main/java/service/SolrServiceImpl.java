@@ -1,4 +1,4 @@
-package LucidWorksApp.search;
+package service;
 
 import LucidWorksApp.utils.DateUtils;
 import LucidWorksApp.utils.FieldUtils;
@@ -25,24 +25,20 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class SolrUtils extends Utils {
+public class SolrServiceImpl implements SolrService {
 
     private static String SOLR_ENDPOINT = "/solr";
-    private static String LUCID_ENDPOINT = "/lucid";
     private static String UPDATECSV_ENDPOINT = "/update/csv";
     private static String LUKE_ENDPOINT = "/admin/luke";
     private static Pattern fieldNamesToIgnore = Pattern.compile("^(attr|_).*|.*(version|batch|body|text_all).*");
     private static Pattern fieldNamesToIgnoreIncIds = Pattern.compile("^(attr|_).*|.*(version|batch|body|text_all|Id).*");
+    private String SERVER;
 
-    public static String lucidEndpointSearch(String collectionName, String queryParams) {
-        String url = SERVER + SOLR_ENDPOINT + "/" + collectionName + LUCID_ENDPOINT;
-        queryParams += "&wt=json&role=DEFAULT";
-
-        return HttpClientUtils.httpGetRequest(url + queryParams);
+    public SolrServiceImpl() {
+        this.SERVER = Utils.getServer();
     }
 
-
-    public static List<String> getSolrIndexDateRange(String collectionName) {
+    public List<String> getSolrIndexDateRange(String collectionName) {
         int buckets = 10;
         String url = SERVER + SOLR_ENDPOINT + "/" + collectionName + "/select";
         String urlParams = "?q=*:*&rows=1&wt=json&fl=timestamp&sort=timestamp";
@@ -65,7 +61,7 @@ public class SolrUtils extends Utils {
         return dateRange;
     }
 
-    private static List<String> getFieldNameSubset(Collection<String> fieldNames, boolean ignoreIds) {
+    private List<String> getFieldNameSubset(Collection<String> fieldNames, boolean ignoreIds) {
         List<String> fieldNamesSubset = new ArrayList<String>();
 
         for(String fieldName : fieldNames) {
@@ -79,9 +75,9 @@ public class SolrUtils extends Utils {
     }
 
     /* Return the field name and the type
-    * //http://denlx006.dn.gates.com:8888/solr/invoice2test/admin/luke?numTerms=0&wt=json
-    * */
-    private static TreeMap<String, String> retrieveFields(String collectionName) {
+   * //http://denlx006.dn.gates.com:8888/solr/invoice2test/admin/luke?numTerms=0&wt=json
+   * */
+    private TreeMap<String, String> retrieveFields(String collectionName) {
         String url = SERVER + SOLR_ENDPOINT + "/" + collectionName + LUKE_ENDPOINT;
         String urlParams = "?numTerms=0&wt=json";
 
@@ -96,7 +92,7 @@ public class SolrUtils extends Utils {
         return namesAndTypes;
     }
 
-    private static String editFilterQueryDateRange(String fq, String fieldName) {
+    private String editFilterQueryDateRange(String fq, String fieldName) {
         if (fq == null || !fq.contains(fieldName)) return fq;
 
         Pattern p = Pattern.compile(".*\\+" + fieldName + ":\\(([^\\)]*)\\)(\\+.*)*");
@@ -110,8 +106,8 @@ public class SolrUtils extends Utils {
         return fq;
     }
 
-    public static void solrSearch(String collectionName, String queryString, String sortType, String sortOrder,
-                                  int start, String fq, JsonGenerator g) throws IOException {
+    public void solrSearch(String collectionName, String queryString, String sortType, String sortOrder,
+                           int start, String fq, JsonGenerator g) throws IOException {
 
         String url = SERVER + SOLR_ENDPOINT + "/" + collectionName;
         TreeMap<String, String> fields = retrieveFields(collectionName);
@@ -134,7 +130,7 @@ public class SolrUtils extends Utils {
                     query.add("facet.date.gap", dateRange.get(2));
 
                     fq = editFilterQueryDateRange(fq, (String) field.getKey());
-                     if (sortType.equals("date")) {
+                    if (sortType.equals("date")) {
                         query.addSortField((String) field.getKey(),
                                 sortOrder.equals("asc") ? SolrQuery.ORDER.asc : SolrQuery.ORDER.desc);
                     }
@@ -189,8 +185,8 @@ public class SolrUtils extends Utils {
                 for(FacetField.Count count : facetField.getValues()) {
                     if (count.getCount() > 0) {
                         g.writeString(DateUtils.getDateStringFromSolrDate(count.getName()) + " - " +
-                                      DateUtils.solrDateMath(count.getName(), count.getFacetField().getGap())
-                                      + " (" + count.getCount() + ")");
+                                DateUtils.solrDateMath(count.getName(), count.getFacetField().getGap())
+                                + " (" + count.getCount() + ")");
                     }
                 }
                 g.writeEndArray();
@@ -205,7 +201,7 @@ public class SolrUtils extends Utils {
         }
     }
 
-    public static String importLocalCsvToSolr(String collectionName, String fileName) {
+    public String importCsvFileOnServerToSolr(String collectionName, String fileName) {
         /*
         String url = SERVER + SOLR_ENDPOINT + UPDATECSV_ENDPOINT;
         String urlParams = "?stream.file=" + fileName + "&stream.contentType=text/plain;charset=utf-8";
@@ -213,7 +209,7 @@ public class SolrUtils extends Utils {
         */
         String url = SERVER + SOLR_ENDPOINT + "/" + collectionName + UPDATECSV_ENDPOINT;
         String urlParams = "?commit=true&f.categories.split=true&stream.file=" +
-                            fileName + "&stream.contentType=text/csv";
+                fileName + "&stream.contentType=text/csv";
 
         String response = HttpClientUtils.httpGetRequest(url + urlParams);
         if (!response.contains("Errors")) {
@@ -222,7 +218,7 @@ public class SolrUtils extends Utils {
         return response;
     }
 
-    public static String importRemoteCsvToSolr(String collectionName, String fileName) {
+    public String importCsvFileOnLocalSystemToSolr(String collectionName, String fileName) {
         String url = SERVER + SOLR_ENDPOINT + "/" + collectionName + UPDATECSV_ENDPOINT;
         String urlParams = "?commit=true&f.categories.split=true";
 
@@ -241,4 +237,5 @@ public class SolrUtils extends Utils {
         }
         return response;
     }
+}
 }

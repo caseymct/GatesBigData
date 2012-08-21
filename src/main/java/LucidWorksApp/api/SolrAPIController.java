@@ -24,8 +24,9 @@ public class SolrAPIController extends APIController {
                                             @RequestParam(value = PARAM_LOCAL, required = true) Boolean isLocal,
                                             @RequestParam(value = PARAM_COLLECTION_NAME, required = true) String collectionName) throws IOException {
 
+        // Here, local means on the server filesystem
         String response = isLocal ? SolrUtils.importLocalCsvToSolr(collectionName, fileName) :
-                SolrUtils.importRemoteCsvToSolr(collectionName, fileName);
+                                    SolrUtils.importRemoteCsvToSolr(collectionName, fileName);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));

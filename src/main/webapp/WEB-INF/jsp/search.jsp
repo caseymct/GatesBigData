@@ -10,7 +10,7 @@
     <form id = "search_form">
         <div class = "row" id="search_div">
             <label for="search_input">Query terms: </label>
-            <input id="search_input" type = "text" value="*:*"/>
+            <textarea id="search_input">*:*</textarea>
         </div>
 
         <div class="row" id = "collection_name">
@@ -31,23 +31,17 @@
                 <input id="sort_relevance" type="radio" name="sorttype" value="score">
                 <input id="sort_random" type="radio" name="sorttype" value="random">
             </div>
-
         </div>
 
-        <!--
-        <div class="row" id= "filter_by_datasource_div">
-            <label for="filter_by_datasource">Filter by datasource:</label>
-            <select id = "filter_by_datasource"></select>
-        </div>
-        -->
         <div class="clearboth"></div>
+
         <div id="facet_options">
             <div class="clearboth"></div>
         </div>
 
         <div class="buttons">
             <a href="#" class="button small" id="submit">Submit</a>
-            <a href="#" class="button small" id="cancel">Cancel</a>
+            <a href="#" class="button small" id="reset">Reset query</a>
         </div>
         <div class = "row"></div>
     </form>
@@ -82,6 +76,8 @@
             TreeView = YAHOO.widget.TreeView,
             TextNode = YAHOO.widget.TextNode,
             Overlay = YAHOO.widget.Overlay;
+
+        var treeView = new YAHOO.widget.TreeView("tree_view");
 
         // Sort buttons code
         var sortType = "date", ascType = "asc",
@@ -163,8 +159,6 @@
             return sortedkeys.concat(unsortedkeys.sort());
         };
 
-        var treeView = new YAHOO.widget.TreeView("tree_view");
-
         var buildFacetTree = function(facets) {
             var i, j, nameNode, valueNode, root = treeView.getRoot();
 
@@ -239,17 +233,20 @@
                             { key : "class", value : "search-result-inner-container-label" } ]);
 
                         LWA.ui.createDomElement("div", innerContainerDiv, [
-                            { key : "text", value : LWA.util.stripBrackets(docs[i][key]) },
-                            { key : "id", value : key + i },
+                            { key : "text", value : "<a href=\"#\">" + LWA.util.stripBrackets(docs[i][key]) + "</a>"},
+                            { key : "id", value : key + "_" + i },
                             { key: "class", value : "search-result-inner-container" } ]);
+
+                        Event.addListener(key + "_" + i, "click", function(e) {
+                            Event.stopEvent(e);
+                            var currentValue = Dom.get("search_input").value;
+                            Dom.get("search_input").value = ((currentValue == "*:*") ? "" : currentValue) + "+" +
+                                    this.id.replace(/_[0-9]+$/, "") + ":\"" +
+                                    this.innerHTML.replace("<a href=\"#\">", "").replace("</a>", "") + "\"";
+                        });
                     }
                 }
-                /*
-                 LWA.ui.createDomElement("div", innerContainerDiv, [
-                 { key : "text", value : getHighlightedText(docs[i].id, highlighting) },
-                 { key : "id", value : "highlighting" + i },
-                 { key: "class", value : "search-result-inner-container" } ]);
-                 */
+
                 LWA.ui.createDomElement("div", containerDiv, [ { key: "style", value : "clear:both" } ]);
             }
         };
@@ -272,6 +269,11 @@
             return fqStr;
         };
 
+        Event.addListener("reset", "click", function (e) {
+            Event.stopEvent(e);
+            Dom.get("search_input").value = "*:*";
+        });
+
         Event.addListener("submit", "click", function (e) {
             Event.stopEvent(e);
 
@@ -283,8 +285,7 @@
             if (fq != "") {
                 urlParams += "&fq=" + fq;
             }
-            console.log(urlParams);
-            debugger;
+
             var pag = new YAHOO.widget.Paginator( {rowsPerPage : 10, containers : [ "pag1" ] });
 
             var handlePagination = function (newState) {

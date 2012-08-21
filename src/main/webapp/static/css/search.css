@@ -27,6 +27,10 @@ pre {
     margin: 0px;
 }
 
+.ygtvlabel {
+    font-size: 12px;
+}
+
 li.yui-button-selectedmenuitem {
     background: url("../images/checkbox.png") left center no-repeat;
 }
@@ -65,13 +69,15 @@ li.yui-button-selectedmenuitem {
 
 .search-result-inner-container-label {
     float : left;
-    width: 30%;
+    width: 40%;
     font-weight: bold;
+    font-size: 12px;
 }
 
 .search-result-inner-container {
     float : left;
-    width: 70%;
+    width: 60%;
+    font-size: 12px;
 }
 
 .facet_option_div {
@@ -89,6 +95,8 @@ li.yui-button-selectedmenuitem {
 
 #search_input {
     width: 300px;
+    margin-left: 15px;
+    height: 50px;
 }
 
 #selectCollectionNamesButton {
@@ -121,7 +129,7 @@ li.yui-button-selectedmenuitem {
 
 #sort_ascdesc_buttongroup_label {
     float: right;
-    width: 60px;
+    width: 70px;
     padding-right: 10px;
 }
 

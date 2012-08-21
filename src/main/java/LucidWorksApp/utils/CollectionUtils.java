@@ -40,6 +40,9 @@ public class CollectionUtils extends Utils {
     public static String deleteIndexForCollection(String collectionName) {
         String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + INDEX_ENDPOINT;
         String urlParams = "?key=iaccepttherisk";
+
+        FieldUtils.clearCSVFilesUploadedField(collectionName);
+
         return HttpClientUtils.httpDeleteRequest(url + urlParams);
     }
 

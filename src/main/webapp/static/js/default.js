@@ -100,7 +100,12 @@ LWA.util = {};
                 return true;
             }
         } else {
-            alert("Could not add file: \n" + xDoc.getElementsByTagName("title")[0].textContent);
+            var alertString = xDoc.getElementsByTagName("title")[0].textContent;
+            var stackTraceStart = alertString.indexOf("java");
+            if (stackTraceStart != -1) {
+                alertString = alertString.substring(0, stackTraceStart);
+            }
+            alert("Could not add file: \n" + alertString);
         }
         return false;
     };

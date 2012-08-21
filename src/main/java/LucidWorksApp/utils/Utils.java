@@ -23,6 +23,10 @@ public class Utils {
     public static final String INFO_ENDPOINT = "/info";
     public static final String INDEX_ENDPOINT = "/index";
 
+    public static String getServer() {
+        return SERVER;
+    }
+
     public static List<String> convertObjectListToStringList(List<Object> objectList) {
         List<String> stringList = new ArrayList<String>();
         for (Object o : objectList) {

@@ -145,6 +145,31 @@ public class HttpClientUtils {
         return "";
     }
 
+    public static String httpJsonPutRequest(String url, String json) {
+        HttpClient httpclient = new DefaultHttpClient();
+
+        try {
+            HttpPut httpPut = new HttpPut(url);
+
+            StringEntity input = new StringEntity(json);
+            input.setContentType(jsonContentType);
+            httpPut.setEntity(input);
+
+            HttpResponse response = httpclient.execute(httpPut);
+
+            return getResponse(response.getEntity());
+
+        } catch (URISyntaxException e) {
+            System.out.println(e.getMessage());
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        } catch (org.apache.http.HttpException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return "";
+    }
+
     public static String httpDeleteRequest(String url) {
         HttpClient httpclient = new DefaultHttpClient();
 
