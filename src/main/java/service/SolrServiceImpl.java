@@ -1,204 +1,144 @@
 package service;
 
-import LucidWorksApp.utils.DateUtils;
 import LucidWorksApp.utils.FieldUtils;
 import LucidWorksApp.utils.HttpClientUtils;
 import LucidWorksApp.utils.Utils;
-import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
-import org.apache.solr.client.solrj.response.FacetField;
-import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrDocument;
-import org.apache.solr.common.SolrDocumentList;
-import org.apache.solr.schema.DateField;
-import org.codehaus.jackson.JsonGenerator;
+import org.apache.solr.client.solrj.request.CoreAdminRequest;
+import org.apache.solr.client.solrj.request.UpdateRequest;
+import org.apache.solr.client.solrj.response.CoreAdminResponse;
+import org.apache.solr.client.solrj.response.UpdateResponse;
+import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.common.params.CoreAdminParams;
+import org.apache.solr.core.CoreContainer;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.text.ParseException;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class SolrServiceImpl implements SolrService {
 
-    private static String SOLR_ENDPOINT = "/solr";
-    private static String UPDATECSV_ENDPOINT = "/update/csv";
-    private static String LUKE_ENDPOINT = "/admin/luke";
-    private static Pattern fieldNamesToIgnore = Pattern.compile("^(attr|_).*|.*(version|batch|body|text_all).*");
-    private static Pattern fieldNamesToIgnoreIncIds = Pattern.compile("^(attr|_).*|.*(version|batch|body|text_all|Id).*");
-    private String SERVER;
-
-    public SolrServiceImpl() {
-        this.SERVER = Utils.getServer();
-    }
-
-    public List<String> getSolrIndexDateRange(String collectionName) {
-        int buckets = 10;
-        String url = SERVER + SOLR_ENDPOINT + "/" + collectionName + "/select";
-        String urlParams = "?q=*:*&rows=1&wt=json&fl=timestamp&sort=timestamp";
-
-        List<String> dateRange = new ArrayList<String>();
-
-        JSONObject jsonObject = JSONObject.fromObject(HttpClientUtils.httpGetRequest(url + urlParams + "+asc"));
-        dateRange.add((String) ((JSONObject) ((JSONArray) ((JSONObject) jsonObject.get("response")).get("docs")).get(0)).get("timestamp"));
-
-        jsonObject = JSONObject.fromObject(HttpClientUtils.httpGetRequest(url + urlParams + "+desc"));
-        dateRange.add((String) ((JSONObject) ((JSONArray) ((JSONObject) jsonObject.get("response")).get("docs")).get(0)).get("timestamp"));
-
+    public SolrServer getSolrServer() {
         try {
-            Long ms = (DateField.parseDate(dateRange.get(1)).getTime() - DateField.parseDate(dateRange.get(0)).getTime())/buckets;
-            dateRange.add(DateUtils.getDateGapString(ms));
-        } catch (ParseException e) {
-            System.err.println(e.getCause());
-        }
+            String url = Utils.getServer() + Utils.getSolrEndpoint();
+            return new CommonsHttpSolrServer(url);
 
-        return dateRange;
-    }
-
-    private List<String> getFieldNameSubset(Collection<String> fieldNames, boolean ignoreIds) {
-        List<String> fieldNamesSubset = new ArrayList<String>();
-
-        for(String fieldName : fieldNames) {
-            Matcher m = ignoreIds ? fieldNamesToIgnoreIncIds.matcher(fieldName) : fieldNamesToIgnore.matcher(fieldName);
-            if (!m.matches()) {
-                fieldNamesSubset.add(fieldName);
-            }
-        }
-        Collections.sort(fieldNamesSubset);
-        return fieldNamesSubset;
-    }
-
-    /* Return the field name and the type
-   * //http://denlx006.dn.gates.com:8888/solr/invoice2test/admin/luke?numTerms=0&wt=json
-   * */
-    private TreeMap<String, String> retrieveFields(String collectionName) {
-        String url = SERVER + SOLR_ENDPOINT + "/" + collectionName + LUKE_ENDPOINT;
-        String urlParams = "?numTerms=0&wt=json";
-
-        TreeMap<String, String> namesAndTypes = new TreeMap<String, String>();
-        JSONObject json = JSONObject.fromObject(HttpClientUtils.httpGetRequest(url+urlParams));
-
-        for(String field : getFieldNameSubset(((JSONObject) json.get("fields")).names(), false)) {
-            String type = (String) ((JSONObject)((JSONObject) json.get("fields")).get((String)field)).get("type");
-            namesAndTypes.put(field, type);
-        }
-
-        return namesAndTypes;
-    }
-
-    private String editFilterQueryDateRange(String fq, String fieldName) {
-        if (fq == null || !fq.contains(fieldName)) return fq;
-
-        Pattern p = Pattern.compile(".*\\+" + fieldName + ":\\(([^\\)]*)\\)(\\+.*)*");
-        Matcher m = p.matcher(fq);
-        if (m.matches()) {
-            String[] dates = m.group(1).split(" - ");
-            String newDateFq = DateUtils.getSolrDateFromDateString(dates[0]) + " TO " + DateUtils.getSolrDateFromDateString(dates[1]);
-
-            fq = fq.replace(fieldName + ":(" + dates[0] + " - " + dates[1] + ")", fieldName + ":[" + newDateFq + "]");
-        }
-        return fq;
-    }
-
-    public void solrSearch(String collectionName, String queryString, String sortType, String sortOrder,
-                           int start, String fq, JsonGenerator g) throws IOException {
-
-        String url = SERVER + SOLR_ENDPOINT + "/" + collectionName;
-        TreeMap<String, String> fields = retrieveFields(collectionName);
-
-        try {
-            //SolrServer server = new HttpSolrServer(url);
-            SolrServer server = new CommonsHttpSolrServer(url);
-            SolrQuery query = new SolrQuery();
-
-            query.setQuery(queryString);
-            query.setStart(start);
-
-            query.add("facet", "true");
-            for (Map.Entry field : fields.entrySet()) {
-                if (field.getValue().equals("date")) {
-                    List<String> dateRange = getSolrIndexDateRange(collectionName);
-                    query.add("facet.date", (String) field.getKey());
-                    query.add("facet.date.start", dateRange.get(0));
-                    query.add("facet.date.end", dateRange.get(1));
-                    query.add("facet.date.gap", dateRange.get(2));
-
-                    fq = editFilterQueryDateRange(fq, (String) field.getKey());
-                    if (sortType.equals("date")) {
-                        query.addSortField((String) field.getKey(),
-                                sortOrder.equals("asc") ? SolrQuery.ORDER.asc : SolrQuery.ORDER.desc);
-                    }
-                } else {
-                    query.add("facet.field", (String) field.getKey());
-                    query.add("facet.method", "enum");
-                }
-            }
-
-            if (fq != null) {
-                query.addFilterQuery(fq);
-            }
-            if (!sortType.equals("date")) {
-                query.addSortField(sortType, sortOrder.equals("asc") ? SolrQuery.ORDER.asc : SolrQuery.ORDER.desc);
-            }
-            QueryResponse rsp = server.query(query);
-            SolrDocumentList docs = rsp.getResults();
-
-            g.writeNumberField("start", start);
-            g.writeNumberField("numFound", docs.getNumFound());
-            g.writeArrayFieldStart("docs");
-
-            for (SolrDocument doc : docs) {
-                g.writeStartObject();
-                for(String fieldName : getFieldNameSubset(doc.getFieldNames(), false)) {
-                    Utils.writeValueByType(fieldName, doc.getFieldValue(fieldName), g);
-                }
-                g.writeEndObject();
-            }
-            g.writeEndArray();
-
-            g.writeArrayFieldStart("facets");
-            for(FacetField facetField : rsp.getFacetFields()) {
-                g.writeStartObject();
-                g.writeStringField("name", facetField.getName());
-
-                g.writeArrayFieldStart("values");
-                for(FacetField.Count count : facetField.getValues()) {
-                    if (count.getCount() > 0) {
-                        g.writeString(count.getName() + " (" + count.getCount() + ")");
-                    }
-                }
-                g.writeEndArray();
-                g.writeEndObject();
-            }
-
-            for(FacetField facetField : rsp.getFacetDates()) {
-                g.writeStartObject();
-                g.writeStringField("name", facetField.getName());
-
-                g.writeArrayFieldStart("values");
-                for(FacetField.Count count : facetField.getValues()) {
-                    if (count.getCount() > 0) {
-                        g.writeString(DateUtils.getDateStringFromSolrDate(count.getName()) + " - " +
-                                DateUtils.solrDateMath(count.getName(), count.getFacetField().getGap())
-                                + " (" + count.getCount() + ")");
-                    }
-                }
-                g.writeEndArray();
-                g.writeEndObject();
-            }
-
-            g.writeEndArray();
         } catch (MalformedURLException e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
+    }
+
+    public SolrServer getSolrServer(String url) {
+        try {
+            return new CommonsHttpSolrServer(url);
+
+        } catch (MalformedURLException e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
+    }
+
+    private boolean solrServerCommit(SolrServer server, SolrInputDocument doc) {
+        try {
+            server.commit();
+
+            UpdateRequest req = new UpdateRequest();
+            req.setAction(UpdateRequest.ACTION.COMMIT, false, false );
+
+            if (doc != null) {
+                req.add(doc);
+            }
+            UpdateResponse rsp = req.process(server);
+
+        } catch (SolrServerException e) {
+            System.err.println(e.getMessage());
+            return false;
+
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+            return false;
+        }
+        return true;
+    }
+
+    private boolean solrServerCommit(SolrServer server) {
+        return solrServerCommit(server, null);
+    }
+
+    public boolean addJsonDocumentToSolrEmbeddedServer(JSONObject document, String coreName) {
+        String solrHome = Utils.getSolrPath();
+
+        try {
+            File home = new File(solrHome);
+            File f = new File(home, "solr.xml");
+            CoreContainer container = new CoreContainer();
+            container.load(solrHome, f);
+
+            EmbeddedSolrServer server = new EmbeddedSolrServer(container, coreName);
+
+            SolrInputDocument doc = new SolrInputDocument();
+            for(Object key : document.keySet()) {
+                doc.addField((String) key, document.get(key), 1.0f);
+            }
+            server.add(doc);
+            boolean added = solrServerCommit(server, doc);
+            container.shutdown();
+            return added;
+
+        } catch (MalformedURLException e) {
+            System.out.println(e.getMessage());
+        } catch (ParserConfigurationException e) {
+            System.out.println(e.getMessage());
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        } catch (SAXException e) {
             System.out.println(e.getMessage());
         } catch (SolrServerException e) {
             System.out.println(e.getMessage());
         }
+
+        return false;
+    }
+
+    public boolean addJsonDocumentToSolr(JSONObject document, String coreName, String hdfsKey) {
+
+        SolrInputDocument doc = new SolrInputDocument();
+
+        doc.addField(Utils.getSolrSchemaHdfskey(), hdfsKey);
+        for(Object key : document.keySet()) {
+            doc.addField((String) key, document.get(key), 1.0f);
+        }
+
+        return solrServerCommit(getSolrServer(), doc);
+    }
+
+    public boolean deleteIndex(String coreName) {
+
+        try {
+            SolrServer server = getSolrServer();
+            server.deleteByQuery( "*:*" );
+            solrServerCommit(server);
+
+        } catch (SolrServerException e) {
+            System.out.println(e.getMessage());
+            return false;
+
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+
+        return true;
     }
 
     public String importCsvFileOnServerToSolr(String collectionName, String fileName) {
@@ -207,7 +147,7 @@ public class SolrServiceImpl implements SolrService {
         String urlParams = "?stream.file=" + fileName + "&stream.contentType=text/plain;charset=utf-8";
         straight solr
         */
-        String url = SERVER + SOLR_ENDPOINT + "/" + collectionName + UPDATECSV_ENDPOINT;
+        String url = Utils.getServer() + Utils.getSolrEndpoint() + "/" + collectionName + Utils.getUpdateCsvEndpoint();
         String urlParams = "?commit=true&f.categories.split=true&stream.file=" +
                 fileName + "&stream.contentType=text/csv";
 
@@ -219,7 +159,7 @@ public class SolrServiceImpl implements SolrService {
     }
 
     public String importCsvFileOnLocalSystemToSolr(String collectionName, String fileName) {
-        String url = SERVER + SOLR_ENDPOINT + "/" + collectionName + UPDATECSV_ENDPOINT;
+        String url = Utils.getServer() + Utils.getSolrEndpoint() + "/" + collectionName + Utils.getUpdateCsvEndpoint();
         String urlParams = "?commit=true&f.categories.split=true";
 
         //curl http://localhost:8983/solr/update/csv --data-binary @books.csv -H 'Content-type:text/plain; charset=utf-8'
@@ -237,5 +177,25 @@ public class SolrServiceImpl implements SolrService {
         }
         return response;
     }
-}
+
+    public List<String> getCoreNames() {
+        List<String> coreList = new ArrayList<String>();
+
+        try {
+            CoreAdminRequest request = new CoreAdminRequest();
+            request.setAction(CoreAdminParams.CoreAdminAction.STATUS);
+            CoreAdminResponse cores = request.process(getSolrServer());
+
+            for (int i = 0; i < cores.getCoreStatus().size(); i++) {
+                coreList.add(cores.getCoreStatus().getName(i));
+            }
+
+        } catch (SolrServerException e) {
+            System.out.println(e.getMessage());
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return coreList;
+    }
 }

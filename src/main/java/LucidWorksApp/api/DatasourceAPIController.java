@@ -1,6 +1,5 @@
 package LucidWorksApp.api;
 
-import LucidWorksApp.api.APIController;
 import LucidWorksApp.utils.*;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
@@ -30,7 +29,7 @@ public class DatasourceAPIController extends APIController {
     public static final String PARAM_DATASOURCE_ID = "datasourceId";
 
     @RequestMapping(value="/topleveldetails", method = RequestMethod.GET)
-    public ResponseEntity<String> getAllDatasources(@RequestParam(value = PARAM_COLLECTION_NAME, required = true) String collectionName) throws IOException {
+    public ResponseEntity<String> getAllDatasources(@RequestParam(value = PARAM_CORE_NAME, required = true) String collectionName) throws IOException {
 
         StringWriter writer = new StringWriter();
         JsonFactory f = new JsonFactory();
@@ -82,7 +81,7 @@ public class DatasourceAPIController extends APIController {
     }
 
     @RequestMapping(value="/datasourcedetails", method = RequestMethod.GET)
-    public ResponseEntity<String> getDatasourceDetails(@RequestParam(value = PARAM_COLLECTION_NAME, required = true) String collectionName,
+    public ResponseEntity<String> getDatasourceDetails(@RequestParam(value = PARAM_CORE_NAME, required = true) String collectionName,
                                                        @RequestParam(value = PARAM_DATASOURCE_ID, required = true) Integer datasourceId) throws IOException {
 
         String result = DatasourceUtils.getAllDataSourceProperties(collectionName, datasourceId);
@@ -108,7 +107,7 @@ public class DatasourceAPIController extends APIController {
     }
 
     @RequestMapping(value = "/delete", method = RequestMethod.DELETE)
-    public ResponseEntity<String> deleteDatassource(@RequestParam(value = PARAM_COLLECTION_NAME, required = true) String collectionName,
+    public ResponseEntity<String> deleteDatassource(@RequestParam(value = PARAM_CORE_NAME, required = true) String collectionName,
                                                     @RequestParam(value = PARAM_DATASOURCE_ID, required = true) Integer datasourceId) {
         String result = DatasourceUtils.deleteDatasource(collectionName, datasourceId.toString());
 

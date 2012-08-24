@@ -110,4 +110,36 @@ LWA.util = {};
         return false;
     };
 
+    // formatJson() :: formats and indents JSON string
+    LWA.util.formatJson = function(val) {
+        var retval = '', str = val, pos = 0, strLen = val.length, ch = '';
+        var indentStr = '&nbsp;&nbsp;&nbsp;&nbsp;', newLine = '<br />';
+
+        for (var i=0; i<strLen; i++) {
+            ch = str.substring(i,i+1);
+
+            if (ch == '}' || ch == ']') {
+                retval = retval + newLine;
+                pos = pos - 1;
+
+                for (var j=0; j<pos; j++) {
+                    retval = retval + indentStr;
+                }
+            }
+
+            retval = retval + ch;
+
+            if (ch == '{' || ch == '[' || ch == ',') {
+                retval = retval + newLine;
+                if (ch == '{' || ch == '[') {
+                    pos = pos + 1;
+                }
+                for (var k=0; k<pos; k++) {
+                    retval = retval + indentStr;
+                }
+            }
+        }
+        return retval;
+    };
+
 })();

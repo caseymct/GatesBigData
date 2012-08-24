@@ -80,6 +80,14 @@ li.yui-button-selectedmenuitem {
     font-size: 12px;
 }
 
+.search-result-button {
+    float: right;
+    width: 3px;
+    height: 15px;
+    bottom: 30px;
+    margin-bottom: -30px;
+}
+
 .facet_option_div {
     border: 1px solid black;
     float: left;
@@ -97,11 +105,6 @@ li.yui-button-selectedmenuitem {
     width: 300px;
     margin-left: 15px;
     height: 50px;
-}
-
-#selectCollectionNamesButton {
-    float: right;
-    width: 275px;
 }
 
 #search_result_container {

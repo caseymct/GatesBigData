@@ -143,8 +143,6 @@
                 this.hide();
             };
 
-
-
             Event.addListener("delete_collection", "click", function (e) {
                 Event.stopEvent(e);
 

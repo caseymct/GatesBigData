@@ -14,8 +14,8 @@
         </div>
 
         <div class="row" id = "collection_name">
-            <label id ="collection_name_label" for="collection_name_select">Select a collection: </label>
-            <select id = "collection_name_select"></select>
+            <label id ="collection_name_label" for="core_name_select">Select a collection: </label>
+            <select id ="core_name_select"></select>
         </div>
 
         <div class="row" id = "sort_by_div">
@@ -108,12 +108,12 @@
         }, narrowSearchOverlay, true);
 
         // Get collection names for search select box
-        Connect.asyncRequest('GET', '<c:url value="/collection/collectionNames" />', {
+        Connect.asyncRequest('GET', '<c:url value="/core/corenames" />', {
             success : function(o) {
                 var i, result = Json.parse(o.responseText);
 
                 for(i = 0; i < result.names.length; i++) {
-                    LWA.ui.createDomElement("option", Dom.get("collection_name_select"),
+                    LWA.ui.createDomElement("option", Dom.get("core_name_select"),
                       [ { key: "text", value: result.names[i]}, { key: "value", value: result.names[i]}]);
                 }
             },
@@ -121,19 +121,6 @@
                 alert("Could not retrieve collection names.");
             }
         });
-
-        var setHrefAttribute = function(a, doc) {
-            a.setAttribute("href", doc.id.match(/http*/) ? doc.id : "file:///" + doc.id);
-        };
-
-        var getHighlightedText = function(index, highlighting, queryTerms) {
-            if (highlighting.hasOwnProperty(index)) {
-                var body = highlighting[index].body[0];
-                body = body.replace(/^\s+|\s+$/g, '').replace(/\n/g, "<br>");
-                return body;
-            }
-            return "";
-        };
 
         /* Sort keys so that title and author come first */
         var sortKeys = function(unsortedkeys) {
@@ -204,7 +191,7 @@
             var docs = result.response.docs,
                 highlighting = result.highlighting,
                 searchResults = Dom.get("search_results"),
-                i, j, containerDiv, childDiv, innerContainerDiv, titleAnchor, titleAnchorText;
+                i, j, containerDiv, childDiv, innerContainerDiv, titleAnchor, titleAnchorText, anchor;
 
             LWA.ui.removeDivChildNodes("search_results");
 
@@ -216,26 +203,29 @@
 
                 for(j = 0; j < sortedkeys.length; j++) {
                     var key = sortedkeys[j];
-                    innerContainerDiv = LWA.ui.createDomElement("div", containerDiv, []);
+                    if (key != "HDFSKey") {
+                        var value = (docs[i][key] == "") ? "<i>No value</i>" : LWA.util.stripBrackets(docs[i][key]);
+                        innerContainerDiv = LWA.ui.createDomElement("div", containerDiv, []);
 
-                    if (key == "title" && docs[i].hasOwnProperty("id")) {
-                        childDiv = LWA.ui.createDomElement("div", containerDiv, []);
-                        titleAnchor = LWA.ui.createDomElement("a", childDiv, [
-                            { key : "class", value: "search-result-header" },
-                            { key : "id", value : "titleanchor" + i },
-                            { key : "style", value: "color: steelblue" }, { key : "target", value : "_blank" }]);
-                        setHrefAttribute(titleAnchor, docs[i]);
-                        titleAnchor.appendChild(document.createTextNode(LWA.util.stripBrackets(docs[i].title)));
+                        /*if (key == "title" && docs[i].hasOwnProperty("id")) {
+                            childDiv = LWA.ui.createDomElement("div", containerDiv, []);
+                            titleAnchor = LWA.ui.createDomElement("a", childDiv, [
+                                { key : "class", value: "search-result-header" },
+                                { key : "id",    value: "titleanchor" + i },
+                                { key : "style", value: "color: steelblue" }, { key : "target", value : "_blank" }]);
+                            setHrefAttribute(titleAnchor, docs[i]);
+                            titleAnchor.appendChild(document.createTextNode(LWA.util.stripBrackets(docs[i].title)));
 
-                    } else {
+                        } else { }*/
+
                         LWA.ui.createDomElement("div", innerContainerDiv, [
-                            { key : "text", value : key },
+                            { key : "text",  value : key },
                             { key : "class", value : "search-result-inner-container-label" } ]);
 
                         LWA.ui.createDomElement("div", innerContainerDiv, [
-                            { key : "text", value : "<a href=\"#\">" + LWA.util.stripBrackets(docs[i][key]) + "</a>"},
-                            { key : "id", value : key + "_" + i },
-                            { key: "class", value : "search-result-inner-container" } ]);
+                            { key : "text",  value : "<a href=\"#\">" + value + "</a>"},
+                            { key : "id",    value : key + "_" + i },
+                            { key : "class", value : "search-result-inner-container" } ]);
 
                         Event.addListener(key + "_" + i, "click", function(e) {
                             Event.stopEvent(e);
@@ -244,6 +234,19 @@
                                     this.id.replace(/_[0-9]+$/, "") + ":\"" +
                                     this.innerHTML.replace("<a href=\"#\">", "").replace("</a>", "") + "\"";
                         });
+
+                        if (j == sortedkeys.length - 1) {
+                            anchor = LWA.ui.createDomElement("a", innerContainerDiv, [
+                                { key : "class", value: "button add search-result-button" },
+                                { key : "id",    value: "expand_" + i }, { key : "target", value : "_blank" } ]);
+                            anchor.setAttribute("href", "hdfs://" + docs[i]["HDFSKey"]);
+
+                            Event.addListener("expand_" + i, "click", function(e) {
+                                Event.stopEvent(e);
+                                window.location = '<c:url value="/core/" />' + Dom.get("core_name_select").value +
+                                        "/document/view?hdfs=" + this.href.substring("hdfs://".length);
+                            });
+                        }
                     }
                 }
 
@@ -278,10 +281,10 @@
             Event.stopEvent(e);
 
             var queryTerms = Dom.get("search_input").value,
-                collectionName = Dom.get("collection_name_select").value,
+                coreName = Dom.get("core_name_select").value,
                 fq = getFilterQueryString();
 
-            var urlParams = "?query=" + queryTerms + "&collection=" + collectionName + "&sort=" + sortType + "&order=" + ascType;
+            var urlParams = "?query=" + queryTerms + "&core=" + coreName + "&sort=" + sortType + "&order=" + ascType;
             if (fq != "") {
                 urlParams += "&fq=" + fq;
             }

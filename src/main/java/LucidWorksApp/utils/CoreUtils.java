@@ -6,9 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 
 
-public class CollectionUtils extends Utils {
+public class CoreUtils extends Utils {
 
-    public static List<String> getCollectionNames() {
+    public static List<String> getCoreNames() {
         String url = SERVER + COLLECTIONS_ENDPOINT;
         String json = HttpClientUtils.httpGetRequest(url);
 

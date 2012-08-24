@@ -23,6 +23,6 @@
     <mvc:view-controller path="/collection/{collectionName}/datasource/{datasourceId}" view-name="datasourceDetails"/>
     <mvc:view-controller path="/collection/{collectionName}/type/web/datasource/{datasourceId}" view-name="datasourceTypes/webdatasource"/>
     <mvc:view-controller path="/collection/{collectionName}/type/importcsv/datasource/{datasourceId}" view-name="datasourceTypes/importcsv"/>
-
+    <mvc:view-controller path="/core/{coreName}/document/view" view-name="documentView" />
 
 </beans>
