@@ -91,15 +91,4 @@ public class DatasourceUtils extends Utils {
         return namesAndIds;
     }
 
-    public static String createDatasource(String collectionName, HashMap<String, Object> properties) {
-        String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + DATASOURCES_ENDPOINT;
-
-        return HttpClientUtils.httpJsonPostRequest(url, JsonParsingUtils.constructJsonStringFromProperties(properties));
-    }
-
-    public static String deleteDatasource(String collectionName, String datasourceId) {
-        String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + DATASOURCES_ENDPOINT + "/" + datasourceId;
-
-        return HttpClientUtils.httpDeleteRequest(url);
-    }
 }

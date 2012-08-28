@@ -90,29 +90,4 @@ public class DatasourceAPIController extends APIController {
         httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(result, httpHeaders, OK);
     }
-
-    @RequestMapping(value="/create", method = RequestMethod.POST)
-    public ResponseEntity<String> createDatasource(@RequestBody String body) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-        ObjectMapper mapper = new ObjectMapper();
-        Map<String, Object> newDataSource = mapper.readValue(body, TypeFactory.mapType(HashMap.class, String.class, Object.class));
-
-        String collectionName = (String) newDataSource.get("collectionName");
-        HashMap<String, Object> properties = (HashMap<String, Object>) newDataSource.get("properties");
-
-        String result = DatasourceUtils.createDatasource(collectionName, properties);
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>(result, httpHeaders, OK);
-    }
-
-    @RequestMapping(value = "/delete", method = RequestMethod.DELETE)
-    public ResponseEntity<String> deleteDatassource(@RequestParam(value = PARAM_CORE_NAME, required = true) String collectionName,
-                                                    @RequestParam(value = PARAM_DATASOURCE_ID, required = true) Integer datasourceId) {
-        String result = DatasourceUtils.deleteDatasource(collectionName, datasourceId.toString());
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>(result, httpHeaders, OK);
-    }
 }

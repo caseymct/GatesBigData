@@ -2,11 +2,9 @@ package LucidWorksApp.utils;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.apache.solr.common.util.NamedList;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -79,5 +77,27 @@ public class JsonParsingUtils {
             jsonObject.put(entry.getKey(), entry.getValue().toString());
         }
         return jsonObject.toString();
+    }
+
+    private static JSONObject recursivelyConstructJSON(Map.Entry entry, JSONObject json)  {
+        if (entry.getValue() instanceof NamedList) {
+            JSONObject subJson = new JSONObject();
+            for(Object o : (NamedList) entry.getValue()) {
+                subJson = recursivelyConstructJSON((Map.Entry) o, subJson);
+            }
+            json.put(entry.getKey(), subJson);
+        } else {
+            json.put(entry.getKey(), entry.getValue().toString());
+        }
+        return json;
+    }
+
+    public static JSONObject constructJSONObjectFromNamedList(NamedList namedList) {
+        JSONObject json = new JSONObject();
+
+        for(Object o : namedList) {
+            json = recursivelyConstructJSON((Map.Entry) o, json);
+        }
+        return json;
     }
 }

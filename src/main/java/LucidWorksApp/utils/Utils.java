@@ -10,8 +10,8 @@ import java.util.List;
 
 public class Utils {
     public static final String COLLECTIONS_ENDPOINT = "/api/collections";
-    //public static final String SERVER = "http://denlx006.dn.gates.com:8888";
-    public static final String SERVER = "http://localhost:8983";
+    public static final String SERVER = "http://denlx006.dn.gates.com:8983";
+    //public static final String SERVER = "http://localhost:8983";
     public static final String DATASOURCES_ENDPOINT = "/datasources";
     public static final String INFO_ENDPOINT = "/info";
     public static final String INDEX_ENDPOINT = "/index";
@@ -20,6 +20,8 @@ public class Utils {
     public static final String LUKE_ENDPOINT = "/admin/luke";
     public static final String SOLR_PATH = "/Users/caseymctaggart/projects/solr/example/solr";
     public static final String SOLR_SCHEMA_HDFSKEY = "HDFSKey";
+    public static final String HDFS_URI = "hdfs://denlx006.dn.gates.com:8020";
+
 
     public static String getServer() {
         return SERVER;
@@ -44,6 +46,11 @@ public class Utils {
     public static String getSolrSchemaHdfskey() {
         return SOLR_SCHEMA_HDFSKEY;
     }
+
+    public static String getHDFSUri() {
+        return HDFS_URI;
+    }
+
 
     public static List<String> convertObjectListToStringList(List<Object> objectList) {
         List<String> stringList = new ArrayList<String>();

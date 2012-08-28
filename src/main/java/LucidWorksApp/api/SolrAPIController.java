@@ -47,42 +47,5 @@ public class SolrAPIController extends APIController {
         return new ResponseEntity<String>(response, httpHeaders, OK);
     }
 
-    @RequestMapping(value="/addfile/json", method = RequestMethod.GET)
-    public ResponseEntity<String> addDocument(@RequestParam(value = PARAM_FILENAME, required = true) String fileName,
-                                              @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
-                                              @RequestParam(value = PARAM_HDFS_KEY, required = true) String hdfsKey) {
-        boolean added = false;
 
-        JSONObject response = new JSONObject();
-        response.put("File", fileName);
-        response.put("Core", coreName);
-
-        String jsonDocument = Utils.readFileIntoString(fileName);
-
-        if (!jsonDocument.equals("")) {
-            try {
-                JSONObject jsonObject = JSONObject.fromObject(jsonDocument);
-                added = solrService.addJsonDocumentToSolr(jsonObject, coreName, hdfsKey);
-            } catch (JSONException e) {
-                System.err.println(e.getMessage());
-            }
-        }
-        response.put("Added", added);
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>(response.toString(), httpHeaders, OK);
-    }
-
-    @RequestMapping(value="/add/json", method = RequestMethod.POST)
-    public ResponseEntity<String> addDocument(@RequestBody String body) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-        ObjectMapper mapper = new ObjectMapper();
-        Map<String, Object> map = mapper.readValue(body, TypeFactory.mapType(HashMap.class, String.class, Object.class));
-
-
-        //response = solrService.addJsonDocumentToSolr(jsonDocument, "")
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>("", httpHeaders, OK);
-    }
 }

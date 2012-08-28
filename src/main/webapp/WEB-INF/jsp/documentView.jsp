@@ -16,7 +16,6 @@
             Json = YAHOO.lang.JSON;
 
         var remoteFile = YAHOO.deconcept.util.getRequestParameter("hdfs");
-        remoteFile = "/outfiles/" + remoteFile.substring(remoteFile.lastIndexOf("/") + 1);
 
         Connect.asyncRequest('GET', '<c:url value="/data/read?remotefile=" />' + remoteFile, {
             success : function(o) {

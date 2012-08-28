@@ -152,8 +152,21 @@
             treeView.removeChildren(root);
 
             for(i = 0; i < facets.length; i++) {
-                if (facets[i].values.length > 0 && facets[i].name != "id") {
-                    nameNode = new TextNode(facets[i].name, root, false);
+                var parent = root;
+                if (facets[i].name.indexOf(".") > 0) {
+                    var facetNameArray = facets[i].name.split(".");
+                    var facetParentName = facetNameArray[0], facetChildName = facetNameArray[1];
+                    var parentNode = treeView.getNodeByProperty("label", facetParentName);
+                    if (parentNode == null) {
+                        parentNode = new TextNode(facetParentName, root, false);
+                    }
+                    parent = parentNode;
+                    facets[i].name = facetChildName;
+                }
+
+                if (facets[i].values.length > 0 &&
+                        !(facets[i].values.length == 1 && facets[i].values[0].match(/^\s\([0-9]+\)$/))) {
+                    nameNode = new TextNode(facets[i].name, parent, false);
 
                     for(j = 0; j < facets[i].values.length; j++) {
                         valueNode = new TextNode(facets[i].values[j], nameNode, false);
@@ -169,7 +182,8 @@
                 }
 
                 var node = e.node;
-                var anchorText = node.parent.label + " : " + node.label.substring(0, node.label.lastIndexOf("(") - 1);
+                var anchorText = (!(node.parent.parent instanceof YAHOO.widget.RootNode) ? node.parent.parent.label + "." : "")
+                                    + node.parent.label + " : " + node.label.substring(0, node.label.lastIndexOf("(") - 1);
 
                 if (Dom.inDocument("treeNode" + node.index) == false) {
                     var anchor = LWA.ui.createDomElement("a", Dom.get("facet_options"), [
@@ -284,7 +298,7 @@
                 coreName = Dom.get("core_name_select").value,
                 fq = getFilterQueryString();
 
-            var urlParams = "?query=" + queryTerms + "&core=" + coreName + "&sort=" + sortType + "&order=" + ascType;
+            var urlParams = "?query=" + queryTerms + "&core=" + coreName + "&sort=" + sortType + "&order=" + ascType + "&hdfs=/na_data/";
             if (fq != "") {
                 urlParams += "&fq=" + fq;
             }

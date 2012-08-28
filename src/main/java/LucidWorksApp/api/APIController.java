@@ -8,5 +8,5 @@ public abstract class APIController {
     public static final String PARAM_CORE_NAME = "core";
     public static final String PARAM_FILENAME = "file";
     public static final String PARAM_FILE_ONSERVER = "local";
-    public static final String PARAM_HDFS_KEY = "hdfs";
+    public static final String PARAM_HDFS = "hdfs";
 }

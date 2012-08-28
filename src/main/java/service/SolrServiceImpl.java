@@ -2,7 +2,9 @@ package service;
 
 import LucidWorksApp.utils.FieldUtils;
 import LucidWorksApp.utils.HttpClientUtils;
+import LucidWorksApp.utils.JsonParsingUtils;
 import LucidWorksApp.utils.Utils;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -14,6 +16,8 @@ import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.CoreAdminParams;
+import org.apache.solr.common.util.NamedList;
+import org.apache.solr.common.util.SimpleOrderedMap;
 import org.apache.solr.core.CoreContainer;
 import org.xml.sax.SAXException;
 
@@ -22,7 +26,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 
 public class SolrServiceImpl implements SolrService {
@@ -115,9 +121,28 @@ public class SolrServiceImpl implements SolrService {
         SolrInputDocument doc = new SolrInputDocument();
 
         doc.addField(Utils.getSolrSchemaHdfskey(), hdfsKey);
+
         for(Object key : document.keySet()) {
-            doc.addField((String) key, document.get(key), 1.0f);
+            if (document.get(key) instanceof JSONObject) {
+                JSONObject subDocument = (JSONObject) document.get(key);
+                for (Object subKey : subDocument.keySet()) {
+                    doc.addField((String) key + "." + (String) subKey, subDocument.get(subKey));
+                }
+            } else {
+                doc.addField((String) key, document.get(key), 1.0f);
+            }
         }
+
+        return solrServerCommit(getSolrServer(), doc);
+    }
+
+    public boolean addDocumentToSolr(String content, String coreName, String hdfsKey) {
+
+        SolrInputDocument doc = new SolrInputDocument();
+
+        doc.addField(Utils.getSolrSchemaHdfskey(), hdfsKey);
+
+        doc.addField("content", content);
 
         return solrServerCommit(getSolrServer(), doc);
     }
@@ -197,5 +222,46 @@ public class SolrServiceImpl implements SolrService {
         }
 
         return coreList;
+    }
+
+    public JSONObject getCoreData(String coreName) {
+
+        try {
+            CoreAdminRequest request = new CoreAdminRequest();
+            request.setAction(CoreAdminParams.CoreAdminAction.STATUS);
+            CoreAdminResponse cores = request.process(getSolrServer());
+
+            return JsonParsingUtils.constructJSONObjectFromNamedList(cores.getCoreStatus(coreName));
+
+        } catch (SolrServerException e) {
+            System.out.println(e.getMessage());
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return new JSONObject();
+    }
+
+    public JSONArray getAllCoreData() {
+        JSONArray coreInfo = new JSONArray();
+
+        try {
+            CoreAdminRequest request = new CoreAdminRequest();
+            request.setAction(CoreAdminParams.CoreAdminAction.STATUS);
+            CoreAdminResponse cores = request.process(getSolrServer());
+
+            for (Object o : cores.getCoreStatus()) {
+                Map.Entry coreData = (Map.Entry) o;
+                coreInfo.add(JsonParsingUtils.constructJSONObjectFromNamedList((NamedList) coreData.getValue()));
+            }
+            return coreInfo;
+
+        } catch (SolrServerException e) {
+            System.out.println(e.getMessage());
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return new JSONArray();
     }
 }

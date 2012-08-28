@@ -1,38 +1,84 @@
 package service;
 
+import LucidWorksApp.utils.Utils;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TreeMap;
 
 @Service
 public class HDFSServiceImpl implements HDFSService {
 
-    private static final String hadoopDirectory = "/Users/caseymctaggart/projects/hadoop/hadoop-0.20.0";
-    private static final String ERROR = "!Error!";
+    private static final String HDFS_ERROR_STRING = "ERROR";
+    private static final String FACETFIELDS_HDFSFILENAME = "fields.csv";
 
     private Configuration getHDFSConfiguration() {
-        Configuration config = new Configuration();
+        return new Configuration();
+        /*
         config.addResource(new Path(hadoopDirectory + "/conf/hadoop-env.sh"));
         config.addResource(new Path(hadoopDirectory + "/conf/core-site.xml"));
         config.addResource(new Path(hadoopDirectory + "/conf/hdfs-site.xml"));
         config.addResource(new Path(hadoopDirectory + "/conf/mapred-site.xml"));
+        */
+    }
 
-        return config;
+    private FileSystem getHDFSFileSystem() {
+        try {
+            Configuration conf = getHDFSConfiguration();
+            return FileSystem.get(URI.create(Utils.getHDFSUri()), conf, "hdfs");
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        } catch (InterruptedException e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
+    }
+
+    public int addAllFilesInLocalDirectory(String remoteFileDirectory, String localFileDirectory) {
+        int nAdded = 0;
+
+        try {
+            FileSystem fs = getHDFSFileSystem();
+            File localFileDir = new File(localFileDirectory);
+            File[] localFiles = localFileDir.listFiles();
+
+            for(File file : localFiles) {
+
+                Path srcPath = new Path(file.getAbsolutePath());
+                Path dstPath = new Path(remoteFileDirectory + "/" + file.getName());
+
+                if (!fs.exists(dstPath)) {
+                    try {
+                        fs.copyFromLocalFile(srcPath, dstPath);
+                        nAdded++;
+                    } catch(Exception e) {
+                        System.err.println(e.getMessage());
+                    }
+                }
+            }
+
+            fs.close();
+        }
+        catch (IOException e) {
+            System.err.println(e.getMessage());
+        }
+
+        return nAdded;
     }
 
     public boolean addFile(String remoteFilePath, String localFilePath) {
         try {
-            Configuration conf = getHDFSConfiguration();
-
-            FileSystem fs = FileSystem.get(conf);
+            FileSystem fs = getHDFSFileSystem();
             Path srcPath = new Path(localFilePath);
             Path dstPath = new Path(remoteFilePath);
 
@@ -58,8 +104,7 @@ public class HDFSServiceImpl implements HDFSService {
 
     public boolean removeFile(String remoteFilePath) {
         try {
-            Configuration conf = getHDFSConfiguration();
-            FileSystem fs = FileSystem.get(conf);
+            FileSystem fs = getHDFSFileSystem();
             Path path = new Path(remoteFilePath);
 
             if (fs.exists(path)) {
@@ -79,12 +124,11 @@ public class HDFSServiceImpl implements HDFSService {
         StringBuilder sb = new StringBuilder();
 
         try {
-            Configuration config = new Configuration();
-            FileSystem fs = FileSystem.get(config);
+            FileSystem fs = getHDFSFileSystem();
             Path path = new Path(remoteFilePath);
 
             if (!fs.exists(path)) {
-                return ERROR + "File does not exist";
+                return HDFS_ERROR_STRING + "File does not exist";
             }
 
             String line = "";
@@ -110,8 +154,8 @@ public class HDFSServiceImpl implements HDFSService {
 
         String fileContents = getFileContents(remoteFilePath);
 
-        if (fileContents.contains(ERROR)) {
-            error.put("Error", fileContents.substring(ERROR.length()));
+        if (fileContents.contains(HDFS_ERROR_STRING)) {
+            error.put("Error", fileContents.substring(HDFS_ERROR_STRING.length()));
             return error;
         }
 
@@ -122,4 +166,45 @@ public class HDFSServiceImpl implements HDFSService {
             return error;
         }
     }
+
+    public TreeMap<String, String> getHDFSFacetFields(String hdfsDir) {
+        TreeMap<String, String> namesAndTypes = new TreeMap<String, String>();
+
+        hdfsDir = hdfsDir.endsWith("/") ? hdfsDir : hdfsDir + "/";
+        String response = this.getFileContents(hdfsDir + FACETFIELDS_HDFSFILENAME);
+
+        if (!response.startsWith(HDFS_ERROR_STRING)) {
+            for(String ret : response.split(",")) {
+                String[] n = ret.split(":");
+                namesAndTypes.put(n[0], n[1]);
+            }
+        }
+
+        return namesAndTypes;
+    }
+
+    public List<String> listFiles(String hdfsDirectory) {
+        List<String> filePaths = new ArrayList<String>();
+
+        FileSystem fs = getHDFSFileSystem();
+        Path path = new Path(hdfsDirectory);
+        int hdfsUriStringLength = Utils.getHDFSUri().length();
+
+        try {
+            RemoteIterator<LocatedFileStatus> r = fs.listFiles(path, true);
+            while(r.hasNext()) {
+                String pathString = r.next().getPath().toString();
+                // just add the HDFS path: hdfs://denlx006.dn.gates.com/path/etc --> /path/etc
+                filePaths.add(pathString.substring(hdfsUriStringLength));
+            }
+        } catch (FileNotFoundException e){
+            System.out.println(e.getMessage());
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return filePaths;
+    }
+
+
 }
