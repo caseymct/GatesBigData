@@ -21,4 +21,6 @@ public interface HDFSService {
     public String getFileContents(String fileName);
 
     public List<String> listFiles(String hdfsDirectory);
+
+    public void readOffNutch();
 }

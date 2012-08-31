@@ -5,21 +5,38 @@
 <layout:main>
     <link rel="stylesheet" type="text/css" href="<c:url value="/static/css/index.css"/>" />
 
-    <h2>Collections</h2>
+    <h2>Solr Cores</h2>
 
     <div id="tree_view"></div>
 
-    <form id="create_collection_form">
-        <div id="create_new_collection_div">
-            <h3 id="create_new_collection_header">Create new collection</h3>
-            <div class="row">
-                <label for="new_collection_name" id = "new_collection_name_label"><span class="red">*</span>Name: </label>
-                <input id="new_collection_name" type="text"/>
+    <form id="create_core_form">
+        <div id="create_new_core_div">
+            <h4 id="create_new_core_header">Create new core</h4>
+            <div class="index_row">
+                <label for="new_core_name" id = "new_core_name_label" class="index_label"><span class="red">*</span>Name: </label>
+                <input id="new_core_name" type="text" class="index_input"/>
             </div>
-            <div class="buttons">
+            <div class="index_row">
+                <label for="instance_dir" id = "instance_dir_label" class="index_label">Instance directory: </label>
+                <input id="instance_dir" type="text" class="index_input" value="solr/{name}"/>
+            </div>
+            <div class="index_row">
+                <label for="data_dir" id = "data_dir_label" class="index_label">Data directory: </label>
+                <input id="data_dir" type="text" class="index_input" value="solr/{name}/data"/>
+            </div>
+            <div class="index_row">
+                <label for="config_file_name" id = "config_file_name_label" class="index_label">Config file: </label>
+                <input id="config_file_name" type="text" value="solrconfig.xml" class="index_input"/>
+            </div>
+            <div class="index_row">
+                <label for="schema_file_name" id = "schema_file_name_label" class="index_label">Schema file: </label>
+                <input id="schema_file_name" type="text" value="schema.xml" class="index_input"/>
+            </div>
+
+            <div class="buttons index_buttons">
                 <a href="#" class="button small" id="create">Create</a>
             </div>
-            <div class = "row"></div>
+            <div class = "index_row"></div>
         </div>
     </form>
 
@@ -34,115 +51,47 @@
 
         var treeView = new YAHOO.widget.TreeView("tree_view");
 
-        var buildTreeRecurse = function(doc, parentNode) {
-            var isObject = Object.prototype.toString.call(doc).match("Object") != null;
-            var nameNode = new TextNode(doc, parentNode, false);
-            console.log("adding " + doc);
+        var buildTreeRecurse = function(doc, keyname, parentNode) {
+            var key, isObject = Object.prototype.toString.call(doc).match("Object") != null;
+            var name = isObject ? keyname : keyname + ": " + doc;
+            var nameNode = new TextNode(name, parentNode, false);
 
             if (!isObject) {
                 nameNode.isLeaf = true;
             } else {
-                debugger;
-                var keys = Object.keys(doc);
-                for(var j = 0; j < keys.length; j++) {
-                    buildTreeRecurse(doc[keys[j]], nameNode);
+                for(key in doc) {
+                    buildTreeRecurse(doc[key], key, nameNode);
                 }
             }
         };
 
         var buildTree = function(docs) {
-            var i, j, keys, root = treeView.getRoot();
-
+            var i, j, key, nameNode, root = treeView.getRoot();
             treeView.removeChildren(root);
 
             for(i = 0; i < docs.length; i++) {
-                keys = Object.keys(docs[i]);
-                for(j = 0; j < keys.length; j++) {
-                    buildTreeRecurse(docs[i][keys[j]], root);
+                nameNode = new TextNode(docs[i].name, root, false);
+                for(key in docs[i]) {
+                    buildTreeRecurse(docs[i][key], key, nameNode);
                 }
             }
             treeView.render();
-        };
-        /*
-        var dataSource = new YAHOO.util.XHRDataSource('<c:url value="/core/info" />');
-        dataSource.responseSchema = {
-            resultsList:'collections',
-            fields:[
-                {key:'name', parser:'text'},
-                {key:'isDefaultCore', parser:'text'},
-                {key:'instanceDir', parser:'text'},
-                {key:'dataDir', parser:'text'},
-                {key:'config', parser:'text'},
-                {key:'schema', parser:'text'},
-                {key:'startTime', parser:'date'},
-                {key:'uptime', parser:'number'},
-                {key:'dataSources', parser:'number'},
-                {key:'crawling', parser:'text'}
-            ]
-
-            name: "collection1",
-            isDefaultCore: "true",
-            instanceDir: "solr/collection1/",
-            dataDir: "solr/collection1/data/",
-            config: "solrconfig.xml",
-            schema: "schema.xml",
-            startTime: "Mon Aug 27 16:39:09 MDT 2012",
-            uptime: "82076746",
-            index: {
-                numDocs: "28",
-                maxDoc: "28",
-                version: "169",
-                segmentCount: "1",
-                current: "true",
-                hasDeletions: "false",
-                directory: "org.apache.lucene.store.NRTCachingDirectory:NRTCachingDirectory(org.apache.lucene.store.MMapDirectory@/projects/solr/solr4.0/example/solr/collection1/data/index lockFactory=org.apache.lucene.store.NativeFSLockFactory@6d3d7254; maxCacheMB=48.0 maxMergeSizeMB=4.0)",
-                userData: {
-                    commitTimeMSec: 1346101495813
-                },
-                lastModified: "Mon Aug 27 15:04:55 MDT 2012",
-                sizeInBytes: "34866",
-                size: "34.05 KB"
-            }
+            treeView.expandAll();
         };
 
-        var contextPath = '<c:url value="/"/>';
-        contextPath = contextPath != '/' ? contextPath : '';
-        var formatCollectionName = function(elCell, oRecord, oColumn, oData) {
-            elCell.innerHTML =  '<a href="' + contextPath + 'collection/' + oData + '">' + oData + '</a>';
-        };
-
-        var columnDefs = [
-            {key:'name', label:'Name', sortable:true, resizeable:true, formatter:formatCollectionName},
-            {key:'docs', label:'# Documents', resizeable:true, sortable:true},
-            {key:'size', label:'Size', sortable:true, resizeable:true},
-            {key:'dataSources', label:'# Data sources', sortable:true},
-            {key:'crawling', label:'Crawl status', sortable:true}
-        ];
-
-        var dataTable = new YAHOO.widget.ScrollingDataTable('results_table', columnDefs, dataSource, {
-            draggableColumns: true,
-            width:"100%",
-            paginator : new YAHOO.widget.Paginator({
-                rowsPerPage: 25,
-                pageLinks:5
-            })
-        });
-        */
         Connect.asyncRequest('GET', '<c:url value="/core/info/all" />' , {
             success : function(o) {
-
-                var result = Json.parse(o.responseText);
-                buildTree(result);
+                buildTree(Json.parse(o.responseText));
             },
             failure : function (o) {
-                alert("failed");
+                alert("Could not retrieve core information.");
             }
         });
 
         Event.addListener("create", "click", function(e) {
             Event.stopEvent(e);
 
-            var newcollectioninfo =  { "collectionName" : Dom.get("new_collection_name").value };
+            var newcoreinfo =  { "corename" : Dom.get("new_core_name").value };
 
             Connect.initHeader('Content-Type', 'application/json');
             Connect.setDefaultPostHeader('application/json');

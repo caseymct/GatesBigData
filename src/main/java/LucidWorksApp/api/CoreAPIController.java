@@ -137,6 +137,25 @@ public class CoreAPIController extends APIController {
         return new ResponseEntity<String>("", httpHeaders, OK);
     }
 
+    @RequestMapping(value="/create", method = RequestMethod.POST)
+    public ResponseEntity<String> createCore(@RequestBody String body) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+        ObjectMapper mapper = new ObjectMapper();
+        Map<String, Object> newDataSource = mapper.readValue(body, TypeFactory.mapType(HashMap.class, String.class, Object.class));
+
+        String coreName = (String) newDataSource.get("coreName");
+        HashMap<String, Object> properties = new HashMap<String, Object>();
+        properties.put("name", coreName);
+
+        String result = CoreUtils.createCollection(properties);
+        //http://localhost:8983/solr/admin/cores?action=CREATE&name=coreX&instanceDir=path_to_instance_directory&config=config_file_name.xml&schema=schem_file_name.xml&dataDir=data
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        return new ResponseEntity<String>(result, httpHeaders, OK);
+    }
+
+
+
     @RequestMapping(value="/repopulate", method = RequestMethod.GET)
     public ResponseEntity<String> repopulateCoreFromHDFS(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
                                                          @RequestParam(value = PARAM_HDFS, required = true) String hdfsDir) {

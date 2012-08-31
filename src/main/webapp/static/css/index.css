@@ -1,17 +1,24 @@
-#create_new_collection_div {
-    margin-top: 30px;
+.index_row {
+    clear: both;
+    padding: 2px;
+}
+
+.index_label {
+    float:  left;
+    width: 35%;
+}
+
+.index_input {
+    width: 60%;
+}
+
+.index_buttons {
+    padding-bottom: 5px;
+}
+#create_new_core_div {
     padding: 5px;
     border: 1px solid #777777;
     border-radius: 15px;
-    margin: 10px;
+    margin: 30px 10px 10px 10px;
     background-color: #c3d5e8;
-}
-
-#new_collection_name {
-    float: left;
-    margin-left: 20px;
-}
-#new_collection_name_label {
-    float: left;
-    width: 40px;
 }

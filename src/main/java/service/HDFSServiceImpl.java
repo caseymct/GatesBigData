@@ -8,11 +8,23 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.Writable;
+
+import org.apache.nutch.crawl.CrawlDatum;
+import org.apache.nutch.crawl.Generator;
+import org.apache.nutch.protocol.Content;
+import org.apache.nutch.segment.SegmentReader;
+import org.apache.nutch.util.LockUtil;
+import org.apache.nutch.util.NutchConfiguration;
 import org.springframework.stereotype.Service;
+
 
 import java.io.*;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -206,5 +218,88 @@ public class HDFSServiceImpl implements HDFSService {
         return filePaths;
     }
 
+    public void readOffNutch() {
+        try {
+            Configuration conf = NutchConfiguration.create();
+            //CrawlDbReader dbr = new CrawlDbReader();
 
+            //String crawlDb = "/user/hdfs/urls/crawldb/";
+
+            String url="out100010.json";
+            /*CrawlDatum res = dbr.get(crawlDb, url, conf);
+            System.out.println("URL: " + url);
+            if (res != null) {
+                System.out.println(res);
+            } else {
+                System.out.println("not found");
+            }  */
+
+            FileSystem fs = getHDFSFileSystem();
+            boolean co = true,     // Content
+                    fe = false,    // Crawl Fetch
+                    ge = false,    // Crawl Generate
+                    pa = false,    // Crawl Parse
+                    pd = true,     // ParseData
+                    pt = false;    // ParseText
+
+            Text key=new Text();
+            Generator g = new Generator(conf);
+            String segName = g.generateSegmentName();
+            Path hdfsPath = new Path("/user/hdfs/urls/segments/" + segName + "/crawl_fetch/part-00000/index");
+            SequenceFile.Reader reader = new SequenceFile.Reader(fs, new Path("/user/hdfs/urls/segments/20120831142157/crawl_fetch/part-00000/index"), conf);
+            reader.next(key);
+
+            reader=new SequenceFile.Reader(fs, new Path("/user/hdfs/urls/segments/" + segName + "/content/part-00000/data"), conf);
+            reader.next(key);
+            //Path localPath = new Path("C:\\Users\\cm0607\\projects\\LucidWorksApp\\segOut");
+
+
+            //    Text key=new Text();
+            //    CrawlDatum value=new CrawlDatum();
+            //    if(!reader.next(key, value))
+            Path testdir = new Path("/user/hdfs/urls");
+
+            Path urlPath = new Path(testdir,"urls");
+            Path crawldbPath = new Path(testdir,"crawldb");
+            Path segmentsPath = new Path(testdir,"segments");
+            LockUtil.removeLockFile(fs, new Path("/user/hdfs/urls/crawldb/.locked"));
+            Path[] generatedSegment = g.generate(crawldbPath, segmentsPath, 1, Long.MAX_VALUE, Long.MAX_VALUE, false, true);
+            Path content = new Path(new Path(generatedSegment[0], Content.DIR_NAME),"part-00000/data");
+            //Path content = new Path("/user/hdfs/urls/segments/20120830142310/content/part-00000/data");
+            reader=new SequenceFile.Reader(fs, content, conf);
+
+
+            READ_CONTENT:
+            do {
+                 key=new Text();
+                Content value=new Content();
+                if(!reader.next(key, value)) break READ_CONTENT;
+                String contentString=new String(value.getContent());
+                if(contentString.indexOf("Nutch fetcher test page")!=-1) {
+                    System.out.println(key.toString());
+                }
+            } while(true);
+
+            reader.close();
+            //SequenceFile.Reader reader = new SequenceFile.Reader(fs, hdfsPath, conf);
+             key=new Text();
+            CrawlDatum value=new CrawlDatum();
+            while(reader.next(key, value)) {
+                System.out.println(key.toString());
+            }
+
+            SegmentReader segmentReader = new SegmentReader(conf, co, fe, ge, pa, pd, pt);
+
+            try {
+            segmentReader.get(new Path("/user/hdfs/urls/segments/20120830142310"),
+                new Text(url),
+                new OutputStreamWriter(System.out, "UTF-8"),
+                new HashMap<String, List<Writable>>());
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
 }
