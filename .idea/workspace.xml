@@ -2,16 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="8a9a16ad-4506-44ba-a1cd-7e3ddb8f9760" name="Default" comment="">
-      <change type="MOVED" beforePath="C:\Users\cm0607\projects\LucidWorksApp\src\main\java\LucidWorksApp\api\HDFSApiController.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/api/HDFSAPIController.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/artifacts/LucidWorksApp_war_exploded.xml" afterPath="$PROJECT_DIR$/.idea/artifacts/LucidWorksApp_war_exploded.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LucidWorksApp.iml" afterPath="$PROJECT_DIR$/LucidWorksApp.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pom.xml" afterPath="$PROJECT_DIR$/pom.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/LucidWorksApp/api/CoreAPIController.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/api/CoreAPIController.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/JsonParsingUtils.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/JsonParsingUtils.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/Utils.java" afterPath="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/Utils.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/service/HDFSService.java" afterPath="$PROJECT_DIR$/src/main/java/service/HDFSService.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/service/HDFSServiceImpl.java" afterPath="$PROJECT_DIR$/src/main/java/service/HDFSServiceImpl.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/index.jsp" afterPath="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/index.jsp" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/webapp/static/css/index.css" afterPath="$PROJECT_DIR$/src/main/webapp/static/css/index.css" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/service/SolrServiceImpl.java" afterPath="$PROJECT_DIR$/src/main/java/service/SolrServiceImpl.java" />
     </list>
     <ignored path="LucidWorksApp.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -43,7 +40,7 @@
         <option name="CONDITION" value="" />
         <option name="LOG_MESSAGE" value="" />
       </breakpoint>
-      <breakpoint url="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/Utils.java" line="103" class="LucidWorksApp.utils.Utils" package="LucidWorksApp.utils">
+      <breakpoint url="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/Utils.java" line="116" class="LucidWorksApp.utils.Utils" package="LucidWorksApp.utils">
         <option name="ENABLED" value="true" />
         <option name="LOG_ENABLED" value="false" />
         <option name="LOG_EXPRESSION_ENABLED" value="false" />
@@ -82,33 +79,7 @@
         <option name="CONDITION" value="" />
         <option name="LOG_MESSAGE" value="" />
       </breakpoint>
-      <breakpoint url="file://$PROJECT_DIR$/src/main/java/service/HDFSServiceImpl.java" line="283" class="service.HDFSServiceImpl" package="service">
-        <option name="ENABLED" value="true" />
-        <option name="LOG_ENABLED" value="false" />
-        <option name="LOG_EXPRESSION_ENABLED" value="false" />
-        <option name="SUSPEND_POLICY" value="SuspendAll" />
-        <option name="COUNT_FILTER_ENABLED" value="false" />
-        <option name="COUNT_FILTER" value="0" />
-        <option name="CONDITION_ENABLED" value="false" />
-        <option name="CLASS_FILTERS_ENABLED" value="false" />
-        <option name="INSTANCE_FILTERS_ENABLED" value="false" />
-        <option name="CONDITION" value="" />
-        <option name="LOG_MESSAGE" value="" />
-      </breakpoint>
-      <breakpoint url="file://$PROJECT_DIR$/src/main/java/service/HDFSServiceImpl.java" line="260" class="service.HDFSServiceImpl" package="service">
-        <option name="ENABLED" value="true" />
-        <option name="LOG_ENABLED" value="false" />
-        <option name="LOG_EXPRESSION_ENABLED" value="false" />
-        <option name="SUSPEND_POLICY" value="SuspendAll" />
-        <option name="COUNT_FILTER_ENABLED" value="false" />
-        <option name="COUNT_FILTER" value="0" />
-        <option name="CONDITION_ENABLED" value="false" />
-        <option name="CLASS_FILTERS_ENABLED" value="false" />
-        <option name="INSTANCE_FILTERS_ENABLED" value="false" />
-        <option name="CONDITION" value="" />
-        <option name="LOG_MESSAGE" value="" />
-      </breakpoint>
-      <breakpoint url="file://$PROJECT_DIR$/src/main/java/service/HDFSServiceImpl.java" line="247" class="service.HDFSServiceImpl" package="service">
+      <breakpoint url="file://$PROJECT_DIR$/src/main/java/service/HDFSServiceImpl.java" line="287" class="service.HDFSServiceImpl" package="service">
         <option name="ENABLED" value="true" />
         <option name="LOG_ENABLED" value="false" />
         <option name="LOG_EXPRESSION_ENABLED" value="false" />
@@ -165,7 +136,7 @@
       <file leaf-file-name="CoreAPIController.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/api/CoreAPIController.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="151" column="8" selection-start="6768" selection-end="6768" vertical-scroll-proportion="0.0">
+            <state line="89" column="66" selection-start="3619" selection-end="3619" vertical-scroll-proportion="0.0">
               <folding>
                 <element signature="e#6451#6467#0" expanded="true" />
               </folding>
@@ -185,29 +156,43 @@
       <file leaf-file-name="HDFSServiceImpl.java" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/java/service/HDFSServiceImpl.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="255" column="47" selection-start="8491" selection-end="8491" vertical-scroll-proportion="0.46825397">
+            <state line="289" column="0" selection-start="9772" selection-end="9772" vertical-scroll-proportion="0.33206108">
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#5625#5641#0" expanded="true" />
-                <element signature="e#6163#6171#0" expanded="true" />
+                <element signature="e#6328#6344#0" expanded="true" />
+                <element signature="e#6866#6874#0" expanded="true" />
+                <element signature="e#7778#7796#0" expanded="true" />
+                <element signature="e#8445#8460#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Utils.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/Utils.java">
+      <file leaf-file-name="SolrServiceImpl.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/service/SolrServiceImpl.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="10" column="13" selection-start="191" selection-end="191" vertical-scroll-proportion="0.0">
+            <state line="156" column="0" selection-start="5194" selection-end="5194" vertical-scroll-proportion="-12.6">
+              <folding>
+                <element signature="imports" expanded="true" />
+                <element signature="e#7458#7466#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="SolrAPIController.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/api/SolrAPIController.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="27" column="13" selection-start="989" selection-end="989" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="HDFSAPIController.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/api/HDFSAPIController.java">
+      <file leaf-file-name="JsonParsingUtils.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/JsonParsingUtils.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="110" column="0" selection-start="4959" selection-end="4959" vertical-scroll-proportion="0.0">
+            <state line="93" column="0" selection-start="3387" selection-end="3387" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -216,10 +201,28 @@
       <file leaf-file-name="HDFSService.java" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/java/service/HDFSService.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="24" column="31" selection-start="637" selection-end="637" vertical-scroll-proportion="0.0">
+            <state line="27" column="76" selection-start="737" selection-end="737" vertical-scroll-proportion="0.0">
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Utils.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/Utils.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="21" column="63" selection-start="944" selection-end="944" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="HDFSAPIController.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/api/HDFSAPIController.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="32" column="60" selection-start="1261" selection-end="1261" vertical-scroll-proportion="0.0">
+              <folding />
             </state>
           </provider>
         </entry>
@@ -229,36 +232,6 @@
           <provider selected="true" editor-type-id="text-editor">
             <state line="33" column="21" selection-start="1158" selection-end="1158" vertical-scroll-proportion="-14.96">
               <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="index.css" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/webapp/static/css/index.css">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="17" column="0" selection-start="181" selection-end="181" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="search.jsp" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/search.jsp">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="219" column="52" selection-start="9224" selection-end="9224" vertical-scroll-proportion="-3.3921568">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="SolrServiceImpl.java" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/service/SolrServiceImpl.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="261" column="55" selection-start="9296" selection-end="9296" vertical-scroll-proportion="0.0">
-              <folding>
-                <element signature="imports" expanded="true" />
-                <element signature="e#7357#7365#0" expanded="true" />
-              </folding>
             </state>
           </provider>
         </entry>
@@ -276,21 +249,21 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/src/main/java/service/SearchService.java" />
         <option value="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/search.jsp" />
         <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/api/SearchAPIController.java" />
-        <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/JsonParsingUtils.java" />
         <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/CoreUtils.java" />
         <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/DatasourceUtils.java" />
         <option value="$PROJECT_DIR$/src/main/java/service/SolrService.java" />
         <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/api/DatasourceAPIController.java" />
-        <option value="$PROJECT_DIR$/src/main/java/service/SolrServiceImpl.java" />
         <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/api/CoreAPIController.java" />
         <option value="$PROJECT_DIR$/src/main/webapp/static/css/index.css" />
         <option value="$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/index.jsp" />
-        <option value="$PROJECT_DIR$/src/main/java/service/HDFSService.java" />
-        <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/api/HDFSAPIController.java" />
         <option value="$PROJECT_DIR$/pom.xml" />
+        <option value="$PROJECT_DIR$/src/main/java/service/HDFSService.java" />
+        <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/JsonParsingUtils.java" />
+        <option value="$PROJECT_DIR$/src/main/java/service/SolrServiceImpl.java" />
+        <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/api/HDFSAPIController.java" />
+        <option value="$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/Utils.java" />
         <option value="$PROJECT_DIR$/src/main/java/service/HDFSServiceImpl.java" />
       </list>
     </option>
@@ -304,9 +277,9 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-306" />
-    <option name="y" value="882" />
-    <option name="width" value="1768" />
+    <option name="x" value="-230" />
+    <option name="y" value="810" />
+    <option name="width" value="1507" />
     <option name="height" value="1063" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
@@ -974,8 +947,8 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-306" y="882" width="1768" height="1063" extended-state="0" />
-    <editor active="true" />
+    <frame x="-230" y="810" width="1507" height="1063" extended-state="0" />
+    <editor active="false" />
     <layout>
       <window_info id="Data Sources" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -983,18 +956,18 @@
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.30454043" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.38648948" sideWeight="0.9993972" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.34219268" sideWeight="0.9993041" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="IDEtalk Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.27972028" sideWeight="0.16588785" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="IDEtalk" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Web" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Web" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.19424883" sideWeight="0.19601329" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.22938323" sideWeight="0.07198228" order="1" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.19424883" sideWeight="0.61351055" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.22938323" sideWeight="0.5780731" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -1095,23 +1068,9 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/CrawlingUtils.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="4" column="13" selection-start="67" selection-end="67" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/DatasourceUtils.java">
       <provider selected="true" editor-type-id="text-editor">
         <state line="92" column="0" selection-start="4015" selection-end="4015" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/api/SolrAPIController.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="27" column="13" selection-start="989" selection-end="989" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
@@ -1137,29 +1096,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/service/SolrServiceImpl.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="261" column="55" selection-start="9296" selection-end="9296" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#7357#7365#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/webapp/WEB-INF/jsp/search.jsp">
       <provider selected="true" editor-type-id="text-editor">
         <state line="219" column="52" selection-start="9224" selection-end="9224" vertical-scroll-proportion="-3.3921568">
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/api/CoreAPIController.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="151" column="8" selection-start="6768" selection-end="6768" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="e#6451#6467#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1177,29 +1117,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/service/HDFSService.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="24" column="31" selection-start="637" selection-end="637" vertical-scroll-proportion="0.0">
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/Utils.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="10" column="13" selection-start="191" selection-end="191" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/api/HDFSAPIController.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="110" column="0" selection-start="4959" selection-end="4959" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pom.xml">
       <provider selected="true" editor-type-id="text-editor">
         <state line="33" column="21" selection-start="1158" selection-end="1158" vertical-scroll-proportion="-14.96">
@@ -1207,13 +1124,71 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/service/HDFSServiceImpl.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/JsonParsingUtils.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="255" column="47" selection-start="8491" selection-end="8491" vertical-scroll-proportion="0.46825397">
+        <state line="93" column="0" selection-start="3387" selection-end="3387" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/api/SolrAPIController.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="27" column="13" selection-start="989" selection-end="989" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/api/CoreAPIController.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="89" column="66" selection-start="3619" selection-end="3619" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="e#6451#6467#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/service/SolrServiceImpl.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="156" column="0" selection-start="5194" selection-end="5194" vertical-scroll-proportion="-12.6">
           <folding>
             <element signature="imports" expanded="true" />
-            <element signature="e#5625#5641#0" expanded="true" />
-            <element signature="e#6163#6171#0" expanded="true" />
+            <element signature="e#7458#7466#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/api/HDFSAPIController.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="32" column="60" selection-start="1261" selection-end="1261" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/LucidWorksApp/utils/Utils.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="21" column="63" selection-start="944" selection-end="944" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/service/HDFSService.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="27" column="76" selection-start="737" selection-end="737" vertical-scroll-proportion="0.0">
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/service/HDFSServiceImpl.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="289" column="0" selection-start="9772" selection-end="9772" vertical-scroll-proportion="0.33206108">
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#6328#6344#0" expanded="true" />
+            <element signature="e#6866#6874#0" expanded="true" />
+            <element signature="e#7778#7796#0" expanded="true" />
+            <element signature="e#8445#8460#0" expanded="true" />
           </folding>
         </state>
       </provider>

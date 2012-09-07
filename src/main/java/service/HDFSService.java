@@ -2,6 +2,7 @@ package service;
 
 
 import net.sf.json.JSONObject;
+import org.codehaus.jackson.JsonGenerator;
 
 import java.util.List;
 import java.util.TreeMap;
@@ -22,5 +23,5 @@ public interface HDFSService {
 
     public List<String> listFiles(String hdfsDirectory);
 
-    public void readOffNutch();
+    public void printFileContents(String hdfsDate, String fileName, JsonGenerator g);
 }

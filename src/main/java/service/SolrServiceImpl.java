@@ -10,6 +10,7 @@ import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
+import org.apache.solr.client.solrj.request.AbstractUpdateRequest;
 import org.apache.solr.client.solrj.request.CoreAdminRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.client.solrj.response.CoreAdminResponse;
@@ -59,12 +60,13 @@ public class SolrServiceImpl implements SolrService {
             server.commit();
 
             UpdateRequest req = new UpdateRequest();
-            req.setAction(UpdateRequest.ACTION.COMMIT, false, false );
+            req.setAction(AbstractUpdateRequest.ACTION.COMMIT, false, false);
 
             if (doc != null) {
                 req.add(doc);
             }
             UpdateResponse rsp = req.process(server);
+            rsp.getStatus();
 
         } catch (SolrServerException e) {
             System.err.println(e.getMessage());
@@ -151,7 +153,7 @@ public class SolrServiceImpl implements SolrService {
 
         try {
             SolrServer server = getSolrServer();
-            server.deleteByQuery( "*:*" );
+            server.deleteByQuery("*:*");
             solrServerCommit(server);
 
         } catch (SolrServerException e) {

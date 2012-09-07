@@ -3,35 +3,15 @@ package LucidWorksApp.utils;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.solr.common.util.NamedList;
+import org.codehaus.jackson.JsonGenerator;
 
+import java.io.IOException;
 import java.util.*;
 
-/**
- * Created by IntelliJ IDEA.
- * User: caseymctaggart
- * Date: 7/26/12
- * Time: 2:08 PM
- * To change this template use File | Settings | File Templates.
- */
+
 public class JsonParsingUtils {
 
 
-    public static Object getContingentPropertyFromDataSourceJson(String dataSourcePropertyName, String dataSourcePropertyValue,
-                                                       String propertyToRetrieveName, String dataSourceFullJson) {
-
-        JSONObject dataSourcesJsonObject = JSONObject.fromObject("{ obj : " + dataSourceFullJson + "}");
-        JSONArray jsonArray = (JSONArray) dataSourcesJsonObject.get("obj");
-
-        for(Object o : jsonArray) {
-            JSONObject dataSourceJsonObject = (JSONObject) o;
-            if (dataSourceJsonObject.has(dataSourcePropertyName) &&
-                    dataSourceJsonObject.get(dataSourcePropertyName).equals(dataSourcePropertyValue)) {
-                return dataSourceJsonObject.get(propertyToRetrieveName);
-            }
-        }
-
-        return "";
-    }
 
     public static List<Object> getPropertiesFromDataSourceJson(String propertyName, String dataSourceFullJson) {
 
@@ -100,4 +80,32 @@ public class JsonParsingUtils {
         }
         return json;
     }
+
+    public static void printJSONObject(JSONObject jsonObject, String objectFieldName, JsonGenerator g) throws IOException {
+        g.writeObjectFieldStart(objectFieldName);
+
+        for(Object key : jsonObject.names()) {
+            Object value = jsonObject.get(key);
+
+            if (value instanceof JSONArray) {
+                g.writeArrayFieldStart((String) key);
+                for (Object o : (JSONArray) value) {
+                    if (o instanceof JSONObject) {
+                        printJSONObject((JSONObject) o, (String) key, g);
+                    } else {
+                        Utils.writeValueByType(value, g);
+                    }
+                }
+                g.writeEndArray();
+
+            } else if (value instanceof JSONObject) {
+                printJSONObject((JSONObject) value, (String) key, g);
+
+            } else {
+                Utils.writeValueByType((String) key, value, g);
+            }
+        }
+        g.writeEndObject();
+    }
+
 }

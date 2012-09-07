@@ -20,8 +20,6 @@ public class Utils {
     public static final String LUKE_ENDPOINT = "/admin/luke";
     public static final String SOLR_PATH = "/Users/caseymctaggart/projects/solr/example/solr";
     public static final String SOLR_SCHEMA_HDFSKEY = "HDFSKey";
-    public static final String HDFS_URI = "hdfs://denlx006.dn.gates.com:8020";
-
 
     public static String getServer() {
         return SERVER;
@@ -46,11 +44,6 @@ public class Utils {
     public static String getSolrSchemaHdfskey() {
         return SOLR_SCHEMA_HDFSKEY;
     }
-
-    public static String getHDFSUri() {
-        return HDFS_URI;
-    }
-
 
     public static List<String> convertObjectListToStringList(List<Object> objectList) {
         List<String> stringList = new ArrayList<String>();
@@ -79,6 +72,26 @@ public class Utils {
             }
         } else {
             g.writeStringField(key, new String(value.toString().getBytes(), Charset.forName("UTF-8")));
+        }
+    }
+
+    public static void writeValueByType(Object value, JsonGenerator g) throws IOException {
+        if (value == null) {
+            g.writeNull();
+        } else if (value instanceof Boolean) {
+            g.writeBoolean((Boolean) value);
+        } else if (value instanceof Number) {
+            if (value instanceof Integer) {
+                g.writeNumber((Integer) value);
+            } else if (value instanceof Double) {
+                g.writeNumber((Double) value);
+            } else if (value instanceof Float) {
+                g.writeNumber((Float) value);
+            } else if (value instanceof Long) {
+                g.writeNumber((Long) value);
+            }
+        } else {
+            g.writeString(new String(value.toString().getBytes(), Charset.forName("UTF-8")));
         }
     }
 

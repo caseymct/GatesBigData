@@ -203,6 +203,24 @@
     <orderEntry type="library" scope="RUNTIME" name="Maven: org.apache.ant:ant:1.8.1" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: org.apache.ant:ant-launcher:1.8.1" level="project" />
     <orderEntry type="library" scope="RUNTIME" name="Maven: rhino:js:1.7R2" level="project" />
+    <orderEntry type="module-library" scope="RUNTIME">
+      <library name="cygpath">
+        <ANNOTATIONS>
+          <root url="file://C:/cygwin/bin" />
+        </ANNOTATIONS>
+        <CLASSES>
+          <root url="file://C:/cygwin/bin" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://C:/cygwin/bin" />
+          <root url="file://C:/cygwin/bin" />
+          <root url="file://C:/cygwin/bin" />
+        </SOURCES>
+        <jarDirectory url="file://C:/cygwin/bin" recursive="false" type="SOURCES" />
+        <jarDirectory url="file://C:/cygwin/bin" recursive="false" type="SOURCES" />
+      </library>
+    </orderEntry>
   </component>
 </module>
 
