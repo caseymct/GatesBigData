@@ -125,24 +125,16 @@
         /* Sort keys so that title and author come first */
         var sortKeys = function(unsortedkeys) {
             var sortedkeys = [];
+            var strings = ["title", "author", "creator", "url"];
 
-            var titleindex = unsortedkeys.indexOf("title");
-            if (titleindex!= -1) {
-                sortedkeys.push("title");
-                unsortedkeys.splice(titleindex, 1);
+            for(var i = 0; i < strings.length; i++) {
+                var index = unsortedkeys.indexOf(strings[i]);
+                if (index != -1) {
+                    sortedkeys.push(strings[i]);
+                    unsortedkeys.splice(index, 1);
+                }
             }
 
-            var authorindex = unsortedkeys.indexOf("author");
-            if (authorindex != -1) {
-                sortedkeys.push("author");
-                unsortedkeys.splice(authorindex, 1);
-            }
-
-            var creatorindex = unsortedkeys.indexOf("creator");
-            if (creatorindex != -1) {
-                sortedkeys.push("creator");
-                unsortedkeys.splice(creatorindex, 1);
-            }
             return sortedkeys.concat(unsortedkeys.sort());
         };
 
@@ -214,10 +206,9 @@
                     { key : "class", value : "search-result-div" } ]);
 
                 var sortedkeys = sortKeys(Object.keys(docs[i]));
-
                 for(j = 0; j < sortedkeys.length; j++) {
                     var key = sortedkeys[j];
-                    if (key != "HDFSKey") {
+                    if (key.indexOf("HDFS") == -1) {
                         var value = (docs[i][key] == "") ? "<i>No value</i>" : LWA.util.stripBrackets(docs[i][key]);
                         innerContainerDiv = LWA.ui.createDomElement("div", containerDiv, []);
 
@@ -252,13 +243,14 @@
                         if (j == sortedkeys.length - 1) {
                             anchor = LWA.ui.createDomElement("a", innerContainerDiv, [
                                 { key : "class", value: "button add search-result-button" },
-                                { key : "id",    value: "expand_" + i }, { key : "target", value : "_blank" } ]);
-                            anchor.setAttribute("href", "hdfs://" + docs[i]["HDFSKey"]);
+                                { key : "id",    value: "expand_" + i } ]);
+                            anchor.setAttribute("href", "hdfs://" + docs[i]["HDFSSegment"] + ";" + docs[i]["HDFSKey"]);
 
                             Event.addListener("expand_" + i, "click", function(e) {
                                 Event.stopEvent(e);
-                                window.location = '<c:url value="/core/" />' + Dom.get("core_name_select").value +
-                                        "/document/view?hdfs=" + this.href.substring("hdfs://".length);
+                                var href = this.href.substring("hdfs://".length).split(";");
+                                window.open('<c:url value="/core/" />' + Dom.get("core_name_select").value +
+                                        "/document/view?segment=" + href[0] + "&file=" + href[1], "_blank");
                             });
                         }
                     }
@@ -298,7 +290,7 @@
                 coreName = Dom.get("core_name_select").value,
                 fq = getFilterQueryString();
 
-            var urlParams = "?query=" + queryTerms + "&core=" + coreName + "&sort=" + sortType + "&order=" + ascType + "&hdfs=/na_data/";
+            var urlParams = "?query=" + queryTerms + "&core=" + coreName + "&sort=" + sortType + "&order=" + ascType;
             if (fq != "") {
                 urlParams += "&fq=" + fq;
             }

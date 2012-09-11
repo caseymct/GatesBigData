@@ -58,16 +58,5 @@ public class CrawlingUtils extends Utils {
         return convertObjectListToStringList(JsonParsingUtils.getPropertiesFromDataSourceJson("crawl_state", crawlerDetails));
     }
 
-    public static String getCrawlerIdByType(String collectionName, String crawlerType) {
-        String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + DATASOURCES_ENDPOINT;
-
-        String dataSrcFullJson = HttpClientUtils.httpGetRequest(url);
-        Object id = JsonParsingUtils.getContingentPropertyFromDataSourceJson("type", crawlerType, "id", dataSrcFullJson);
-
-        if (id instanceof Integer) {
-            return id.toString();
-        }
-        return "Collection " + collectionName + " does not have a crawler of type " + crawlerType;
-    }
 }
 

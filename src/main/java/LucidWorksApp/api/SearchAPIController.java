@@ -1,6 +1,5 @@
 package LucidWorksApp.api;
 
-import LucidWorksApp.utils.Utils;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +33,7 @@ public class SearchAPIController extends APIController {
     public static final String PARAM_FQ = "fq";
     public static final String SESSION_HDFSDIR_TOKEN = "currentHDFSDir";
 
+
     private SearchService searchService;
     private HDFSService hdfsService;
 
@@ -51,18 +51,14 @@ public class SearchAPIController extends APIController {
                                                 @RequestParam(value = PARAM_SORT_ORDER, required = true) String sortOrder,
                                                 @RequestParam(value = PARAM_START, required = false) Integer start,
                                                 @RequestParam(value = PARAM_FQ, required = false) String fq,
-                                                @RequestParam(value = PARAM_HDFS, required = false) String hdfsDir,
                                                 HttpServletRequest request) throws IOException {
 
-        TreeMap<String, String> facetFields = new TreeMap<String, String>();
-
-        if (hdfsDir != null) {
-            HttpSession session = request.getSession();
-            facetFields = (TreeMap<String, String>) session.getAttribute(SESSION_HDFSDIR_TOKEN + hdfsDir);
-            if (facetFields == null) {
-                facetFields = hdfsService.getHDFSFacetFields(hdfsDir);
-                session.setAttribute(SESSION_HDFSDIR_TOKEN + hdfsDir, facetFields);
-            }
+        String hdfsDir = hdfsService.getSegmentsDir() + "/" + coreName;
+        HttpSession session = request.getSession();
+        TreeMap<String, String> facetFields = (TreeMap<String, String>) session.getAttribute(SESSION_HDFSDIR_TOKEN + hdfsDir);
+        if (facetFields == null) {
+            facetFields = hdfsService.getHDFSFacetFields(hdfsDir);
+            session.setAttribute(SESSION_HDFSDIR_TOKEN + hdfsDir, facetFields);
         }
 
         StringWriter writer = new StringWriter();

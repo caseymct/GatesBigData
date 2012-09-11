@@ -7,7 +7,6 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONException;
 import net.sf.json.JSONNull;
 import net.sf.json.JSONObject;
-import org.apache.avro.generic.GenericData;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -18,7 +17,6 @@ import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.schema.DateField;
 import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.JsonParseException;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -31,7 +29,8 @@ import java.util.regex.Pattern;
 public class SearchServiceImpl implements SearchService {
 
     private static Pattern fieldNamesToIgnore = Pattern.compile("^(attr|_).*|.*(version|batch|body|text_all|" +
-                                                                 Utils.getSolrSchemaHdfskey() + ").*");
+                                                                 Utils.getSolrSchemaHdfskey() +
+                                                                "|boost|digest|host|segment|tstamp|id).*");
 
     public List<String> getSolrIndexDateRange(String collectionName) {
 
@@ -170,6 +169,20 @@ public class SearchServiceImpl implements SearchService {
         }
     }
 
+    private boolean isLocalDirectory(SolrDocument doc) {
+        if (doc.containsKey("title")) {
+            Object title = doc.get("title");
+            String titleContents = "";
+            if (title instanceof ArrayList) {
+                titleContents = (String) ((ArrayList) doc.get("title")).get(0);
+            } else if (title instanceof String) {
+                titleContents = (String) title;
+            }
+            return titleContents.startsWith("Index of /");
+        }
+        return false;
+    }
+
     private void writeSearchResponse(JsonGenerator g, QueryResponse rsp) throws IOException {
         SolrDocumentList docs = rsp.getResults();
 
@@ -177,11 +190,13 @@ public class SearchServiceImpl implements SearchService {
         g.writeArrayFieldStart("docs");
 
         for (SolrDocument doc : docs) {
-            g.writeStartObject();
-            for(String fieldName : getFieldNameSubset(doc.getFieldNames(), false)) {
-                Utils.writeValueByType(fieldName, doc.getFieldValue(fieldName), g);
+            if (!isLocalDirectory(doc)) {
+                g.writeStartObject();
+                for(String fieldName : getFieldNameSubset(doc.getFieldNames(), false)) {
+                    Utils.writeValueByType(fieldName, doc.getFieldValue(fieldName), g);
+                }
+                g.writeEndObject();
             }
-            g.writeEndObject();
         }
         g.writeEndArray();
 

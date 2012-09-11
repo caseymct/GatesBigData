@@ -1,27 +1,22 @@
 package service;
 
 import LucidWorksApp.utils.JsonParsingUtils;
-import LucidWorksApp.utils.Utils;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.RemoteIterator;
-import org.apache.hadoop.io.*;
+import org.apache.hadoop.io.MapFile;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.MapFileOutputFormat;
-
 import org.apache.hadoop.mapred.Partitioner;
 import org.apache.hadoop.mapred.lib.HashPartitioner;
 import org.apache.nutch.crawl.CrawlDatum;
-import org.apache.nutch.crawl.Generator;
-import org.apache.nutch.metadata.Metadata;
 import org.apache.nutch.protocol.Content;
 import org.apache.nutch.util.NutchConfiguration;
 import org.codehaus.jackson.JsonGenerator;
 import org.springframework.stereotype.Service;
-
 
 import java.io.*;
 import java.net.URI;
@@ -35,7 +30,8 @@ public class HDFSServiceImpl implements HDFSService {
 
     private static final String HDFS_ERROR_STRING = "ERROR";
     private static final String FACETFIELDS_HDFSFILENAME = "fields.csv";
-    private static final String HDFS_URI = "hdfs://denlx006.dn.gates.com:8020";
+    //private static final String HDFS_URI = "hdfs://denlx006.dn.gates.com:8020";
+    private static final String HDFS_URI = "hdfs://127.0.0.1:8020";
     private static final String CRAWL_DIR = "/user/hdfs/crawl";
     private static final String SEGMENTS_DIR = CRAWL_DIR + "/segments";
     private static final String CONTENT_DATA = Content.DIR_NAME + "/part-00000/data";
@@ -48,14 +44,19 @@ public class HDFSServiceImpl implements HDFSService {
         return HDFS_URI + SEGMENTS_DIR + "/" + hdfsDate;
     }
 
+    public String getSegmentsDir() {
+        return SEGMENTS_DIR;
+    }
+
     private Configuration getHDFSConfiguration() {
         return new Configuration();
         /*
-        config.addResource(new Path(hadoopDirectory + "/conf/hadoop-env.sh"));
+        Configuration config = new Configuration();
+        String hadoopDirectory = "/Users/caseymctaggart/projects/hadoop/hadoop-1.0.3";
         config.addResource(new Path(hadoopDirectory + "/conf/core-site.xml"));
         config.addResource(new Path(hadoopDirectory + "/conf/hdfs-site.xml"));
         config.addResource(new Path(hadoopDirectory + "/conf/mapred-site.xml"));
-        */
+        return config;*/
     }
 
     private FileSystem getHDFSFileSystem() {
@@ -283,28 +284,40 @@ public class HDFSServiceImpl implements HDFSService {
         return content;
     }
 
-    public void printFileContents(String hdfsDate, String fileName, JsonGenerator g) {
+    private void testCrawlData(String hdfsDate) {
         try {
-            HashMap<Text, Content> allContents = getAllContents(hdfsDate);
             HashMap<Text, CrawlDatum> allCrawlFetchData = getCrawlData(hdfsDate, CRAWL_FETCH_DATA);
             HashMap<Text, CrawlDatum> allCrawlGenData = getCrawlData(hdfsDate, CrawlDatum.GENERATE_DIR_NAME + "/part-00000");
-            Content content = getFileContents(hdfsDate, "file:/opt/omega/smalltest/out100010.txt");
+
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+
+    public void printFileContents(String hdfsDate, String fileName, JsonGenerator g) {
+        try {
+            Content content = getFileContents(hdfsDate, fileName);
             if (content == null) {
                 return;
             }
 
-            g.writeStartObject();
+            String contentType = content.getContentType();
 
-            Metadata metadata = content.getMetadata();
+            g.writeStartObject();
+            g.writeStringField("url", content.getUrl());
+            g.writeStringField("contentType", content.getContentType());
+            g.writeStringField("dateAdded", content.getMetadata().get("Last-Modified"));
+
+            /*Metadata metadata = content.getMetadata();
             for(String name : metadata.names()) {
                 g.writeArrayFieldStart(name);
                 for(String value : metadata.getValues(name)) {
                     g.writeString(value);
                 }
                 g.writeEndArray();
-            }
+            }*/
 
-            String contentType = content.getContentType();
             if (contentType.equals("application/json")) {
                 JSONObject jsonObject = JSONObject.fromObject(new String(content.getContent()));
                 JsonParsingUtils.printJSONObject(jsonObject, "Contents", g);

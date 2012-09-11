@@ -9,6 +9,8 @@ import java.util.TreeMap;
 
 public interface HDFSService {
 
+    public String getSegmentsDir();
+
     public TreeMap<String, String> getHDFSFacetFields(String hdfsDir);
 
     public boolean addFile(String remoteFilePath, String localFilePath);
