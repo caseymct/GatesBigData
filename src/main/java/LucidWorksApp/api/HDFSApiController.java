@@ -2,6 +2,7 @@ package LucidWorksApp.api;
 
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
@@ -18,6 +19,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import static java.util.Collections.singletonList;
 import static org.springframework.http.HttpStatus.OK;
@@ -30,7 +33,7 @@ public class HDFSAPIController extends APIController {
     private static final String PARAM_REMOTEFILENAME = "remotefile";
     private static final String PARAM_LOCALDIR = "localdir";
     private static final String PARAM_REMOTEDIR = "remotedir";
-    private static final String PARAM_HDFSDATE = "hdfsdate";
+    private static final String PARAM_HDFSSEGMENT = "segment";
 
     private HDFSService hdfsService;
     private static final Logger logger = Logger.getLogger(HDFSAPIController.class);
@@ -67,9 +70,9 @@ public class HDFSAPIController extends APIController {
     }
 
     @RequestMapping(value = "/read", method = RequestMethod.GET)
-    public ResponseEntity<String> readRawData(@RequestParam(value = PARAM_REMOTEFILENAME, required = true) String remoteFilename) {
+    public ResponseEntity<String> readRawData(@RequestParam(value = PARAM_REMOTEFILENAME, required = true) String remoteFile) {
 
-        JSONObject contents = hdfsService.getJSONFileContents(remoteFilename);
+        JSONObject contents = hdfsService.getJSONFileContents(new Path(remoteFile));
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
@@ -79,7 +82,7 @@ public class HDFSAPIController extends APIController {
     @RequestMapping(value = "/listfiles", method = RequestMethod.GET)
     public ResponseEntity<String> listFiles(@RequestParam(value = PARAM_HDFS, required = true) String hdfsDir) {
 
-        List<String> files = hdfsService.listFiles(hdfsDir);
+        List<String> files = hdfsService.listFiles(new Path(hdfsDir), true);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
@@ -99,13 +102,51 @@ public class HDFSAPIController extends APIController {
     }
 
     @RequestMapping(value = "/nutch", method = RequestMethod.GET)
-    public ResponseEntity<String> readNutchFileFromHDFS(@RequestParam(value = PARAM_HDFSDATE, required = true) String hdfsDate) throws IOException {
+    public ResponseEntity<String> readNutchFileFromHDFS(@RequestParam(value = PARAM_HDFSSEGMENT, required = true) String segment,
+                                                        @RequestParam(value = PARAM_FILENAME, required = true) String key) throws IOException {
         StringWriter writer = new StringWriter();
         JsonFactory f = new JsonFactory();
         JsonGenerator g = f.createJsonGenerator(writer);
 
-        hdfsService.printFileContents(hdfsDate, "", g);
+        hdfsService.printFileContents(segment, key, g);
 
+        g.close();
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
+    }
+
+    @RequestMapping(value = "/test", method = RequestMethod.GET)
+    public ResponseEntity<String> test() throws IOException {
+        hdfsService.testCrawlData("");
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        return new ResponseEntity<String>("", httpHeaders, OK);
+    }
+
+    @RequestMapping(value = "/nutch/listincrawl", method = RequestMethod.GET)
+    public ResponseEntity<String> readNutchFileFromHDFS() throws IOException {
+        StringWriter writer = new StringWriter();
+        JsonFactory f = new JsonFactory();
+        JsonGenerator g = f.createJsonGenerator(writer);
+
+        TreeMap<String, String> filesCrawled = hdfsService.listFilesInCrawlDirectory();
+
+        g.writeStartObject();
+
+        g.writeStringField("Number of files: ", (String) filesCrawled.get("Total"));
+
+        for(Map.Entry<String, String> entry : filesCrawled.entrySet()) {
+            g.writeArrayFieldStart(entry.getKey());
+            for(String file : entry.getValue().split(",")) {
+                g.writeString(file);
+            }
+            g.writeEndArray();
+        }
+
+        g.writeEndObject();
         g.close();
 
         HttpHeaders httpHeaders = new HttpHeaders();

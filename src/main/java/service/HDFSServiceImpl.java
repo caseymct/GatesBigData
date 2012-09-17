@@ -3,9 +3,9 @@ package service;
 import LucidWorksApp.utils.JsonParsingUtils;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.MapFile;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
@@ -20,43 +20,65 @@ import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.TreeMap;
+import java.util.*;
 
 @Service
 public class HDFSServiceImpl implements HDFSService {
 
     private static final String HDFS_ERROR_STRING = "ERROR";
     private static final String FACETFIELDS_HDFSFILENAME = "fields.csv";
-    //private static final String HDFS_URI = "hdfs://denlx006.dn.gates.com:8020";
-    private static final String HDFS_URI = "hdfs://127.0.0.1:8020";
-    private static final String CRAWL_DIR = "/user/hdfs/crawl";
+    private static final String HDFS_URI = "hdfs://denlx006.dn.gates.com:8020";
+    //private static final String HDFS_URI = "hdfs://127.0.0.1:8020";
+
+    private static final String USER_HDFS_DIR = "/user/hdfs";
+    private static final String CRAWL_DIR = USER_HDFS_DIR + "/crawl";
     private static final String SEGMENTS_DIR = CRAWL_DIR + "/segments";
+    private static final String CRAWLDB_CURRENT = CRAWL_DIR + "/crawldb/current";
+
     private static final String CONTENT_DATA = Content.DIR_NAME + "/part-00000/data";
     private static final String CRAWL_FETCH_DATA = CrawlDatum.FETCH_DIR_NAME + "/part-00000/data";
-
+    private static final String CRAWL_GENERATE_DATA = CrawlDatum.GENERATE_DIR_NAME + "/part-00000";
 
     private static final Partitioner PARTITIONER = new HashPartitioner();
 
-    private String hdfsSegmentDirectory(String hdfsDate) {
-        return HDFS_URI + SEGMENTS_DIR + "/" + hdfsDate;
+    public Path getHDFSSegmentsDirectory(boolean includeURI) {
+        return new Path((includeURI ? HDFS_URI : "") + SEGMENTS_DIR);
     }
 
-    public String getSegmentsDir() {
-        return SEGMENTS_DIR;
+    public Path getHDFSSegmentDirectory(String segment, boolean includeURI) {
+        return new Path(getHDFSSegmentsDirectory(includeURI), segment);
+    }
+
+    public Path getHDFSCrawlFetchDataFile(String segment, boolean includeURI) {
+        return new Path(getHDFSSegmentDirectory(segment, includeURI), CRAWL_FETCH_DATA);
+    }
+
+    public Path getHDFSCrawlGenerateFile(String segment, boolean includeURI) {
+        return new Path(getHDFSSegmentDirectory(segment, includeURI), CRAWL_GENERATE_DATA);
+    }
+
+    public Path getHDFSContentDirectory(String segment, boolean includeURI) {
+        return new Path(getHDFSSegmentDirectory(segment, includeURI), Content.DIR_NAME);
+    }
+
+    public Path getHDFSContentDataFile(String segment, boolean includeURI) {
+        return new Path(getHDFSSegmentDirectory(segment, includeURI), CONTENT_DATA);
+    }
+
+    public Path getHDFSCoreDirectory(String coreName) {
+        return new Path(USER_HDFS_DIR, coreName);
+    }
+
+    public Path getHDFSFacetFieldCustomFile(String coreName) {
+        return new Path(getHDFSCoreDirectory(coreName), FACETFIELDS_HDFSFILENAME);
+    }
+
+    public Path getHDFSCrawlDirectory(boolean includeURI) {
+        return new Path((includeURI ? HDFS_URI : "") + CRAWL_DIR);
     }
 
     private Configuration getHDFSConfiguration() {
         return new Configuration();
-        /*
-        Configuration config = new Configuration();
-        String hadoopDirectory = "/Users/caseymctaggart/projects/hadoop/hadoop-1.0.3";
-        config.addResource(new Path(hadoopDirectory + "/conf/core-site.xml"));
-        config.addResource(new Path(hadoopDirectory + "/conf/hdfs-site.xml"));
-        config.addResource(new Path(hadoopDirectory + "/conf/mapred-site.xml"));
-        return config;*/
     }
 
     private FileSystem getHDFSFileSystem() {
@@ -147,19 +169,18 @@ public class HDFSServiceImpl implements HDFSService {
         return false;
     }
 
-    public String getFileContents(String remoteFilePath) {
+    public String getFileContents(Path remoteFilePath) {
         StringBuilder sb = new StringBuilder();
 
         try {
             FileSystem fs = getHDFSFileSystem();
-            Path path = new Path(remoteFilePath);
 
-            if (!fs.exists(path)) {
+            if (!fs.exists(remoteFilePath)) {
                 return HDFS_ERROR_STRING + "File does not exist";
             }
 
             String line = "";
-            DataInputStream d = new DataInputStream(fs.open(path));
+            DataInputStream d = new DataInputStream(fs.open(remoteFilePath));
             BufferedReader reader = new BufferedReader(new InputStreamReader(d));
 
             while ((line = reader.readLine()) != null){
@@ -176,7 +197,7 @@ public class HDFSServiceImpl implements HDFSService {
         return sb.toString();
     }
 
-    public JSONObject getJSONFileContents(String remoteFilePath) {
+    public JSONObject getJSONFileContents(Path remoteFilePath) {
         JSONObject error = new JSONObject();
 
         String fileContents = getFileContents(remoteFilePath);
@@ -194,12 +215,10 @@ public class HDFSServiceImpl implements HDFSService {
         }
     }
 
-    public TreeMap<String, String> getHDFSFacetFields(String hdfsDir) {
+    public TreeMap<String, String> getHDFSFacetFields(String coreName) {
         TreeMap<String, String> namesAndTypes = new TreeMap<String, String>();
 
-        hdfsDir = hdfsDir.endsWith("/") ? hdfsDir : hdfsDir + "/";
-        String response = this.getFileContents(hdfsDir + FACETFIELDS_HDFSFILENAME);
-
+        String response = getFileContents(getHDFSFacetFieldCustomFile(coreName));
         if (!response.startsWith(HDFS_ERROR_STRING)) {
             for(String ret : response.split(",")) {
                 String[] n = ret.split(":");
@@ -210,19 +229,24 @@ public class HDFSServiceImpl implements HDFSService {
         return namesAndTypes;
     }
 
-    public List<String> listFiles(String hdfsDirectory) {
+    public List<String> listFiles(Path hdfsDirectory, boolean recurse) {
         List<String> filePaths = new ArrayList<String>();
 
         FileSystem fs = getHDFSFileSystem();
-        Path path = new Path(hdfsDirectory);
         int hdfsUriStringLength = HDFS_URI.length();
 
         try {
-            RemoteIterator<LocatedFileStatus> r = fs.listFiles(path, true);
-            while(r.hasNext()) {
-                String pathString = r.next().getPath().toString();
-                // just add the HDFS path: hdfs://denlx006.dn.gates.com/path/etc --> /path/etc
-                filePaths.add(pathString.substring(hdfsUriStringLength));
+            if (recurse) {
+                RemoteIterator<LocatedFileStatus> r = fs.listFiles(hdfsDirectory, true);
+                while(r.hasNext()) {
+                    String pathString = r.next().getPath().toString();
+                    // just add the HDFS path: hdfs://denlx006.dn.gates.com/path/etc --> /path/etc
+                    filePaths.add(pathString.substring(hdfsUriStringLength));
+                }
+            } else {
+                for(FileStatus status : fs.listStatus(hdfsDirectory)) {
+                    filePaths.add(status.getPath().getName());
+                }
             }
         } catch (FileNotFoundException e){
             System.out.println(e.getMessage());
@@ -233,13 +257,37 @@ public class HDFSServiceImpl implements HDFSService {
         return filePaths;
     }
 
-    private HashMap<Text, CrawlDatum> getCrawlData(String hdfsDate, String crawlDir) throws IOException {
+    public List<String> listSegments() {
+        return listFiles(getHDFSSegmentsDirectory(false), false);
+    }
+
+    public TreeMap<String, String> listFilesInCrawlDirectory() {
+        int total = 0;
+        TreeMap<String, String> filesCrawled = new TreeMap<String, String>();
+
+        try {
+            for(String segment : listSegments()) {
+                List<String> files = new ArrayList<String>();
+                for(Map.Entry entry : getCrawlData(getHDFSCrawlGenerateFile(segment, true)).entrySet()) {
+                    files.add(entry.getKey().toString());
+                }
+                filesCrawled.put(segment, StringUtils.join(files, ","));
+                total += files.size();
+            }
+        } catch (IOException e) {
+            System.out.println(e);
+        }
+        filesCrawled.put("Total", total + "");
+
+        return filesCrawled;
+    }
+
+    private HashMap<Text, CrawlDatum> getCrawlData(Path path) throws IOException {
         HashMap<Text, CrawlDatum> allContents = new HashMap<Text, CrawlDatum>();
 
         Configuration conf = NutchConfiguration.create();
         FileSystem fs = getHDFSFileSystem();
 
-        Path path = new Path(hdfsSegmentDirectory(hdfsDate), crawlDir);
         SequenceFile.Reader reader= new SequenceFile.Reader(fs, path, conf);
 
         do {
@@ -252,13 +300,13 @@ public class HDFSServiceImpl implements HDFSService {
         return allContents;
     }
 
-    private HashMap<Text, Content> getAllContents(String hdfsDate) throws IOException {
+    private HashMap<Text, Content> getAllContents(String segment) throws IOException {
         HashMap<Text, Content> allContents = new HashMap<Text, Content>();
 
         Configuration conf = NutchConfiguration.create();
         FileSystem fs = getHDFSFileSystem();
 
-        Path contentData = new Path(hdfsSegmentDirectory(hdfsDate), CONTENT_DATA);
+        Path contentData = new Path(getHDFSSegmentDirectory(segment, true), CONTENT_DATA);
         SequenceFile.Reader reader= new SequenceFile.Reader(fs, contentData, conf);
 
         do {
@@ -271,12 +319,12 @@ public class HDFSServiceImpl implements HDFSService {
         return allContents;
     }
 
-    private Content getFileContents(String hdfsDate, String fileName) throws IOException {
+    private Content getFileContents(String segment, String fileName) throws IOException {
 
         Configuration conf = NutchConfiguration.create();
         FileSystem fs = getHDFSFileSystem();
 
-        MapFile.Reader[] readers = MapFileOutputFormat.getReaders(fs, new Path(hdfsSegmentDirectory(hdfsDate), Content.DIR_NAME), conf);
+        MapFile.Reader[] readers = MapFileOutputFormat.getReaders(fs, getHDFSContentDirectory(segment, true), conf);
         Text key = new Text(fileName);
         Content content = new Content();
         MapFileOutputFormat.getEntry(readers, PARTITIONER, key, content);
@@ -284,10 +332,12 @@ public class HDFSServiceImpl implements HDFSService {
         return content;
     }
 
-    private void testCrawlData(String hdfsDate) {
+    public void testCrawlData(String segment) {
         try {
-            HashMap<Text, CrawlDatum> allCrawlFetchData = getCrawlData(hdfsDate, CRAWL_FETCH_DATA);
-            HashMap<Text, CrawlDatum> allCrawlGenData = getCrawlData(hdfsDate, CrawlDatum.GENERATE_DIR_NAME + "/part-00000");
+
+            HashMap<Text, CrawlDatum> crawlDbCurr = getCrawlData(new Path(CRAWLDB_CURRENT + "/part-00000/data"));
+        //    HashMap<Text, CrawlDatum> allCrawlFetchData = getCrawlData(segment, CRAWL_FETCH_DATA);
+        //    HashMap<Text, CrawlDatum> allCrawlGenData = getCrawlData(segment, CrawlDatum.GENERATE_DIR_NAME + "/part-00000");
 
         } catch (IOException e) {
             System.out.println(e.getMessage());
@@ -295,9 +345,9 @@ public class HDFSServiceImpl implements HDFSService {
     }
 
 
-    public void printFileContents(String hdfsDate, String fileName, JsonGenerator g) {
+    public void printFileContents(String segment, String fileName, JsonGenerator g) {
         try {
-            Content content = getFileContents(hdfsDate, fileName);
+            Content content = getFileContents(segment, fileName);
             if (content == null) {
                 return;
             }

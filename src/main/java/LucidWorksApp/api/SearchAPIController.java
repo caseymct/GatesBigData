@@ -53,11 +53,11 @@ public class SearchAPIController extends APIController {
                                                 @RequestParam(value = PARAM_FQ, required = false) String fq,
                                                 HttpServletRequest request) throws IOException {
 
-        String hdfsDir = hdfsService.getSegmentsDir() + "/" + coreName;
+        String hdfsDir = hdfsService.getHDFSCoreDirectory(coreName).toString();
         HttpSession session = request.getSession();
         TreeMap<String, String> facetFields = (TreeMap<String, String>) session.getAttribute(SESSION_HDFSDIR_TOKEN + hdfsDir);
-        if (facetFields == null) {
-            facetFields = hdfsService.getHDFSFacetFields(hdfsDir);
+        if (facetFields == null || facetFields.size() == 0) {
+            facetFields = hdfsService.getHDFSFacetFields(coreName);
             session.setAttribute(SESSION_HDFSDIR_TOKEN + hdfsDir, facetFields);
         }
 

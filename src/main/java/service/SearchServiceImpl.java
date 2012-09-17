@@ -202,6 +202,8 @@ public class SearchServiceImpl implements SearchService {
 
         g.writeArrayFieldStart("facets");
         for(FacetField facetField : rsp.getFacetFields()) {
+            if (facetField.getValues() == null) continue;
+
             g.writeStartObject();
             g.writeStringField("name", facetField.getName());
 

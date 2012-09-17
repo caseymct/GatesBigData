@@ -8,19 +8,48 @@
     <h1>Search</h1>
 
     <form id = "search_form">
-        <div class = "row" id="search_div">
-            <label for="search_input">Query terms: </label>
-            <textarea id="search_input">*:*</textarea>
+        <div id="search_tab" class="yui-navset">
+            <ul class="yui-nav">
+                <li class="selected"><a href="#tab1"><em>Supplier</em></a></li>
+                <li><a href="#tab2"><em>Company</em></a></li>
+                <li><a href="#tab3"><em>Open Query</em></a></li>
+            </ul>
+            <div class="yui-content">
+                <div class="row search_tab_style" id="search_supplier_tab">
+                    <label for="search_supplier_input">Supplier Name:</label>
+                    <input type="text" id="search_supplier_input"/>
+                </div>
+                <div class="row search_tab_style" id="search_company_tab" class="search_tab_style">
+                    <div class="row">
+                        <label for="company_name_input">Company Name: </label>
+                        <input type="text" id="company_name_input" />
+                    </div>
+                    <div class="row">
+                        <label for="account_name_input">Account Name: </label>
+                        <input type="text" id="account_name_input" />
+                    </div>
+                    <div class="row">
+                        <label for="cost_center_name_input">Cost Center Name: </label>
+                        <input type="text" id="cost_center_name_input" />
+                    </div>
+                </div>
+                <div class = "row search_tab_style" id="search_generalquery_tab">
+                    <label id="search_input_label" for="general_query_search_input">Query terms: </label>
+                    <textarea id="general_query_search_input">*:*</textarea>
+                </div>
+            </div>
         </div>
 
+        <!--
         <div class="row" id = "collection_name">
             <label id ="collection_name_label" for="core_name_select">Select a collection: </label>
             <select id ="core_name_select"></select>
         </div>
-
+        -->
+        <div class="clearboth"></div>
         <div class="row" id = "sort_by_div">
             <label for="sort_type_buttongroup" id="sort_type_buttongroup_label">Sort by: </label>
-            <div id = "sort_ascdesc_buttongroup" class = "yui-buttongroup" style="float:right">
+            <div id = "sort_ascdesc_buttongroup" class = "yui-buttongroup">
                 <input id="sort_asc" type="radio" name="sorttype" value="asc" >
                 <input id="sort_desc" type="radio" name="sorttype" value="desc" checked>
             </div>
@@ -75,9 +104,11 @@
             ButtonGroup = YAHOO.widget.ButtonGroup,
             TreeView = YAHOO.widget.TreeView,
             TextNode = YAHOO.widget.TextNode,
+            TabView = YAHOO.widget.TabView,
             Overlay = YAHOO.widget.Overlay;
 
-        var treeView = new YAHOO.widget.TreeView("tree_view");
+        var searchTab = new TabView('search_tab');
+        var treeView = new TreeView("tree_view");
 
         // Sort buttons code
         var sortType = "date", ascType = "asc",
@@ -108,6 +139,7 @@
         }, narrowSearchOverlay, true);
 
         // Get collection names for search select box
+        /*
         Connect.asyncRequest('GET', '<c:url value="/core/corenames" />', {
             success : function(o) {
                 var i, result = Json.parse(o.responseText);
@@ -120,7 +152,7 @@
             failure : function(o) {
                 alert("Could not retrieve collection names.");
             }
-        });
+        });  */
 
         /* Sort keys so that title and author come first */
         var sortKeys = function(unsortedkeys) {
@@ -249,8 +281,8 @@
                             Event.addListener("expand_" + i, "click", function(e) {
                                 Event.stopEvent(e);
                                 var href = this.href.substring("hdfs://".length).split(";");
-                                window.open('<c:url value="/core/" />' + Dom.get("core_name_select").value +
-                                        "/document/view?segment=" + href[0] + "&file=" + href[1], "_blank");
+                                window.open('<c:url value="/core/" />' +
+                                        "collection1/document/view?segment=" + href[0] + "&file=" + href[1], "_blank");
                             });
                         }
                     }
@@ -260,7 +292,14 @@
             }
         };
 
+        var encodeForRequest = function(s) { return s.replace(/&amp;/g, "%26"); };
+
         var getFilterQueryString = function() {
+            var company = Dom.get("company_name_input").value,
+                account = Dom.get("account_name_input").value,
+                costCenter = Dom.get("cost_center_name_input").value,
+                supplier = Dom.get("search_supplier_input").value;
+
             var facetOptions = {}, domFacets = Dom.get("facet_options").children;
             for (var i = 0; i < domFacets.length; i++) {
                 if (!Dom.hasClass(domFacets[i], "clearboth")) {
@@ -272,8 +311,21 @@
             var fqStr = "";
             if (Object.keys(facetOptions).length > 0) {
                 for (var key in facetOptions) {
-                    fqStr += "%2B" + key + ":(" + facetOptions[key] + ")";
+                    fqStr += "%2B" + key + ":(\"" + encodeForRequest(facetOptions[key]) + "\")";
                 }
+            }
+
+            switch (searchTab.get('activeIndex')) {
+                case 0:
+                    fqStr += (supplier != "") ? "%2BSupplier.SupplierName:(\"" + encodeForRequest(supplier) + "\")" : "";
+                    break;
+                case 1:
+                    fqStr += (company != "") ? "%2BCompanySite.SiteName:(\"" + encodeForRequest(company) + "\")" : "";
+                    fqStr += (account != "") ? "%2BAccount.AccountName:(\"" + encodeForRequest(account) + "\")" : "";
+                    fqStr += (costCenter != "") ? "%2BCostCenter.CostCenterName:(\"" + encodeForRequest(costCenter) + "\")" : "";
+                    break;
+                default:
+                    break;
             }
             return fqStr;
         };
@@ -286,15 +338,18 @@
         Event.addListener("submit", "click", function (e) {
             Event.stopEvent(e);
 
-            var queryTerms = Dom.get("search_input").value,
-                coreName = Dom.get("core_name_select").value,
+
+            var queryTerms = Dom.get("general_query_search_input").value,
+                coreName = "collection1",
+                //coreName = Dom.get("core_name_select").value,
                 fq = getFilterQueryString();
+
 
             var urlParams = "?query=" + queryTerms + "&core=" + coreName + "&sort=" + sortType + "&order=" + ascType;
             if (fq != "") {
                 urlParams += "&fq=" + fq;
             }
-
+            debugger;
             var pag = new YAHOO.widget.Paginator( {rowsPerPage : 10, containers : [ "pag1" ] });
 
             var handlePagination = function (newState) {

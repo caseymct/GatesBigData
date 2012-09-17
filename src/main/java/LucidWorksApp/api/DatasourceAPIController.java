@@ -66,7 +66,6 @@ public class DatasourceAPIController extends APIController {
                         DatasourceUtils.getDataSourceHistoryProperty(collectionName, datasourceId, "num_total"), g);
 
                 //  g.writeNumberField("dataSources", DatasourceUtils.getNumberOfDataSources(name));
-                //  g.writeStringField("crawling", CrawlingUtils.getCrawlerStatus(name));
                 g.writeEndObject();
             }
         }

@@ -88,6 +88,10 @@ li.yui-button-selectedmenuitem {
     margin-bottom: -30px;
 }
 
+form div.row label {
+    width : 150px;
+}
+
 .facet_option_div {
     border: 1px solid black;
     float: left;
@@ -97,11 +101,19 @@ li.yui-button-selectedmenuitem {
     background-color: lightgray;
 }
 
+.search_tab_style {
+    height: 100px;
+}
+
+#search_tab {
+    width: 500px;
+}
+
 #facet_options {
     padding: 20px 0px 10px 0px;
 }
 
-#search_input {
+#general_query_search_input {
     width: 300px;
     margin-left: 15px;
     height: 50px;
@@ -138,4 +150,8 @@ li.yui-button-selectedmenuitem {
 
 #sort_type_buttongroup_label {
     padding-right: 15px;
+}
+
+#search_input_label {
+    width: 100px;
 }

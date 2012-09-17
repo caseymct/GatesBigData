@@ -1,8 +1,6 @@
 package LucidWorksApp.api;
 
 import LucidWorksApp.utils.CoreUtils;
-import LucidWorksApp.utils.CrawlingUtils;
-import LucidWorksApp.utils.DatasourceUtils;
 import LucidWorksApp.utils.Utils;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
@@ -25,7 +23,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static java.util.Collections.singletonList;
@@ -166,6 +163,7 @@ public class CoreAPIController extends APIController {
             response.put("Error", "Could not delete index for core " + coreName);
 
         } else {
+            /*
             for(String hdfsFilePath : hdfsService.listFiles(hdfsDir)) {
                 boolean added = false;
 
@@ -179,6 +177,7 @@ public class CoreAPIController extends APIController {
 
                 response.put("Added " + hdfsFilePath, added);
             }
+            */
         }
 
         HttpHeaders httpHeaders = new HttpHeaders();
