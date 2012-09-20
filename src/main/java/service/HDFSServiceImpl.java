@@ -15,6 +15,7 @@ import org.apache.hadoop.mapred.lib.HashPartitioner;
 import org.apache.nutch.crawl.CrawlDatum;
 import org.apache.nutch.protocol.Content;
 import org.apache.nutch.util.NutchConfiguration;
+import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +32,7 @@ public class HDFSServiceImpl implements HDFSService {
     //private static final String HDFS_URI = "hdfs://127.0.0.1:8020";
 
     private static final String USER_HDFS_DIR = "/user/hdfs";
-    private static final String CRAWL_DIR = USER_HDFS_DIR + "/crawl";
+    private static final String CRAWL_DIR = USER_HDFS_DIR + "/initial_z_crawl";
     private static final String SEGMENTS_DIR = CRAWL_DIR + "/segments";
     private static final String CRAWLDB_CURRENT = CRAWL_DIR + "/crawldb/current";
 
@@ -345,7 +346,7 @@ public class HDFSServiceImpl implements HDFSService {
     }
 
 
-    public void printFileContents(String segment, String fileName, JsonGenerator g) {
+    public void printFileContents(String segment, String fileName, StringWriter writer) {
         try {
             Content content = getFileContents(segment, fileName);
             if (content == null) {
@@ -354,32 +355,40 @@ public class HDFSServiceImpl implements HDFSService {
 
             String contentType = content.getContentType();
 
-            g.writeStartObject();
-            g.writeStringField("url", content.getUrl());
-            g.writeStringField("contentType", content.getContentType());
-            g.writeStringField("dateAdded", content.getMetadata().get("Last-Modified"));
-
-            /*Metadata metadata = content.getMetadata();
-            for(String name : metadata.names()) {
-                g.writeArrayFieldStart(name);
-                for(String value : metadata.getValues(name)) {
-                    g.writeString(value);
-                }
-                g.writeEndArray();
-            }*/
-
             if (contentType.equals("application/json")) {
-                JSONObject jsonObject = JSONObject.fromObject(new String(content.getContent()));
-                JsonParsingUtils.printJSONObject(jsonObject, "Contents", g);
-
-            } else if (contentType.equals("text/plain")) {
-                g.writeStringField("contents", new String(content.getContent()));
+                printJSONFileContents(writer, content);
+            } else {
+                printFileContents(writer, content);
             }
-
-            g.writeEndObject();
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
     }
+
+    private void printJSONFileContents(StringWriter writer, Content content) throws IOException {
+        JsonFactory f = new JsonFactory();
+        JsonGenerator g = f.createJsonGenerator(writer);
+
+        g.writeStartObject();
+        g.writeStringField("url", content.getUrl());
+        g.writeStringField("contentType", content.getContentType());
+        g.writeStringField("dateAdded", content.getMetadata().get("Last-Modified"));
+
+        JSONObject jsonObject = JSONObject.fromObject(new String(content.getContent()));
+        JsonParsingUtils.printJSONObject(jsonObject, "Contents", g);
+
+        g.writeEndObject();
+        g.close();
+    }
+
+    private void printFileContents(StringWriter writer, Content content) throws IOException {
+        writer.append("<html><body>");
+        writer.append("<p>url : " + content.getUrl() + "</p>");
+        writer.append("<p>dateAdded : " + content.getMetadata().get("Last-Modified"));
+        writer.append("<p>Content : </p>");
+        writer.append(new String(content.getContent()));
+        writer.append("</body></html>");
+    }
+
 }

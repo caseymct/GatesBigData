@@ -3,6 +3,7 @@
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
 <layout:main>
+    <link rel="stylesheet" type="text/css" href="<c:url value="/static/js/yui/2.9/treeview/assets/skins/sam/menu.css"/>" />
     <link rel="stylesheet" type="text/css" href="<c:url value="/static/css/index.css"/>" />
 
     <h2>Solr Cores</h2>
@@ -49,39 +50,12 @@
                 TreeView = YAHOO.widget.TreeView,
                 TextNode = YAHOO.widget.TextNode;
 
-        var treeView = new YAHOO.widget.TreeView("tree_view");
+        var treeView = new TreeView("tree_view");
 
-        var buildTreeRecurse = function(doc, keyname, parentNode) {
-            var key, isObject = Object.prototype.toString.call(doc).match("Object") != null;
-            var name = isObject ? keyname : keyname + ": " + doc;
-            var nameNode = new TextNode(name, parentNode, false);
-
-            if (!isObject) {
-                nameNode.isLeaf = true;
-            } else {
-                for(key in doc) {
-                    buildTreeRecurse(doc[key], key, nameNode);
-                }
-            }
-        };
-
-        var buildTree = function(docs) {
-            var i, j, key, nameNode, root = treeView.getRoot();
-            treeView.removeChildren(root);
-
-            for(i = 0; i < docs.length; i++) {
-                nameNode = new TextNode(docs[i].name, root, false);
-                for(key in docs[i]) {
-                    buildTreeRecurse(docs[i][key], key, nameNode);
-                }
-            }
-            treeView.render();
-            treeView.expandAll();
-        };
-
+        // edit core page? http://localhost:8080/LucidWorksApp/core/empty?core=collection1
         Connect.asyncRequest('GET', '<c:url value="/core/info/all" />' , {
             success : function(o) {
-                buildTree(Json.parse(o.responseText));
+                LWA.ui.buildTreeViewFromJson(Json.parse(o.responseText), treeView);
             },
             failure : function (o) {
                 alert("Could not retrieve core information.");

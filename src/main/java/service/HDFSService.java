@@ -5,6 +5,7 @@ import net.sf.json.JSONObject;
 import org.apache.hadoop.fs.Path;
 import org.codehaus.jackson.JsonGenerator;
 
+import java.io.StringWriter;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -49,5 +50,5 @@ public interface HDFSService {
     /* Returns a map of files to their segment */
     public TreeMap<String, String> listFilesInCrawlDirectory();
 
-    public void printFileContents(String hdfsDate, String fileName, JsonGenerator g);
+    public void printFileContents(String hdfsDate, String fileName, StringWriter writer);
 }

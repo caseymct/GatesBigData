@@ -105,12 +105,8 @@ public class HDFSAPIController extends APIController {
     public ResponseEntity<String> readNutchFileFromHDFS(@RequestParam(value = PARAM_HDFSSEGMENT, required = true) String segment,
                                                         @RequestParam(value = PARAM_FILENAME, required = true) String key) throws IOException {
         StringWriter writer = new StringWriter();
-        JsonFactory f = new JsonFactory();
-        JsonGenerator g = f.createJsonGenerator(writer);
 
-        hdfsService.printFileContents(segment, key, g);
-
-        g.close();
+        hdfsService.printFileContents(segment, key, writer);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));

@@ -7,6 +7,16 @@ pre {
     margin: 10px;
 }
 
+.sort_buttongroup_label {
+    width: 70px;
+    margin-right: 10px;
+}
+
+.search-button-style {
+    float: left;
+    padding: 5px;
+}
+
 .yui-menu-button em.yui-button-label {
     font-style: normal;
     display: block;
@@ -17,6 +27,11 @@ pre {
     text-overflow: ellipsis;
     -o-text-overflow: ellipsis;
 
+}
+
+.yui-skin-sam .yui-radio-button-checked, .yui-skin-sam .yui-checkbox-button-checked {
+    border-color: #304369;
+    background: #243356;
 }
 
 .yui-skin-sam .yui-button button, .yui-skin-sam .yui-button a, .yui-skin-sam .yui-button a:visited {
@@ -53,12 +68,65 @@ li.yui-button-selectedmenuitem {
     padding:5px;
 }
 
+.yui-skin-sam .yui-navset .yui-nav,
+.yui-skin-sam .yui-navset .yui-navset-top .yui-nav { /* protect nested tabviews from other orientations */
+    border:solid #243356; /* color between tab list and content */
+    border-width:0 0 5px;
+}
+
+.yui-skin-sam .yui-navset .yui-nav a,
+.yui-skin-sam .yui-navset .yui-navset-top .yui-nav a {
+    background:#efefef;
+    border:solid #243356;
+    border-top-color: #243356;
+    border-width: 0 1px;
+    color:#000;
+    text-decoration:none;
+}
+
+.yui-skin-sam .yui-navset .yui-nav a em,
+.yui-skin-sam .yui-navset .yui-navset-top .yui-nav a em {
+    border:solid #243356;
+    border-width:1px 0 0;
+    padding:0.25em .75em;
+    left:0; right: 0; bottom: 0; /* protect from other orientations */
+    top:-1px; /* for 1px rounded corners */
+    position:relative;
+}
+
+.yui-skin-sam .yui-navset .yui-nav .selected a,
+.yui-skin-sam .yui-navset .yui-nav .selected a:focus, /* no focus effect for selected */
+.yui-skin-sam .yui-navset .yui-nav .selected a:hover { /* no hover effect for selected */
+    background: #243356;
+}
+
+.yui-skin-sam .yui-navset .yui-nav a:hover,
+.yui-skin-sam .yui-navset .yui-nav a:focus {
+    background: slategray;
+}
+
+.yui-skin-sam .yui-navset .yui-nav .selected a,
+.yui-skin-sam .yui-navset .yui-nav .selected a em {
+    border-color: #243356; /*selected tab border color */
+}
+
+.yui-skin-sam .yui-navset .yui-content {
+    background: #efefef; /* content background color */
+}
+
+.yui-skin-sam .yui-navset .yui-content,
+.yui-skin-sam .yui-navset .yui-navset-top .yui-content {
+    border:1px groove #243356; /* content border */
+    border-top-color: #243356; /* different border color */
+    padding:0.25em 0.5em; /* content padding */
+}
+
 .search-result-div {
-    padding: 5px;
-    border: 1px solid blue;
-    border-radius: 15px;
+    border: 1px inset gray;
+    border-radius: 5px;
     margin: 10px;
-    float: top;
+    padding: 5px;
+    background: #EFEFEF;
 }
 
 .search-result-header {
@@ -86,10 +154,12 @@ li.yui-button-selectedmenuitem {
     height: 15px;
     bottom: 30px;
     margin-bottom: -30px;
+    padding-right: 5px;
 }
 
 form div.row label {
     width : 150px;
+    text-align: left;
 }
 
 .facet_option_div {
@@ -102,7 +172,13 @@ form div.row label {
 }
 
 .search_tab_style {
-    height: 100px;
+    padding: 5px;
+    height: 120px;
+}
+
+#show_query {
+    font-size: 10px;
+    padding: 5px 0px 5px 0px;
 }
 
 #search_tab {
@@ -114,9 +190,10 @@ form div.row label {
 }
 
 #general_query_search_input {
-    width: 300px;
-    margin-left: 15px;
+    width: 450px;
+    margin: 5px 0px 0px 0px;
     height: 50px;
+    padding: 2px;
 }
 
 #search_result_container {
@@ -142,14 +219,15 @@ form div.row label {
     margin: 5px 0px 0px 5px;
 }
 
-#sort_ascdesc_buttongroup_label {
-    float: right;
-    width: 70px;
-    padding-right: 10px;
+#sort_asc_label {
+    width : 70px;
+    margin-right: 10px;
+    margin-left:-15px;
 }
 
-#sort_type_buttongroup_label {
-    padding-right: 15px;
+#sort_date_label {
+    width : 70px;
+    margin-right: 10px;
 }
 
 #search_input_label {

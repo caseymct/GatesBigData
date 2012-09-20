@@ -81,8 +81,10 @@ a.add {
     padding-left: 30px;
 }
 a.delete {
-    background: url(../images/sprite.png)  10px -61px no-repeat #f3f3f3;
+    /* background: url(../images/sprite.png)  10px -61px no-repeat #f3f3f3;     */
+    background: url(../images/delete.png) 5px 5px no-repeat #f3f3f3;
     padding-left: 30px;
+    background-size: 10px;
 }
 a.flag {
     background: url(../images/sprite.png)  10px -96px no-repeat #f3f3f3;

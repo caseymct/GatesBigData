@@ -30,7 +30,7 @@ public class SearchServiceImpl implements SearchService {
 
     private static Pattern fieldNamesToIgnore = Pattern.compile("^(attr|_).*|.*(version|batch|body|text_all|" +
                                                                  Utils.getSolrSchemaHdfskey() +
-                                                                "|boost|digest|host|segment|tstamp|id).*");
+                                                                "|boost|digest|host|segment|tstamp).*|.*id");
 
     public List<String> getSolrIndexDateRange(String collectionName) {
 
@@ -105,10 +105,10 @@ public class SearchServiceImpl implements SearchService {
         Pattern p = Pattern.compile(".*\\+" + fieldName + ":\\(([^\\)]*)\\)(\\+.*)*");
         Matcher m = p.matcher(fq);
         if (m.matches()) {
-            String[] dates = m.group(1).split(" - ");
+            String[] dates = m.group(1).replaceAll("^\"|\"$", "").split(" - ");
             String newDateFq = DateUtils.getSolrDateFromDateString(dates[0]) + " TO " + DateUtils.getSolrDateFromDateString(dates[1]);
 
-            fq = fq.replace(fieldName + ":(" + dates[0] + " - " + dates[1] + ")", fieldName + ":[" + newDateFq + "]");
+            fq = fq.replace(fieldName + ":(" + m.group(1) + ")", fieldName + ":[" + newDateFq + "]");
         }
         return fq;
     }

@@ -10,18 +10,18 @@
     <form id = "search_form">
         <div id="search_tab" class="yui-navset">
             <ul class="yui-nav">
-                <li class="selected"><a href="#tab1"><em>Supplier</em></a></li>
+                <li class="selected tab_selected"><a href="#tab1"><em>Supplier</em></a></li>
                 <li><a href="#tab2"><em>Company</em></a></li>
-                <li><a href="#tab3"><em>Open Query</em></a></li>
+                <li><a href="#tab3"><em>General Query</em></a></li>
             </ul>
             <div class="yui-content">
-                <div class="row search_tab_style" id="search_supplier_tab">
-                    <label for="search_supplier_input">Supplier Name:</label>
-                    <input type="text" id="search_supplier_input"/>
+                <div class="search_tab_style row" id="supplier_name_tab">
+                    <label for="supplier_name_input">Supplier Name:</label>
+                    <input type="text" id="supplier_name_input"/>
                 </div>
-                <div class="row search_tab_style" id="search_company_tab" class="search_tab_style">
+                <div class="search_tab_style row" id="search_company_tab" class="search_tab_style">
                     <div class="row">
-                        <label for="company_name_input">Company Name: </label>
+                        <label for="company_name_input">Company Site Name: </label>
                         <input type="text" id="company_name_input" />
                     </div>
                     <div class="row">
@@ -33,9 +33,17 @@
                         <input type="text" id="cost_center_name_input" />
                     </div>
                 </div>
-                <div class = "row search_tab_style" id="search_generalquery_tab">
-                    <label id="search_input_label" for="general_query_search_input">Query terms: </label>
-                    <textarea id="general_query_search_input">*:*</textarea>
+                <div class = "search_tab_style row" id="search_generalquery_tab">
+                    <div class="row" style="padding: 2px">
+                        <textarea id="general_query_search_input">*:*</textarea>
+                    </div>
+                    <div class="row" style="padding: 2px; font-size: 10px">
+                        Query terms take the form of '<i>Column name</i>:<i>Value</i>' e.g.<br>
+                        Supplier.SupplierName:citibank*<br>
+                        Supplier.SupplierName:citibank* AND CostCenter.CostCenterName:global*<br>
+                        Multiple terms can be concatenated with AND or OR
+                    </div>
+                    <div class="clearboth"></div>
                 </div>
             </div>
         </div>
@@ -48,14 +56,15 @@
         -->
         <div class="clearboth"></div>
         <div class="row" id = "sort_by_div">
-            <label for="sort_type_buttongroup" id="sort_type_buttongroup_label">Sort by: </label>
-            <div id = "sort_ascdesc_buttongroup" class = "yui-buttongroup">
+
+            <div id = "sort_ascdesc_buttongroup" class = "yui-buttongroup search-button-style">
+                <label for="sort_asc" id="sort_asc_label">Sort by: </label>
                 <input id="sort_asc" type="radio" name="sorttype" value="asc" >
                 <input id="sort_desc" type="radio" name="sorttype" value="desc" checked>
             </div>
 
-            <label for="sort_ascdesc_buttongroup" id ="sort_ascdesc_buttongroup_label">Order by: </label>
-            <div id = "sort_type_buttongroup" class = "yui-buttongroup">
+            <div id = "sort_type_buttongroup" class = "yui-buttongroup search-button-style" style="margin-left: 20px">
+                <label for="sort_date" id="sort_date_label">Order by: </label>
                 <input id="sort_date" type="radio" name="sorttype" value="date" checked>
                 <input id="sort_relevance" type="radio" name="sorttype" value="score">
                 <input id="sort_random" type="radio" name="sorttype" value="random">
@@ -68,18 +77,18 @@
             <div class="clearboth"></div>
         </div>
 
-        <div class="buttons">
+        <div class="buttons" style="padding-bottom: 5px">
             <a href="#" class="button small" id="submit">Submit</a>
-            <a href="#" class="button small" id="reset">Reset query</a>
+            <a href="#" class="button small" id="reset">Reset query fields</a>
         </div>
         <div class = "row"></div>
     </form>
 
     <div>
         <div id="search_result_container" >
+            <div id = "show_query"></div>
             <div id = "num_found"></div>
             <div id = "search_results" ></div>
-
         </div>
         <div id="facet_container">
             <a class = "button down-big-overlay" id = "show_overlay">Narrow your search</a>
@@ -266,15 +275,32 @@
 
                         Event.addListener(key + "_" + i, "click", function(e) {
                             Event.stopEvent(e);
-                            var currentValue = Dom.get("search_input").value;
-                            Dom.get("search_input").value = ((currentValue == "*:*") ? "" : currentValue) + "+" +
-                                    this.id.replace(/_[0-9]+$/, "") + ":\"" +
-                                    this.innerHTML.replace("<a href=\"#\">", "").replace("</a>", "") + "\"";
+                            searchTab.set('activeIndex', 2);
+
+                            var currentValue = Dom.get("general_query_search_input").value;
+                            var newSearchKey = this.id.replace(/_[0-9]+$/, "");
+                            var newSearchVal = "\"" + this.innerHTML.replace("<a href=\"#\">", "").replace("</a>", "") + "\"";
+                            var newValue = currentValue;
+
+                            if (currentValue == "*:*" || currentValue == "") {
+                                 newValue = newSearchKey + ":(" + newSearchVal + ")";
+
+                            } else if (currentValue.indexOf(newSearchVal) == -1 ) {
+                                var keyIdx = currentValue.indexOf(newSearchKey);
+                                if (keyIdx >= 0) {
+                                    var sliceIdx = keyIdx + newSearchKey.length + 2;
+                                    newValue = currentValue.slice(0, sliceIdx) + newSearchVal + " OR " + currentValue.slice(sliceIdx);
+                                } else {
+                                    newValue = currentValue + " AND " + newSearchKey + ":(" + newSearchVal + ")";
+                                }
+                            }
+                            Dom.get("general_query_search_input").value = newValue;
                         });
 
                         if (j == sortedkeys.length - 1) {
                             anchor = LWA.ui.createDomElement("a", innerContainerDiv, [
-                                { key : "class", value: "button add search-result-button" },
+                                { key : "class", value: "search-result-button button add" },
+                                { key : "style", value: "padding-right: 3px"},
                                 { key : "id",    value: "expand_" + i } ]);
                             anchor.setAttribute("href", "hdfs://" + docs[i]["HDFSSegment"] + ";" + docs[i]["HDFSKey"]);
 
@@ -298,20 +324,21 @@
             var company = Dom.get("company_name_input").value,
                 account = Dom.get("account_name_input").value,
                 costCenter = Dom.get("cost_center_name_input").value,
-                supplier = Dom.get("search_supplier_input").value;
+                supplier = Dom.get("supplier_name_input").value;
 
             var facetOptions = {}, domFacets = Dom.get("facet_options").children;
             for (var i = 0; i < domFacets.length; i++) {
                 if (!Dom.hasClass(domFacets[i], "clearboth")) {
                     var t = domFacets[i].innerHTML.split(" : ");
-                    facetOptions[t[0]] = facetOptions.hasOwnProperty(t[0]) ? facetOptions[t[0]] + " OR " + t[1] : t[1];
+                    var o = "\"" + t[1] + "\"";
+                    facetOptions[t[0]] = facetOptions.hasOwnProperty(t[0]) ? facetOptions[t[0]] + " " + o: o;
                 }
             }
 
             var fqStr = "";
             if (Object.keys(facetOptions).length > 0) {
                 for (var key in facetOptions) {
-                    fqStr += "%2B" + key + ":(\"" + encodeForRequest(facetOptions[key]) + "\")";
+                    fqStr += "%2B" + key + ":(" + encodeURIComponent(facetOptions[key]) + ")";
                 }
             }
 
@@ -332,7 +359,11 @@
 
         Event.addListener("reset", "click", function (e) {
             Event.stopEvent(e);
-            Dom.get("search_input").value = "*:*";
+            Dom.get("general_query_search_input").value = "*:*";
+            Dom.get("company_name_input").value = "";
+            Dom.get("account_name_input").value = "";
+            Dom.get("cost_center_name_input").value = "";
+            Dom.get("supplier_name_input").value = "";
         });
 
         Event.addListener("submit", "click", function (e) {
@@ -349,7 +380,8 @@
             if (fq != "") {
                 urlParams += "&fq=" + fq;
             }
-            debugger;
+            Dom.get("show_query").innerHTML = "Submitting to solr with<br>q: " + queryTerms + "<br>fq: " + decodeURIComponent(fq);
+
             var pag = new YAHOO.widget.Paginator( {rowsPerPage : 10, containers : [ "pag1" ] });
 
             var handlePagination = function (newState) {
@@ -365,8 +397,6 @@
 
             pag.subscribe('changeRequest', handlePagination);
 
-            //http://localhost:8080/LucidWorksApp/search/query?query=disaster&collection=epic
-
             Connect.asyncRequest('GET', '<c:url value="/search/solrquery" />' + urlParams, {
                 success : function(o) {
 
@@ -377,7 +407,7 @@
                     pag.set('totalRecords', numFound);
                     pag.render();
 
-                    Dom.get("num_found").innerHTML = (numFound == 1) ? "Found 1 document" : "Found " + numFound + " documents";
+                    Dom.get("num_found").innerHTML = "Found " + numFound + " document" + ((numFound > 1) ? "s" : "");
                     Dom.setStyle("show_overlay", "visibility", "visible");
 
                     buildSearchResultHtml(result);

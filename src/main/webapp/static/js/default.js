@@ -84,9 +84,52 @@ LWA.util = {};
         }
     };
 
+    LWA.ui.buildTreeRecurse = function(doc, keyname, parentNode) {
+        var key, isObject = Object.prototype.toString.call(doc).match("Object") != null;
+        var name = isObject ? keyname : keyname + ": <b>" + doc + "</b>";
+        var nameNode = new YAHOO.widget.HTMLNode(name, parentNode, false);
+
+        if (!isObject) {
+            nameNode.isLeaf = true;
+        } else {
+            for(key in doc) {
+                LWA.ui.buildTreeRecurse(doc[key], key, nameNode);
+            }
+        }
+    };
+
+    LWA.ui.buildTreeViewFromJson = function(docs, treeView) {
+        var i, j, key, parent, root = treeView.getRoot();
+        treeView.removeChildren(root);
+
+        if (!(docs instanceof Array)) {
+            docs = [docs];
+        }
+
+        for(i = 0; i < docs.length; i++) {
+            parent = (docs[i].hasOwnProperty("name")) ? new YAHOO.widget.TextNode(docs[i].name, root, false) : root;
+            for(key in docs[i]) {
+                LWA.ui.buildTreeRecurse(docs[i][key], key, parent);
+            }
+        }
+        treeView.render();
+        treeView.expandAll();
+    };
+
+
+
     /* Utility functions */
     LWA.util.stripBrackets = function(s) {
         return (typeof s == "string") ? s.replace(/^\[|\]$/g, '') : s;
+    };
+
+    LWA.util.isValidJSON = function(json) {
+        try {
+            YAHOO.lang.JSON.parse(json);
+            return true;
+        } catch (ex) {
+            return false;
+        }
     };
 
     LWA.util.checkXmlReturnValue = function (o) {
