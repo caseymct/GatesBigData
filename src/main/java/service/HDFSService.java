@@ -3,35 +3,43 @@ package service;
 
 import net.sf.json.JSONObject;
 import org.apache.hadoop.fs.Path;
+import org.apache.nutch.protocol.Content;
 import org.codehaus.jackson.JsonGenerator;
 
+import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.TreeMap;
 
 public interface HDFSService {
 
-    public void testCrawlData(String segment);
+    public void testCrawlData(String coreName, String segment);
 
-    public Path getHDFSSegmentsDirectory(boolean includeURI);
+    public Path getHDFSCoreDirectory(boolean includeURI, String coreName);
 
-    public Path getHDFSSegmentDirectory(String segment, boolean includeURI);
+    public Path getHDFSCrawlDBCurrentDataFile(boolean includeURI, String coreName);
 
-    public Path getHDFSCrawlDirectory(boolean includeURI);
+    public Path getHDFSCrawlDirectory(boolean includeURI, String coreName);
 
-    public Path getHDFSContentDirectory(String segment, boolean includeURI);
+    public Path getHDFSSegmentsDirectory(boolean includeURI, String coreName);
 
-    public Path getHDFSContentDataFile(String segment, boolean includeURI);
+    public Path getHDFSSegmentDirectory(boolean includeURI, String coreName, String segment);
 
-    public Path getHDFSCoreDirectory(String coreName);
+    public Path getHDFSCrawlFetchDataFile(boolean includeURI, String coreName, String segment);
 
-    public Path getHDFSFacetFieldCustomFile(String coreName);
+    public Path getHDFSCrawlGenerateFile(boolean includeURI, String coreName, String segment);
 
-    public Path getHDFSCrawlFetchDataFile(String segment, boolean includeURI);
+    public Path getHDFSContentDirectory(boolean includeURI, String coreName, String segment);
 
-    public Path getHDFSCrawlGenerateFile(String segment, boolean includeURI);
+    public Path getHDFSContentDataFile(boolean includeURI, String coreName, String segment);
+
+    public Path getHDFSFacetFieldsCustomFile(String coreName);
 
     public TreeMap<String, String> getHDFSFacetFields(String hdfsDir);
+
+    public Path getHDFSPreviewFieldsCustomFile(String coreName);
+
+    public List<String> getHDFSPreviewFields(String coreName);
 
     public boolean addFile(String remoteFilePath, String localFilePath);
 
@@ -43,12 +51,15 @@ public interface HDFSService {
 
     public String getFileContents(Path remoteFilePath);
 
+    public Content getFileContents(String coreName, String segment, String fileName) throws IOException;
+
+    public List<Content> getFileContents(String coreName, String segment, List<String> fileNames) throws IOException;
+
     public List<String> listFiles(Path hdfsDirectory, boolean recurse);
 
-    public List<String> listSegments();
+    public List<String> listSegments(String coreName);
 
-    /* Returns a map of files to their segment */
-    public TreeMap<String, String> listFilesInCrawlDirectory();
+    public void listFilesInCrawlDirectory(String coreName, StringWriter writer);
 
-    public void printFileContents(String hdfsDate, String fileName, StringWriter writer);
+    public void printFileContents(String coreName, String hdfsDate, String fileName, StringWriter writer, boolean preview);
 }

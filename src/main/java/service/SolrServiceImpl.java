@@ -5,6 +5,8 @@ import LucidWorksApp.utils.HttpClientUtils;
 import LucidWorksApp.utils.JsonParsingUtils;
 import LucidWorksApp.utils.Utils;
 import net.sf.json.JSONArray;
+import net.sf.json.JSONException;
+import net.sf.json.JSONNull;
 import net.sf.json.JSONObject;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -15,6 +17,8 @@ import org.apache.solr.client.solrj.request.CoreAdminRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
 import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.CoreAdminParams;
 import org.apache.solr.common.util.NamedList;
@@ -26,18 +30,62 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 public class SolrServiceImpl implements SolrService {
 
+    static final String SOLR_SCHEMA_HDFSKEY     = "HDFSKey";
+    static final String SOLR_SCHEMA_HDFSSEGMENT = "HDFSSegment";
+
+    public static final String SOLR_SERVER = "http://denlx006.dn.gates.com:8983";
+    //public static final String SOLR_SERVER = "http://localhost:8983";
+    public static final String SOLR_ENDPOINT = "solr";
+    public static final String SOLR_SUGGEST_ENDPOINT = "suggest";
+    public static final String SOLR_SELECT_ENDPOINT = "select";
+
+    public static final String UPDATECSV_ENDPOINT = "update/csv";
+    public static final String LUKE_ENDPOINT = "admin/luke";
+
+    public String getSolrSchemaHDFSKey() {
+        return SOLR_SCHEMA_HDFSKEY;
+    }
+
+    public String getSolrSchemaHDFSSegment() {
+        return SOLR_SCHEMA_HDFSSEGMENT;
+    }
+
+    public String getSolrServerURI() {
+        return SOLR_SERVER + "/" + SOLR_ENDPOINT;
+    }
+
+    public String getSolrSuggestURI(String fieldSpecificEndpoint, HashMap<String,String> urlParams) {
+        String uri = getSolrServerURI() + "/" + SOLR_SUGGEST_ENDPOINT;
+        if (fieldSpecificEndpoint != null && !fieldSpecificEndpoint.equals("")) {
+            uri += "/" + fieldSpecificEndpoint;
+        }
+        return uri + Utils.constructUrlParams(urlParams);
+    }
+
+    public String getSolrSelectURI(HashMap<String,String> urlParams) {
+        return getSolrServerURI() + "/" + SOLR_SELECT_ENDPOINT + Utils.constructUrlParams(urlParams);
+    }
+
+    public String getUpdateCsvEndpoint(String coreName, HashMap<String,String> urlParams) {
+        return getSolrServerURI() + "/" + coreName + "/" + UPDATECSV_ENDPOINT + Utils.constructUrlParams(urlParams);
+    }
+
+    public String getSolrLukeURI(HashMap<String,String> urlParams) {
+        return getSolrServerURI() + "/" + LUKE_ENDPOINT + Utils.constructUrlParams(urlParams);
+    }
+
+    public String getSolrCoreURI(String coreName) {
+        return getSolrServerURI() + "/" + coreName;
+    }
+
     public SolrServer getSolrServer() {
         try {
-            String url = Utils.getServer() + Utils.getSolrEndpoint();
-            return new CommonsHttpSolrServer(url);
+            return new CommonsHttpSolrServer(getSolrServerURI());
 
         } catch (MalformedURLException e) {
             System.out.println(e.getMessage());
@@ -83,46 +131,35 @@ public class SolrServiceImpl implements SolrService {
         return solrServerCommit(server, null);
     }
 
-    public boolean addJsonDocumentToSolrEmbeddedServer(JSONObject document, String coreName) {
-        String solrHome = Utils.getSolrPath();
+    public List<String> getFieldNamesFromLuke() {
+        List<String> fieldNames = new ArrayList<String>();
+
+        HashMap<String,String> urlParams = new HashMap<String, String>();
+        urlParams.put("numTerms", "0");
+        urlParams.put("wt", "json");
+
+        String response = HttpClientUtils.httpGetRequest(getSolrLukeURI(urlParams));
 
         try {
-            File home = new File(solrHome);
-            File f = new File(home, "solr.xml");
-            CoreContainer container = new CoreContainer();
-            container.load(solrHome, f);
+            JSONObject json = JSONObject.fromObject(response);
+            JSONObject fields = (JSONObject) json.get("fields");
 
-            EmbeddedSolrServer server = new EmbeddedSolrServer(container, coreName);
-
-            SolrInputDocument doc = new SolrInputDocument();
-            for(Object key : document.keySet()) {
-                doc.addField((String) key, document.get(key), 1.0f);
+            List<Object> fieldNameObjects = Arrays.asList(fields.names().toArray());
+            for(Object f : fieldNameObjects) {
+                fieldNames.add((String) f);
             }
-            server.add(doc);
-            boolean added = solrServerCommit(server, doc);
-            container.shutdown();
-            return added;
 
-        } catch (MalformedURLException e) {
-            System.out.println(e.getMessage());
-        } catch (ParserConfigurationException e) {
-            System.out.println(e.getMessage());
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        } catch (SAXException e) {
-            System.out.println(e.getMessage());
-        } catch (SolrServerException e) {
+        } catch (JSONException e) {
             System.out.println(e.getMessage());
         }
-
-        return false;
+        return fieldNames;
     }
 
     public boolean addJsonDocumentToSolr(JSONObject document, String coreName, String hdfsKey) {
 
         SolrInputDocument doc = new SolrInputDocument();
 
-        doc.addField(Utils.getSolrSchemaHdfskey(), hdfsKey);
+        doc.addField(SOLR_SCHEMA_HDFSKEY, hdfsKey);
 
         for(Object key : document.keySet()) {
             if (document.get(key) instanceof JSONObject) {
@@ -141,9 +178,7 @@ public class SolrServiceImpl implements SolrService {
     public boolean addDocumentToSolr(String content, String coreName, String hdfsKey) {
 
         SolrInputDocument doc = new SolrInputDocument();
-
-        doc.addField(Utils.getSolrSchemaHdfskey(), hdfsKey);
-
+        doc.addField(SOLR_SCHEMA_HDFSKEY, hdfsKey);
         doc.addField("content", content);
 
         return solrServerCommit(getSolrServer(), doc);
@@ -168,39 +203,42 @@ public class SolrServiceImpl implements SolrService {
         return true;
     }
 
-    public String importCsvFileOnServerToSolr(String collectionName, String fileName) {
-        /*
-        String url = SERVER + SOLR_ENDPOINT + UPDATECSV_ENDPOINT;
-        String urlParams = "?stream.file=" + fileName + "&stream.contentType=text/plain;charset=utf-8";
-        straight solr
-        */
-        String url = Utils.getServer() + Utils.getSolrEndpoint() + "/" + collectionName + Utils.getUpdateCsvEndpoint();
-        String urlParams = "?commit=true&f.categories.split=true&stream.file=" +
-                fileName + "&stream.contentType=text/csv";
+    public String importCsvFileOnServerToSolr(String coreName, String fileName) {
+        HashMap<String,String> urlParams = new HashMap<String, String>();
+        urlParams.put("commit", "true");
+        urlParams.put("f.categories.split", "true");
+        urlParams.put("stream.file", fileName);
+        urlParams.put("stream.contentType", "text/csv");
 
-        String response = HttpClientUtils.httpGetRequest(url + urlParams);
+        String url = getUpdateCsvEndpoint(coreName, urlParams);
+
+        String response = HttpClientUtils.httpGetRequest(url);
         if (!response.contains("Errors")) {
-            FieldUtils.updateCSVFilesUploadedField(collectionName, fileName, true);
+           // FieldUtils.updateCSVFilesUploadedField(coreName, fileName, true);
         }
         return response;
     }
 
-    public String importCsvFileOnLocalSystemToSolr(String collectionName, String fileName) {
-        String url = Utils.getServer() + Utils.getSolrEndpoint() + "/" + collectionName + Utils.getUpdateCsvEndpoint();
-        String urlParams = "?commit=true&f.categories.split=true";
+    public String importCsvFileOnLocalSystemToSolr(String coreName, String fileName) {
+        HashMap<String,String> urlParams = new HashMap<String, String>();
+        urlParams.put("commit", "true");
+        urlParams.put("f.categories.split", "true");
+
+        String url = getUpdateCsvEndpoint(coreName, urlParams);
+        //String urlParams = "?commit=true&f.categories.split=true";
 
         //curl http://localhost:8983/solr/update/csv --data-binary @books.csv -H 'Content-type:text/plain; charset=utf-8'
 
-        // SolrServer server = new CommonsHttpSolrServer(SERVER + SOLR_ENDPOINT);
+        // SolrServer server = new CommonsHttpSolrServer(SOLR_SERVER + SOLR_ENDPOINT);
         // ContentStreamUpdateRequest req = new ContentStreamUpdateRequest("/update/csv");
         // req.addFile(new File(filename));
         // req.setAction(AbstractUpdateRequest.ACTION.COMMIT, true, true);
         // NamedList result = server.request(req);
         // System.out.println("Result: " + result);
 
-        String response = HttpClientUtils.httpBinaryDataPostRequest(url + urlParams, fileName);
+        String response = HttpClientUtils.httpBinaryDataPostRequest(url, fileName);
         if (!response.contains("Errors")) {
-            FieldUtils.updateCSVFilesUploadedField(collectionName, fileName, false);
+        //    FieldUtils.updateCSVFilesUploadedField(coreName, fileName, false);
         }
         return response;
     }
@@ -244,6 +282,17 @@ public class SolrServiceImpl implements SolrService {
         return new JSONObject();
     }
 
+    public Object getCoreDataIndexProperty(String coreName, String property) {
+        JSONObject coreData = getCoreData(coreName);
+        if (coreData.has("index")) {
+            JSONObject index = (JSONObject) coreData.get("index");
+            if (index.has(property)) {
+                return index.get(property);
+            }
+        }
+        return null;
+    }
+
     public JSONArray getAllCoreData() {
         JSONArray coreInfo = new JSONArray();
 
@@ -265,5 +314,17 @@ public class SolrServiceImpl implements SolrService {
         }
 
         return new JSONArray();
+    }
+
+    public HashMap<String, List<String>> getSegmentToFilesMap(SolrDocumentList docs) {
+        HashMap<String, List<String>> segToFileMap = new HashMap<String, List<String>>();
+
+        for (SolrDocument doc : docs) {
+            String hdfsSeg = (String) doc.getFieldValue(SOLR_SCHEMA_HDFSSEGMENT);
+            List<String> fileNames = segToFileMap.containsKey(hdfsSeg) ? segToFileMap.get(hdfsSeg) : new ArrayList<String>();
+            fileNames.add((String) doc.getFieldValue(SOLR_SCHEMA_HDFSKEY));
+            segToFileMap.put(hdfsSeg, fileNames);
+        }
+        return segToFileMap;
     }
 }

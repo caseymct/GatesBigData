@@ -86,6 +86,13 @@ a.delete {
     padding-left: 30px;
     background-size: 10px;
 }
+a.expand {
+    background: url(../images/expand.png) 0 0 no-repeat #F3F3F3;
+    padding-bottom: 5px;
+    padding-right: 0;
+    background-size: 12px;
+}
+
 a.flag {
     background: url(../images/sprite.png)  10px -96px no-repeat #f3f3f3;
     padding-left: 30px;

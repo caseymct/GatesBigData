@@ -81,17 +81,20 @@ public class JsonParsingUtils {
         return json;
     }
 
-    public static void printJSONObject(JSONObject jsonObject, String objectFieldName, JsonGenerator g) throws IOException {
+    public static void printJSONObject(JSONObject jsonObject, String objectFieldName, String fullPath,
+                                       List<String> previewFields, JsonGenerator g) throws IOException {
         g.writeObjectFieldStart(objectFieldName);
 
         for(Object key : jsonObject.names()) {
             Object value = jsonObject.get(key);
+            String newFullPath = fullPath.equals("") ? (String) key : fullPath + "." + key;
 
             if (value instanceof JSONArray) {
                 g.writeArrayFieldStart((String) key);
+
                 for (Object o : (JSONArray) value) {
-                    if (o instanceof JSONObject) {
-                        printJSONObject((JSONObject) o, (String) key, g);
+                    if (o instanceof JSONObject && (previewFields == null || previewFields.contains(newFullPath))) {
+                        printJSONObject((JSONObject) o, (String) key, newFullPath, previewFields, g);
                     } else {
                         Utils.writeValueByType(value, g);
                     }
@@ -99,10 +102,14 @@ public class JsonParsingUtils {
                 g.writeEndArray();
 
             } else if (value instanceof JSONObject) {
-                printJSONObject((JSONObject) value, (String) key, g);
+                if (previewFields == null || previewFields.contains(newFullPath)) {
+                    printJSONObject((JSONObject) value, (String) key, newFullPath, previewFields, g);
+                }
 
             } else {
-                Utils.writeValueByType((String) key, value, g);
+                if (previewFields == null || previewFields.contains(newFullPath)) {
+                    Utils.writeValueByType((String) key, value, g);
+                }
             }
         }
         g.writeEndObject();

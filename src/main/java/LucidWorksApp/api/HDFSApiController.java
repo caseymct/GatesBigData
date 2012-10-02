@@ -103,10 +103,13 @@ public class HDFSAPIController extends APIController {
 
     @RequestMapping(value = "/nutch", method = RequestMethod.GET)
     public ResponseEntity<String> readNutchFileFromHDFS(@RequestParam(value = PARAM_HDFSSEGMENT, required = true) String segment,
-                                                        @RequestParam(value = PARAM_FILENAME, required = true) String key) throws IOException {
+                                                        @RequestParam(value = PARAM_FILENAME, required = true) String key,
+                                                        @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
+                                                        @RequestParam(value = PARAM_VIEWTYPE, required = false) String viewType) throws IOException {
         StringWriter writer = new StringWriter();
 
-        hdfsService.printFileContents(segment, key, writer);
+        boolean preview = viewType != null && viewType.equals("preview");
+        hdfsService.printFileContents(coreName, segment, key, writer, preview);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
@@ -114,8 +117,8 @@ public class HDFSAPIController extends APIController {
     }
 
     @RequestMapping(value = "/test", method = RequestMethod.GET)
-    public ResponseEntity<String> test() throws IOException {
-        hdfsService.testCrawlData("");
+    public ResponseEntity<String> test(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
+        hdfsService.testCrawlData(coreName, "");
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
@@ -123,27 +126,10 @@ public class HDFSAPIController extends APIController {
     }
 
     @RequestMapping(value = "/nutch/listincrawl", method = RequestMethod.GET)
-    public ResponseEntity<String> readNutchFileFromHDFS() throws IOException {
+    public ResponseEntity<String> readNutchFileFromHDFS(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
         StringWriter writer = new StringWriter();
-        JsonFactory f = new JsonFactory();
-        JsonGenerator g = f.createJsonGenerator(writer);
 
-        TreeMap<String, String> filesCrawled = hdfsService.listFilesInCrawlDirectory();
-
-        g.writeStartObject();
-
-        g.writeStringField("Number of files: ", (String) filesCrawled.get("Total"));
-
-        for(Map.Entry<String, String> entry : filesCrawled.entrySet()) {
-            g.writeArrayFieldStart(entry.getKey());
-            for(String file : entry.getValue().split(",")) {
-                g.writeString(file);
-            }
-            g.writeEndArray();
-        }
-
-        g.writeEndObject();
-        g.close();
+        hdfsService.listFilesInCrawlDirectory(coreName, writer);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));

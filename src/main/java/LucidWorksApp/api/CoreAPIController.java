@@ -143,7 +143,7 @@ public class CoreAPIController extends APIController {
         HashMap<String, Object> properties = new HashMap<String, Object>();
         properties.put("name", coreName);
 
-        String result = CoreUtils.createCollection(properties);
+        String result = CoreUtils.createCore(properties);
         //http://localhost:8983/solr/admin/cores?action=CREATE&name=coreX&instanceDir=path_to_instance_directory&config=config_file_name.xml&schema=schem_file_name.xml&dataDir=data
 
         HttpHeaders httpHeaders = new HttpHeaders();

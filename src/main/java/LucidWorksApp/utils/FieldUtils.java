@@ -14,10 +14,10 @@ public class FieldUtils extends Utils {
     private static String CSVFILESUPLOADED_FIELDNAME = "csvFilesUploaded";
     private static String FIELDS_ENDPOINT = "/fields";
 
-
+    /*
     public static String updateCSVFilesUploadedField(String collectionName, String fileName, boolean onServer) {
-        String postUrl = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + FIELDS_ENDPOINT;
-        String putUrl = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + FIELDS_ENDPOINT + "/" +
+        String postUrl = SOLR_SERVER + "/" + collectionName + FIELDS_ENDPOINT;
+        String putUrl = SOLR_SERVER + "/" + collectionName + FIELDS_ENDPOINT + "/" +
                 CSVFILESUPLOADED_FIELDNAME;
         JSONObject field = new JSONObject();
 
@@ -49,20 +49,21 @@ public class FieldUtils extends Utils {
             return HttpClientUtils.httpJsonPutRequest(putUrl, field.toString());
         }
     }
-
+    */
     public static String clearCSVFilesUploadedField(String collectionName) {
-        String putUrl = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + FIELDS_ENDPOINT + "/" +
+       /* String putUrl = SOLR_SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + FIELDS_ENDPOINT + "/" +
                 CSVFILESUPLOADED_FIELDNAME;
         JSONObject field = new JSONObject();
         field.put("default_value", "");
-        return HttpClientUtils.httpJsonPutRequest(putUrl, field.toString());
+        return HttpClientUtils.httpJsonPutRequest(putUrl, field.toString());     */
+        return "";
     }
 
-    public static String removeEntryFromCSVFilesUploadedField(String collectionName, String fileName) {
-        String putUrl = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + FIELDS_ENDPOINT + "/" +
-                CSVFILESUPLOADED_FIELDNAME;
-
-        List<String> filesUploaded = new ArrayList<String>(Arrays.asList(((String) getFieldValue(CSVFILESUPLOADED_FIELDNAME, collectionName)).split(";")));
+    public static String removeEntryFromCSVFilesUploadedField(String coreName, String fileName) {
+        //String putUrl = SOLR_SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + FIELDS_ENDPOINT + "/" +
+        //        CSVFILESUPLOADED_FIELDNAME;
+        String putUrl = "";//Utils.getSolrCoreURI(coreName);
+        List<String> filesUploaded = new ArrayList<String>(Arrays.asList(((String) getFieldValue(CSVFILESUPLOADED_FIELDNAME, coreName)).split(";")));
         if (filesUploaded.contains(fileName)) {
             filesUploaded.remove(fileName);
 
@@ -74,20 +75,10 @@ public class FieldUtils extends Utils {
         return "{ \"error\" : \"Files uploaded field does not contain file name\"}";
     }
 
-    public static String deletedField(String collectionName, String fieldName) {
-        String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + FIELDS_ENDPOINT + "/" + fieldName;
+    public static String createCSVField(String coreName, String fieldName) {
+        String url = "";//getSolrCoreURI(coreName);
 
-        if (fieldExists(fieldName, collectionName)) {
-            return HttpClientUtils.httpDeleteRequest(url);
-        }
-
-        return "{ \"errors\" : {\"Field does not exist\"}";
-    }
-
-    public static String createCSVField(String collectionName, String fieldName) {
-        String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + "/fields";
-
-        if (!fieldExists(fieldName, collectionName)) {
+        if (!fieldExists(fieldName, coreName)) {
             JSONObject field = new JSONObject();
             field.put("name", fieldName);
             field.put("copy_fields", fieldName + "_display");
@@ -112,8 +103,7 @@ public class FieldUtils extends Utils {
     }
 
     public static Object getFieldValue(String fieldName, String collectionName) {
-        String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + FIELDS_ENDPOINT + "/" + fieldName +
-                "?wt=json";
+        String url = "";//SOLR_SERVER + "/" + collectionName + FIELDS_ENDPOINT + "/" + fieldName + "?wt=json";
         JSONObject jsonObject = JSONObject.fromObject(HttpClientUtils.httpGetRequest(url));
 
         if (jsonObject.containsKey("default_value")) {
@@ -132,15 +122,14 @@ public class FieldUtils extends Utils {
     }
 
     public static boolean fieldExists(String fieldName, String collectionName) {
-        String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + FIELDS_ENDPOINT + "/" + fieldName +
-                "?wt=json";
+        String url = "";//SOLR_SERVER + "/" + collectionName + FIELDS_ENDPOINT + "/" + fieldName +"?wt=json";
         JSONObject jsonObject = JSONObject.fromObject(HttpClientUtils.httpGetRequest(url));
 
         return !(jsonObject.containsKey("http_status_code") && jsonObject.get("http_status_code").equals(404));
     }
 
     public static List<String> getFieldNames(String collectionName) {
-        String url = SERVER + COLLECTIONS_ENDPOINT + "/" + collectionName + "/fields";
+        String url = "";//SOLR_SERVER + "/" + collectionName + "/fields";
         List<String> fieldNames = new ArrayList<String>();
 
         JSONArray fields = JSONArray.fromObject(HttpClientUtils.httpGetRequest(url));

@@ -4,12 +4,19 @@
 
 <layout:main>
     <link rel="stylesheet" type="text/css" href="<c:url value="/static/js/yui/2.9/treeview/assets/skins/sam/menu.css"/>" />
-    <style>
+    <link rel="stylesheet" type="text/css" href="<c:url value="/static/css/search.css"/>" />
+    <style type="text/css">
         .ygtvitem {
             color: #708090;
         }
     </style>
+
     <h1>Document view</h1>
+    <div id = "view_buttongroup" class = "yui-buttongroup search-button-style">
+        <input id="preview" type="radio" name="view" value="preview" >
+        <input id="fullview" type="radio" name="view" value="fullview">
+    </div>
+    <div class="clearboth"></div>
 
     <div id="tree_view"></div>
     <div id="doc_view"></div>
@@ -21,18 +28,32 @@
             Event = YAHOO.util.Event,
             Connect = YAHOO.util.Connect,
             TreeView = YAHOO.widget.TreeView,
+            ButtonGroup = YAHOO.widget.ButtonGroup,
             Json = YAHOO.lang.JSON;
 
         var treeView = new TreeView("tree_view");
 
         var remoteSeg = YAHOO.deconcept.util.getRequestParameter("segment");
         var remoteFile = YAHOO.deconcept.util.getRequestParameter("file");
-        var urlParams = "?segment=" + remoteSeg + "&file=" + remoteFile;
+        var coreName = YAHOO.deconcept.util.getRequestParameter("core");
+        var viewType = YAHOO.deconcept.util.getRequestParameter("view");
+        var urlParams = "?core=" + coreName + "&segment=" + remoteSeg + "&file=" + remoteFile + "&view=" + viewType;
+
+        var viewButtonGroup = new ButtonGroup("view_buttongroup");
+        viewButtonGroup.check(+(viewType == "fullview"));
+        viewButtonGroup.on("checkedButtonChange", function (o) {
+            urlParams = urlParams.replace(/view=.*view/, "view=" + o.newValue.get("value"));
+            window.open('<c:url value="/core/document/view" />' + urlParams, "_self");
+        });
+
+        LWA.ui.initWait();
+        LWA.ui.showWait();
 
         Connect.asyncRequest('GET', '<c:url value="/data/nutch" />' + urlParams, {
             success : function(o) {
                 var i, result = o.responseText;
-                debugger;
+                LWA.ui.hideWait();
+
                 if (LWA.util.isValidJSON(result)) {
                     LWA.ui.buildTreeViewFromJson(Json.parse(result), treeView);
                 } else {

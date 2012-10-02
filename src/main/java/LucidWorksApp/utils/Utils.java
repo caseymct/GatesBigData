@@ -1,58 +1,26 @@
 package LucidWorksApp.utils;
 
+import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.JsonGenerator;
 
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 public class Utils {
-    public static final String COLLECTIONS_ENDPOINT = "/api/collections";
-    public static final String SERVER = "http://denlx006.dn.gates.com:8983";
-    //public static final String SERVER = "http://localhost:8983";
-    public static final String DATASOURCES_ENDPOINT = "/datasources";
-    public static final String INFO_ENDPOINT = "/info";
-    public static final String INDEX_ENDPOINT = "/index";
-    public static final String SOLR_ENDPOINT = "/solr";
-    public static final String UPDATECSV_ENDPOINT = "/update/csv";
-    public static final String LUKE_ENDPOINT = "/admin/luke";
-    public static final String SOLR_PATH = "/Users/caseymctaggart/projects/solr/example/solr";
-    public static final String SOLR_SCHEMA_HDFSKEY = "HDFSKey";
 
-    public static String getServer() {
-        return SERVER;
-    }
+    public static String constructUrlParams(HashMap<String,String> params) {
+        if (params == null) return "";
 
-    public static String getSolrEndpoint() {
-        return SOLR_ENDPOINT;
-    }
-
-    public static String getUpdateCsvEndpoint() {
-        return UPDATECSV_ENDPOINT;
-    }
-
-    public static String getLukeEndpoint() {
-        return LUKE_ENDPOINT;
-    }
-
-    public static String getSolrPath() {
-        return SOLR_PATH;
-    }
-
-    public static String getSolrSchemaHdfskey() {
-        return SOLR_SCHEMA_HDFSKEY;
-    }
-
-    public static List<String> convertObjectListToStringList(List<Object> objectList) {
-        List<String> stringList = new ArrayList<String>();
-        for (Object o : objectList) {
-            if (o instanceof String) {
-                stringList.add((String) o);
-            }
+        List<String> paramList = new ArrayList<String>();
+        for(Map.Entry<String,String> entry : params.entrySet()) {
+            paramList.add(entry.getKey() + "=" + entry.getValue());
         }
-        return stringList;
+        return "?" + StringUtils.join(paramList, "&");
     }
 
     public static void writeValueByType(String key, Object value, JsonGenerator g) throws IOException {

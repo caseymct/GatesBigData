@@ -28,58 +28,77 @@ public class HDFSServiceImpl implements HDFSService {
 
     private static final String HDFS_ERROR_STRING = "ERROR";
     private static final String FACETFIELDS_HDFSFILENAME = "fields.csv";
+    private static final String PREVIEWFIELDS_HDFSFILENAME = "previewfields.csv";
     private static final String HDFS_URI = "hdfs://denlx006.dn.gates.com:8020";
     //private static final String HDFS_URI = "hdfs://127.0.0.1:8020";
 
-    private static final String USER_HDFS_DIR = "/user/hdfs";
-    private static final String CRAWL_DIR = USER_HDFS_DIR + "/initial_z_crawl";
-    private static final String SEGMENTS_DIR = CRAWL_DIR + "/segments";
-    private static final String CRAWLDB_CURRENT = CRAWL_DIR + "/crawldb/current";
+    private static final String USER_HDFS_DIR = "user/hdfs";
+    private static final String CRAWL_DIR = "crawl";
+    private static final String SEGMENTS_DIR = "segments";
+    private static final String CRAWLDB_CURRENT = "crawldb/current";
+    private static final String PART_00000 = "part-00000";
+    private static final String PART_DATA = PART_00000 + "/data";
 
-    private static final String CONTENT_DATA = Content.DIR_NAME + "/part-00000/data";
-    private static final String CRAWL_FETCH_DATA = CrawlDatum.FETCH_DIR_NAME + "/part-00000/data";
-    private static final String CRAWL_GENERATE_DATA = CrawlDatum.GENERATE_DIR_NAME + "/part-00000";
+    private static final String CONTENT_DATA = Content.DIR_NAME + "/" + PART_DATA;
+    private static final String CRAWL_FETCH_DATA = CrawlDatum.FETCH_DIR_NAME + "/" + PART_DATA;
+    private static final String CRAWL_GENERATE_DATA = CrawlDatum.GENERATE_DIR_NAME + "/" + PART_00000;
 
     private static final Partitioner PARTITIONER = new HashPartitioner();
 
-    public Path getHDFSSegmentsDirectory(boolean includeURI) {
-        return new Path((includeURI ? HDFS_URI : "") + SEGMENTS_DIR);
+    public Path getHDFSCoreDirectory(boolean includeURI, String coreName) {
+        return new Path((includeURI ? HDFS_URI : "") + "/" + USER_HDFS_DIR, coreName);
     }
 
-    public Path getHDFSSegmentDirectory(String segment, boolean includeURI) {
-        return new Path(getHDFSSegmentsDirectory(includeURI), segment);
+    public Path getHDFSCrawlDirectory(boolean includeURI, String coreName) {
+        return new Path(getHDFSCoreDirectory(includeURI, coreName), CRAWL_DIR);
     }
 
-    public Path getHDFSCrawlFetchDataFile(String segment, boolean includeURI) {
-        return new Path(getHDFSSegmentDirectory(segment, includeURI), CRAWL_FETCH_DATA);
+    public Path getHDFSSegmentsDirectory(boolean includeURI, String coreName) {
+        return new Path(getHDFSCrawlDirectory(includeURI, coreName), SEGMENTS_DIR);
     }
 
-    public Path getHDFSCrawlGenerateFile(String segment, boolean includeURI) {
-        return new Path(getHDFSSegmentDirectory(segment, includeURI), CRAWL_GENERATE_DATA);
+    public Path getHDFSSegmentDirectory(boolean includeURI, String coreName, String segment) {
+        return new Path(getHDFSSegmentsDirectory(includeURI, coreName), segment);
     }
 
-    public Path getHDFSContentDirectory(String segment, boolean includeURI) {
-        return new Path(getHDFSSegmentDirectory(segment, includeURI), Content.DIR_NAME);
+    public Path getHDFSCrawlFetchDataFile(boolean includeURI, String coreName, String segment) {
+        return new Path(getHDFSSegmentDirectory(includeURI, coreName, segment), CRAWL_FETCH_DATA);
     }
 
-    public Path getHDFSContentDataFile(String segment, boolean includeURI) {
-        return new Path(getHDFSSegmentDirectory(segment, includeURI), CONTENT_DATA);
+    public Path getHDFSCrawlGenerateFile(boolean includeURI, String coreName, String segment) {
+        return new Path(getHDFSSegmentDirectory(includeURI, coreName, segment), CRAWL_GENERATE_DATA);
     }
 
-    public Path getHDFSCoreDirectory(String coreName) {
-        return new Path(USER_HDFS_DIR, coreName);
+    public Path getHDFSContentDirectory(boolean includeURI, String coreName, String segment) {
+        return new Path(getHDFSSegmentDirectory(includeURI, coreName, segment), Content.DIR_NAME);
     }
 
-    public Path getHDFSFacetFieldCustomFile(String coreName) {
-        return new Path(getHDFSCoreDirectory(coreName), FACETFIELDS_HDFSFILENAME);
+    public Path getHDFSContentDataFile(boolean includeURI, String coreName, String segment) {
+        return new Path(getHDFSSegmentDirectory(includeURI, coreName, segment), CONTENT_DATA);
     }
 
-    public Path getHDFSCrawlDirectory(boolean includeURI) {
-        return new Path((includeURI ? HDFS_URI : "") + CRAWL_DIR);
+    public Path getHDFSCrawlDBCurrentDataFile(boolean includeURI, String coreName) {
+        return new Path(getHDFSCrawlDirectory(includeURI, coreName), CRAWLDB_CURRENT + "/" + PART_DATA);
+    }
+
+    public Path getHDFSFacetFieldsCustomFile(String coreName) {
+        return new Path(getHDFSCoreDirectory(true, coreName), FACETFIELDS_HDFSFILENAME);
+    }
+
+    public Path getHDFSPreviewFieldsCustomFile(String coreName) {
+        return new Path(getHDFSCoreDirectory(true, coreName), PREVIEWFIELDS_HDFSFILENAME);
     }
 
     private Configuration getHDFSConfiguration() {
-        return new Configuration();
+        Configuration configuration = new Configuration();
+        configuration.setQuietMode(true);
+        return configuration;
+    }
+
+    private Configuration getNutchConfiguration() {
+        Configuration configuration = NutchConfiguration.create();
+        configuration.setQuietMode(true);
+        return configuration;
     }
 
     private FileSystem getHDFSFileSystem() {
@@ -219,7 +238,7 @@ public class HDFSServiceImpl implements HDFSService {
     public TreeMap<String, String> getHDFSFacetFields(String coreName) {
         TreeMap<String, String> namesAndTypes = new TreeMap<String, String>();
 
-        String response = getFileContents(getHDFSFacetFieldCustomFile(coreName));
+        String response = getFileContents(getHDFSFacetFieldsCustomFile(coreName));
         if (!response.startsWith(HDFS_ERROR_STRING)) {
             for(String ret : response.split(",")) {
                 String[] n = ret.split(":");
@@ -228,6 +247,16 @@ public class HDFSServiceImpl implements HDFSService {
         }
 
         return namesAndTypes;
+    }
+
+    public List<String> getHDFSPreviewFields(String coreName) {
+        List<String> fields = new ArrayList<String>();
+        String response = getFileContents(getHDFSPreviewFieldsCustomFile(coreName));
+        if (!response.startsWith(HDFS_ERROR_STRING)) {
+            fields = Arrays.asList(response.split(","));
+        }
+
+        return fields;
     }
 
     public List<String> listFiles(Path hdfsDirectory, boolean recurse) {
@@ -258,74 +287,93 @@ public class HDFSServiceImpl implements HDFSService {
         return filePaths;
     }
 
-    public List<String> listSegments() {
-        return listFiles(getHDFSSegmentsDirectory(false), false);
+    public List<String> listSegments(String coreName) {
+        return listFiles(getHDFSSegmentsDirectory(false, coreName), false);
     }
 
-    public TreeMap<String, String> listFilesInCrawlDirectory() {
-        int total = 0;
-        TreeMap<String, String> filesCrawled = new TreeMap<String, String>();
+    private long getNumberOfFilesCrawled(String coreName) {
+        long total = 0;
 
         try {
-            for(String segment : listSegments()) {
-                List<String> files = new ArrayList<String>();
-                for(Map.Entry entry : getCrawlData(getHDFSCrawlGenerateFile(segment, true)).entrySet()) {
-                    files.add(entry.getKey().toString());
-                }
-                filesCrawled.put(segment, StringUtils.join(files, ","));
-                total += files.size();
+            for(String segment : listSegments(coreName)) {
+                total += getCrawlData(getHDFSCrawlGenerateFile(true, coreName, segment)).size();
             }
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+        return total;
+    }
+
+    public void listFilesInCrawlDirectory(String coreName, StringWriter writer) {
+        long total = 0;
+
+        try {
+            JsonFactory f = new JsonFactory();
+            JsonGenerator g = f.createJsonGenerator(writer);
+
+            g.writeStartObject();
+
+            for(String segment : listSegments(coreName)) {
+                g.writeArrayFieldStart(segment);
+
+                for(Map.Entry entry : getCrawlData(getHDFSCrawlGenerateFile(true, coreName, segment)).entrySet()) {
+                    g.writeString(entry.getKey().toString());
+                    total++;
+                }
+                g.writeEndArray();
+            }
+
+            g.writeNumberField("Number of files: ", total);
+            g.writeEndObject();
+            g.close();
+
         } catch (IOException e) {
             System.out.println(e);
         }
-        filesCrawled.put("Total", total + "");
-
-        return filesCrawled;
     }
 
     private HashMap<Text, CrawlDatum> getCrawlData(Path path) throws IOException {
         HashMap<Text, CrawlDatum> allContents = new HashMap<Text, CrawlDatum>();
 
-        Configuration conf = NutchConfiguration.create();
-        FileSystem fs = getHDFSFileSystem();
-
-        SequenceFile.Reader reader= new SequenceFile.Reader(fs, path, conf);
+        SequenceFile.Reader reader= new SequenceFile.Reader(getHDFSFileSystem(), path, getNutchConfiguration());
 
         do {
             Text key = new Text();
             CrawlDatum value = new CrawlDatum();
             if (!reader.next(key, value)) break;
             allContents.put(key, value);
-        } while(true);
+        } while (true);
 
         return allContents;
     }
 
-    private HashMap<Text, Content> getAllContents(String segment) throws IOException {
+    private HashMap<Text, Content> getAllContents(String coreName) throws IOException {
         HashMap<Text, Content> allContents = new HashMap<Text, Content>();
 
-        Configuration conf = NutchConfiguration.create();
+        Configuration conf = getNutchConfiguration();
         FileSystem fs = getHDFSFileSystem();
 
-        Path contentData = new Path(getHDFSSegmentDirectory(segment, true), CONTENT_DATA);
-        SequenceFile.Reader reader= new SequenceFile.Reader(fs, contentData, conf);
+        for(String segment : listSegments(coreName)) {
+            Path contentData = getHDFSContentDataFile(true, coreName, segment);
+            SequenceFile.Reader reader= new SequenceFile.Reader(fs, contentData, conf);
 
-        do {
-            Text key = new Text();
-            Content value = new Content();
-            if (!reader.next(key, value)) break;
-            allContents.put(key, value);
-        } while(true);
+            do {
+                Text key = new Text();
+                Content value = new Content();
+                if (!reader.next(key, value)) break;
+                allContents.put(key, value);
+            } while(true);
+        }
 
         return allContents;
     }
 
-    private Content getFileContents(String segment, String fileName) throws IOException {
+    public Content getFileContents(String coreName, String segment, String fileName) throws IOException {
 
-        Configuration conf = NutchConfiguration.create();
+        Configuration conf = getNutchConfiguration();
         FileSystem fs = getHDFSFileSystem();
 
-        MapFile.Reader[] readers = MapFileOutputFormat.getReaders(fs, getHDFSContentDirectory(segment, true), conf);
+        MapFile.Reader[] readers = MapFileOutputFormat.getReaders(fs, getHDFSContentDirectory(true, coreName, segment), conf);
         Text key = new Text(fileName);
         Content content = new Content();
         MapFileOutputFormat.getEntry(readers, PARTITIONER, key, content);
@@ -333,11 +381,28 @@ public class HDFSServiceImpl implements HDFSService {
         return content;
     }
 
-    public void testCrawlData(String segment) {
+    public List<Content> getFileContents(String coreName, String segment, List<String> fileNames) throws IOException {
+        List<Content> contents = new ArrayList<Content>();
+
+        Configuration conf = getNutchConfiguration();
+        FileSystem fs = getHDFSFileSystem();
+
+        MapFile.Reader[] readers = MapFileOutputFormat.getReaders(fs, getHDFSContentDirectory(true, coreName, segment), conf);
+        for(String fileName : fileNames) {
+            Text key = new Text(fileName);
+            Content content = new Content();
+            MapFileOutputFormat.getEntry(readers, PARTITIONER, key, content);
+            contents.add(content);
+        }
+
+        return contents;
+    }
+
+    public void testCrawlData(String coreName, String segment) {
         try {
 
-            HashMap<Text, CrawlDatum> crawlDbCurr = getCrawlData(new Path(CRAWLDB_CURRENT + "/part-00000/data"));
-        //    HashMap<Text, CrawlDatum> allCrawlFetchData = getCrawlData(segment, CRAWL_FETCH_DATA);
+            //HashMap<Text, CrawlDatum> crawlDbCurr = getCrawlData(getHDFSCrawlDBCurrentDataFile(true, coreName));
+            getAllContents(coreName);
         //    HashMap<Text, CrawlDatum> allCrawlGenData = getCrawlData(segment, CrawlDatum.GENERATE_DIR_NAME + "/part-00000");
 
         } catch (IOException e) {
@@ -346,19 +411,20 @@ public class HDFSServiceImpl implements HDFSService {
     }
 
 
-    public void printFileContents(String segment, String fileName, StringWriter writer) {
+    public void printFileContents(String coreName, String segment, String fileName, StringWriter writer, boolean preview) {
         try {
-            Content content = getFileContents(segment, fileName);
+            Content content = getFileContents(coreName, segment, fileName);
             if (content == null) {
                 return;
             }
 
+            List<String> previewFields = preview ? getHDFSPreviewFields(coreName) : null;
             String contentType = content.getContentType();
 
             if (contentType.equals("application/json")) {
-                printJSONFileContents(writer, content);
+                printJSONFileContents(writer, content, previewFields);
             } else {
-                printFileContents(writer, content);
+                printFileContents(writer, content, previewFields);
             }
 
         } catch (Exception e) {
@@ -366,7 +432,7 @@ public class HDFSServiceImpl implements HDFSService {
         }
     }
 
-    private void printJSONFileContents(StringWriter writer, Content content) throws IOException {
+    private void printJSONFileContents(StringWriter writer, Content content, List<String> previewFields) throws IOException {
         JsonFactory f = new JsonFactory();
         JsonGenerator g = f.createJsonGenerator(writer);
 
@@ -376,13 +442,13 @@ public class HDFSServiceImpl implements HDFSService {
         g.writeStringField("dateAdded", content.getMetadata().get("Last-Modified"));
 
         JSONObject jsonObject = JSONObject.fromObject(new String(content.getContent()));
-        JsonParsingUtils.printJSONObject(jsonObject, "Contents", g);
+        JsonParsingUtils.printJSONObject(jsonObject, "Contents", "", previewFields, g);
 
         g.writeEndObject();
         g.close();
     }
 
-    private void printFileContents(StringWriter writer, Content content) throws IOException {
+    private void printFileContents(StringWriter writer, Content content, List<String> previewFields) throws IOException {
         writer.append("<html><body>");
         writer.append("<p>url : " + content.getUrl() + "</p>");
         writer.append("<p>dateAdded : " + content.getMetadata().get("Last-Modified"));

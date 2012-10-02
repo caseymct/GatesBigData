@@ -26,7 +26,18 @@ pre {
     overflow: hidden;
     text-overflow: ellipsis;
     -o-text-overflow: ellipsis;
+}
 
+.yui-skin-sam .yui-ac-container {
+    /*width:275px;*/
+    left:0;
+}
+
+.yui-skin-sam .yui-ac-input {
+    position: static;
+    width: 98%;
+    margin-top: 2px;
+    padding: 2px;
 }
 
 .yui-skin-sam .yui-radio-button-checked, .yui-skin-sam .yui-checkbox-button-checked {
@@ -39,7 +50,7 @@ pre {
 }
 
 .yui-skin-sam .yui-button {
-    margin: 0px;
+    margin: 3px;
 }
 
 .ygtvlabel {
@@ -58,6 +69,7 @@ li.yui-button-selectedmenuitem {
     border-radius: 5px;
     padding:5px;
     margin:10px;
+    z-index:2;
 }
 
 .yui-overlay .hd {
@@ -119,6 +131,7 @@ li.yui-button-selectedmenuitem {
     border:1px groove #243356; /* content border */
     border-top-color: #243356; /* different border color */
     padding:0.25em 0.5em; /* content padding */
+    padding-bottom: 10px;
 }
 
 .search-result-div {
@@ -162,6 +175,11 @@ form div.row label {
     text-align: left;
 }
 
+form div.row {
+    clear: both;
+    padding: 5px;
+}
+
 .facet_option_div {
     border: 1px solid black;
     float: left;
@@ -173,7 +191,6 @@ form div.row label {
 
 .search_tab_style {
     padding: 5px;
-    height: 120px;
 }
 
 #show_query {
@@ -198,11 +215,14 @@ form div.row label {
 
 #search_result_container {
     float: left;
-    width: 70%;
+    width: 100%;
 }
 
 #facet_container {
-    float: left;
+    position: absolute;
+    left: -300px;
+    top: 70px;
+    z-index: 4;
 }
 
 #show_overlay {
@@ -232,4 +252,9 @@ form div.row label {
 
 #search_input_label {
     width: 100px;
+}
+
+#account_name_input {
+    padding: 2px;
+    margin-left: 1px;
 }

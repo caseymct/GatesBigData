@@ -116,6 +116,27 @@ LWA.util = {};
         treeView.expandAll();
     };
 
+    LWA.ui.initWait = function () {
+        if (!LWA.ui.wait) {
+            LWA.ui.wait = new YAHOO.widget.Panel("wait",
+                    { width: "240px",
+                        fixedcenter: true,
+                        close: false,
+                        draggable: false,
+                        zindex:4,
+                        modal: true,
+                        visible: false
+                    }
+                );
+
+            LWA.ui.wait.setHeader("Loading, please wait...");
+            LWA.ui.wait.setBody("<img src=\"http://l.yimg.com/a/i/us/per/gr/gp/rel_interstitial_loading.gif\"/>");
+            LWA.ui.wait.render(document.body);
+        }
+    };
+
+    LWA.ui.showWait = function() { LWA.ui.wait.show(); };
+    LWA.ui.hideWait = function() { LWA.ui.wait.hide(); };
 
 
     /* Utility functions */
@@ -183,6 +204,22 @@ LWA.util = {};
             }
         }
         return retval;
+    };
+
+    /* Sort keys so that title and author come first */
+    LWA.util.sortKeys = function(unsortedkeys) {
+        var sortedkeys = [];
+        var strings = ["title", "author", "creator", "url"];
+
+        for(var i = 0; i < strings.length; i++) {
+            var index = unsortedkeys.indexOf(strings[i]);
+            if (index != -1) {
+                sortedkeys.push(strings[i]);
+                unsortedkeys.splice(index, 1);
+            }
+        }
+
+        return sortedkeys.concat(unsortedkeys.sort());
     };
 
 })();
