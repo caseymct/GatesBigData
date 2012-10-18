@@ -51,6 +51,8 @@ pre {
 
 .yui-skin-sam .yui-button {
     margin: 3px;
+    margin-bottom:-0.5em;
+    vertical-align: baseline;
 }
 
 .ygtvlabel {
@@ -61,23 +63,9 @@ li.yui-button-selectedmenuitem {
     background: url("../images/checkbox.png") left center no-repeat;
 }
 
-
-.yui-overlay {
-    /*position:absolute;*/
-    background:#fff;
-    border:1px dotted black;
-    border-radius: 5px;
-    padding:5px;
-    margin:10px;
-    z-index:2;
-}
-
-.yui-overlay .hd {
-    padding:5px;
-}
-
-.yui-overlay .bd {
-    padding:5px;
+.yui-skin-sam .yui-dt table {
+    font-family: 'Helvetica Neue', Verdana, Helvetica, sans-serif;
+    font-size: 12px;
 }
 
 .yui-skin-sam .yui-navset .yui-nav,
@@ -134,6 +122,20 @@ li.yui-button-selectedmenuitem {
     padding-bottom: 10px;
 }
 
+.yui-skin-sam .yui-ac-content li {
+    margin: 0;
+    padding: 2px 5px;
+    cursor: default;
+    white-space: normal;
+    list-style: none;
+    zoom: 1;
+    word-wrap: break-word;
+}
+
+.yui-menu-button em.yui-button-label {
+    width: 15em;
+}
+
 .search-result-div {
     border: 1px inset gray;
     border-radius: 5px;
@@ -171,7 +173,7 @@ li.yui-button-selectedmenuitem {
 }
 
 form div.row label {
-    width : 150px;
+    width : 160px;
     text-align: left;
 }
 
@@ -193,6 +195,9 @@ form div.row {
     padding: 5px;
 }
 
+#content {
+    min-height: 600px;
+}
 #show_query {
     font-size: 10px;
     padding: 5px 0px 5px 0px;
@@ -211,6 +216,8 @@ form div.row {
     margin: 5px 0px 0px 0px;
     height: 50px;
     padding: 2px;
+    font-family: 'Helvetica Neue', Verdana, Helvetica, sans-serif;
+    font-size: 12px;
 }
 
 #search_result_container {
@@ -218,25 +225,22 @@ form div.row {
     width: 100%;
 }
 
-#facet_container {
-    position: absolute;
-    left: -300px;
-    top: 70px;
-    z-index: 4;
-}
-
-#show_overlay {
-    margin-left : 10px;
-    font-weight: bold;
-    visibility: hidden;
+#overlay {
+    visibility: visible;
+    z-index: 5;
+    background-color: white;
+    border: 1px solid #CCC;
+    padding: 5px;
+    max-width: 400px;
+    min-width: 193px;
 }
 
 #num_found {
     font-weight: bold;
 }
 
-#tree_view {
-    margin: 5px 0px 0px 5px;
+#tree_view, #doc_view {
+    margin: 5px 0 0 5px;
 }
 
 #sort_asc_label {
@@ -246,8 +250,9 @@ form div.row {
 }
 
 #sort_date_label {
-    width : 70px;
+    width : 300px;
     margin-right: 10px;
+    padding: 5px;
 }
 
 #search_input_label {

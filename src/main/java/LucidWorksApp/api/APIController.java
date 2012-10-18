@@ -4,6 +4,7 @@ package LucidWorksApp.api;
 public abstract class APIController {
     public static final String CONTENT_TYPE_HEADER = "Content-Type";
     public static final String CONTENT_TYPE_VALUE = "application/json; charset=UTF-8";
+    public static final String CONTENT_LENGTH_HEADER = "Content-Length";
 
     public static final String PARAM_CORE_NAME = "core";
     public static final String PARAM_FILENAME = "file";
@@ -12,6 +13,7 @@ public abstract class APIController {
     public static final String PARAM_VIEWTYPE = "view";
     public static final String PARAM_USER_INPUT = "userinput";
     public static final String PARAM_FIELD_SUGGEST_ENDPOINT = "f";
+    public static final String PARAM_HDFSSEGMENT = "segment";
 
     public static final String PARAM_QUERY = "query";
     public static final String PARAM_START = "start";

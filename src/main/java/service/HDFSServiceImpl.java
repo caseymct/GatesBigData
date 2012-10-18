@@ -1,9 +1,9 @@
 package service;
 
 import LucidWorksApp.utils.JsonParsingUtils;
+import LucidWorksApp.utils.Utils;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.MapFile;
@@ -13,10 +13,12 @@ import org.apache.hadoop.mapred.MapFileOutputFormat;
 import org.apache.hadoop.mapred.Partitioner;
 import org.apache.hadoop.mapred.lib.HashPartitioner;
 import org.apache.nutch.crawl.CrawlDatum;
+import org.apache.nutch.metadata.Metadata;
 import org.apache.nutch.protocol.Content;
 import org.apache.nutch.util.NutchConfiguration;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -25,6 +27,8 @@ import java.util.*;
 
 @Service
 public class HDFSServiceImpl implements HDFSService {
+
+    private DocumentConversionService documentConversionService;
 
     private static final String HDFS_ERROR_STRING = "ERROR";
     private static final String FACETFIELDS_HDFSFILENAME = "fields.csv";
@@ -38,12 +42,20 @@ public class HDFSServiceImpl implements HDFSService {
     private static final String CRAWLDB_CURRENT = "crawldb/current";
     private static final String PART_00000 = "part-00000";
     private static final String PART_DATA = PART_00000 + "/data";
+    private static final String THUMBNAILS_DIR = "thumbnails";
 
     private static final String CONTENT_DATA = Content.DIR_NAME + "/" + PART_DATA;
     private static final String CRAWL_FETCH_DATA = CrawlDatum.FETCH_DIR_NAME + "/" + PART_DATA;
     private static final String CRAWL_GENERATE_DATA = CrawlDatum.GENERATE_DIR_NAME + "/" + PART_00000;
 
+    private static final String FILE_DOES_NOT_EXIST_METADATA_KEY = "FILE_DOES_NOT_EXIST";
+
     private static final Partitioner PARTITIONER = new HashPartitioner();
+
+    @Autowired
+    public void setServices(DocumentConversionService documentConversionService) {
+        this.documentConversionService = documentConversionService;
+    }
 
     public Path getHDFSCoreDirectory(boolean includeURI, String coreName) {
         return new Path((includeURI ? HDFS_URI : "") + "/" + USER_HDFS_DIR, coreName);
@@ -121,17 +133,19 @@ public class HDFSServiceImpl implements HDFSService {
             File localFileDir = new File(localFileDirectory);
             File[] localFiles = localFileDir.listFiles();
 
-            for(File file : localFiles) {
+            if (localFiles != null && localFiles.length > 0) {
+                for(File file : localFiles) {
 
-                Path srcPath = new Path(file.getAbsolutePath());
-                Path dstPath = new Path(remoteFileDirectory + "/" + file.getName());
+                    Path srcPath = new Path(file.getAbsolutePath());
+                    Path dstPath = new Path(remoteFileDirectory + "/" + file.getName());
 
-                if (!fs.exists(dstPath)) {
-                    try {
-                        fs.copyFromLocalFile(srcPath, dstPath);
-                        nAdded++;
-                    } catch(Exception e) {
-                        System.err.println(e.getMessage());
+                    if (!fs.exists(dstPath)) {
+                        try {
+                            fs.copyFromLocalFile(srcPath, dstPath);
+                            nAdded++;
+                        } catch(Exception e) {
+                            System.err.println(e.getMessage());
+                        }
                     }
                 }
             }
@@ -189,56 +203,58 @@ public class HDFSServiceImpl implements HDFSService {
         return false;
     }
 
-    public String getFileContents(Path remoteFilePath) {
-        StringBuilder sb = new StringBuilder();
+    public byte[] getFileContents(Path remoteFilePath) {
+        byte[] contents = null;
 
         try {
             FileSystem fs = getHDFSFileSystem();
-
             if (!fs.exists(remoteFilePath)) {
-                return HDFS_ERROR_STRING + "File does not exist";
+                return new byte[0];
             }
 
-            String line = "";
+            long length = fs.getContentSummary(remoteFilePath).getLength();
+            if (length > Integer.MAX_VALUE) {
+                System.out.println("File is too large. ");
+                return new byte[0];
+            }
+
+            DataInputStream d = new DataInputStream(fs.open(remoteFilePath));
+
+            contents = new byte[(int)length];
+
+            // Read in the bytes
+            int offset = 0, numRead = 0;
+            while (offset < contents.length
+                    && (numRead= d.read(contents, offset, contents.length-offset)) >= 0) {
+                offset += numRead;
+            }
+
+            // Ensure all the bytes have been read in
+            if (offset < contents.length) {
+                throw new IOException("Could not completely read file " + remoteFilePath);
+            }
+
+            d.close();
+            /*
             DataInputStream d = new DataInputStream(fs.open(remoteFilePath));
             BufferedReader reader = new BufferedReader(new InputStreamReader(d));
 
-            while ((line = reader.readLine()) != null){
-                sb.append(line);
+            while ((reader.readLine()) != null){
             }
             reader.close();
             d.close();
             fs.close();
-
+             */
         } catch (IOException e) {
             System.err.println(e.getMessage());
         }
-
-        return sb.toString();
-    }
-
-    public JSONObject getJSONFileContents(Path remoteFilePath) {
-        JSONObject error = new JSONObject();
-
-        String fileContents = getFileContents(remoteFilePath);
-
-        if (fileContents.contains(HDFS_ERROR_STRING)) {
-            error.put("Error", fileContents.substring(HDFS_ERROR_STRING.length()));
-            return error;
-        }
-
-        try {
-            return JSONObject.fromObject(fileContents);
-        } catch (JSONException e) {
-            error.put("Error", "Cannot convert contents to JSON");
-            return error;
-        }
+        return contents;
     }
 
     public TreeMap<String, String> getHDFSFacetFields(String coreName) {
         TreeMap<String, String> namesAndTypes = new TreeMap<String, String>();
 
-        String response = getFileContents(getHDFSFacetFieldsCustomFile(coreName));
+        String response = new String(getFileContents(getHDFSFacetFieldsCustomFile(coreName)));
         if (!response.startsWith(HDFS_ERROR_STRING)) {
             for(String ret : response.split(",")) {
                 String[] n = ret.split(":");
@@ -251,7 +267,7 @@ public class HDFSServiceImpl implements HDFSService {
 
     public List<String> getHDFSPreviewFields(String coreName) {
         List<String> fields = new ArrayList<String>();
-        String response = getFileContents(getHDFSPreviewFieldsCustomFile(coreName));
+        String response = new String(getFileContents(getHDFSPreviewFieldsCustomFile(coreName)));
         if (!response.startsWith(HDFS_ERROR_STRING)) {
             fields = Arrays.asList(response.split(","));
         }
@@ -317,7 +333,7 @@ public class HDFSServiceImpl implements HDFSService {
                 g.writeArrayFieldStart(segment);
 
                 for(Map.Entry entry : getCrawlData(getHDFSCrawlGenerateFile(true, coreName, segment)).entrySet()) {
-                    g.writeString(entry.getKey().toString());
+                    g.writeString(entry.getKey().toString() + ", " + ((CrawlDatum) entry.getValue()).getStatus());
                     total++;
                 }
                 g.writeEndArray();
@@ -332,8 +348,8 @@ public class HDFSServiceImpl implements HDFSService {
         }
     }
 
-    private HashMap<Text, CrawlDatum> getCrawlData(Path path) throws IOException {
-        HashMap<Text, CrawlDatum> allContents = new HashMap<Text, CrawlDatum>();
+    private TreeMap<Text, CrawlDatum> getCrawlData(Path path) throws IOException {
+        TreeMap<Text, CrawlDatum> allContents = new TreeMap<Text, CrawlDatum>();
 
         SequenceFile.Reader reader= new SequenceFile.Reader(getHDFSFileSystem(), path, getNutchConfiguration());
 
@@ -347,7 +363,7 @@ public class HDFSServiceImpl implements HDFSService {
         return allContents;
     }
 
-    private HashMap<Text, Content> getAllContents(String coreName) throws IOException {
+    public HashMap<Text, Content> getAllContents(String coreName) throws IOException {
         HashMap<Text, Content> allContents = new HashMap<Text, Content>();
 
         Configuration conf = getNutchConfiguration();
@@ -368,12 +384,65 @@ public class HDFSServiceImpl implements HDFSService {
         return allContents;
     }
 
-    public Content getFileContents(String coreName, String segment, String fileName) throws IOException {
+    private Path returnOrCreateDirectory(Path path, FileSystem fs) throws IOException {
+        if (!fs.exists(path)) {
+            fs.mkdirs(path);
+        }
+        return path;
+    }
+
+    public Path getHDFSThumbnailPathFromHDFSDocPath(String coreName, String segment, String hdfsPath) {
+        String imgName = documentConversionService.getThumbnailNameFromHDFSPath(hdfsPath);
+        Path thumbnailPath = new Path(getHDFSCoreDirectory(false, coreName), THUMBNAILS_DIR);
+        Path segmentPath = new Path(thumbnailPath, segment);
+        return new Path(segmentPath, imgName);
+    }
+
+    public void generateThumbnails(String coreName) throws IOException {
 
         Configuration conf = getNutchConfiguration();
         FileSystem fs = getHDFSFileSystem();
 
-        MapFile.Reader[] readers = MapFileOutputFormat.getReaders(fs, getHDFSContentDirectory(true, coreName, segment), conf);
+        Path thumbnailDir = returnOrCreateDirectory(new Path(getHDFSCoreDirectory(false, coreName), THUMBNAILS_DIR), fs);
+
+        for(String segment : listSegments(coreName)) {
+            returnOrCreateDirectory(new Path(thumbnailDir, segment), fs);
+
+            Path contentData = getHDFSContentDataFile(true, coreName, segment);
+            SequenceFile.Reader reader= new SequenceFile.Reader(fs, contentData, conf);
+
+            do {
+                Text key = new Text();
+                Content value = new Content();
+                if (!reader.next(key, value)) break;
+
+                String thumbnail = documentConversionService.convertContentToThumbnail(value, key);
+                if (!thumbnail.equals("") && !Utils.hasFileErrorMessage(thumbnail)) {
+                    fs.moveFromLocalFile(new Path(thumbnail),
+                            getHDFSThumbnailPathFromHDFSDocPath(coreName, segment, key.toString()));
+                }
+            } while(true);
+        }
+    }
+
+    private Content fileDoesNotExistContent() {
+        Content content = new Content();
+        Metadata metadata = new Metadata();
+        metadata.add(FILE_DOES_NOT_EXIST_METADATA_KEY, "true");
+        content.setMetadata(metadata);
+        return content;
+    }
+
+    public Content getFileContents(String coreName, String segment, String fileName) throws IOException {
+
+        Configuration conf = getNutchConfiguration();
+        FileSystem fs = getHDFSFileSystem();
+        Path hdfsContentDirectory = getHDFSContentDirectory(true, coreName, segment);
+        if (!fs.exists(hdfsContentDirectory)) {
+            return fileDoesNotExistContent();
+        }
+
+        MapFile.Reader[] readers = MapFileOutputFormat.getReaders(fs, hdfsContentDirectory, conf);
         Text key = new Text(fileName);
         Content content = new Content();
         MapFileOutputFormat.getEntry(readers, PARTITIONER, key, content);
@@ -386,45 +455,58 @@ public class HDFSServiceImpl implements HDFSService {
 
         Configuration conf = getNutchConfiguration();
         FileSystem fs = getHDFSFileSystem();
+        Path hdfsContentDirectory = getHDFSContentDirectory(true, coreName, segment);
 
-        MapFile.Reader[] readers = MapFileOutputFormat.getReaders(fs, getHDFSContentDirectory(true, coreName, segment), conf);
-        for(String fileName : fileNames) {
-            Text key = new Text(fileName);
-            Content content = new Content();
-            MapFileOutputFormat.getEntry(readers, PARTITIONER, key, content);
-            contents.add(content);
+        if (fs.exists(hdfsContentDirectory)) {
+            MapFile.Reader[] readers = MapFileOutputFormat.getReaders(fs, hdfsContentDirectory, conf);
+            for(String fileName : fileNames) {
+                Text key = new Text(fileName);
+                Content content = new Content();
+                MapFileOutputFormat.getEntry(readers, PARTITIONER, key, content);
+                contents.add(content);
+            }
         }
-
         return contents;
     }
 
     public void testCrawlData(String coreName, String segment) {
         try {
+            HashMap<Text, Content> allContents = getAllContents(coreName);
 
-            //HashMap<Text, CrawlDatum> crawlDbCurr = getCrawlData(getHDFSCrawlDBCurrentDataFile(true, coreName));
-            getAllContents(coreName);
-        //    HashMap<Text, CrawlDatum> allCrawlGenData = getCrawlData(segment, CrawlDatum.GENERATE_DIR_NAME + "/part-00000");
-
+            for(Map.Entry<Text,Content> entry : allContents.entrySet()) {
+                Content content = entry.getValue();
+                Text key = entry.getKey();
+            }
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
     }
 
+    public Content getContent(String coreName, String segment, String filePath, StringWriter writer) throws IOException {
+        Content content = getFileContents(coreName, segment, filePath);
+        if (content == null) {
+            Utils.printFileErrorMessage(writer, "Null content");
+            return null;
+        }
+        if (content.getMetadata().get(FILE_DOES_NOT_EXIST_METADATA_KEY) != null) {
+            Utils.printFileErrorMessage(writer, "File " + filePath + " does not exist on HDFS");
+            return null;
+        }
+        return content;
+    }
+
 
     public void printFileContents(String coreName, String segment, String fileName, StringWriter writer, boolean preview) {
         try {
-            Content content = getFileContents(coreName, segment, fileName);
+            Content content = getContent(coreName, segment, fileName, writer);
             if (content == null) {
                 return;
             }
 
             List<String> previewFields = preview ? getHDFSPreviewFields(coreName) : null;
-            String contentType = content.getContentType();
 
-            if (contentType.equals("application/json")) {
+            if (content.getContentType().equals("application/json")) {
                 printJSONFileContents(writer, content, previewFields);
-            } else {
-                printFileContents(writer, content, previewFields);
             }
 
         } catch (Exception e) {
@@ -447,14 +529,4 @@ public class HDFSServiceImpl implements HDFSService {
         g.writeEndObject();
         g.close();
     }
-
-    private void printFileContents(StringWriter writer, Content content, List<String> previewFields) throws IOException {
-        writer.append("<html><body>");
-        writer.append("<p>url : " + content.getUrl() + "</p>");
-        writer.append("<p>dateAdded : " + content.getMetadata().get("Last-Modified"));
-        writer.append("<p>Content : </p>");
-        writer.append(new String(content.getContent()));
-        writer.append("</body></html>");
-    }
-
 }

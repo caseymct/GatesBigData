@@ -1,12 +1,10 @@
 package service;
 
-
-import LucidWorksApp.utils.Utils;
 import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.common.SolrDocumentList;
-import org.apache.solr.common.util.NamedList;
+import org.apache.solr.common.SolrInputDocument;
 
 import java.util.HashMap;
 import java.util.List;
@@ -17,35 +15,33 @@ public interface SolrService {
 
     public String getSolrSchemaHDFSSegment();
 
-    public String getSolrServerURI();
+    public String getSolrServerURI(String coreName);
 
-    public String getSolrSuggestURI(String fieldSpecificEndpoint, HashMap<String,String> urlParams);
+    public String getSolrSuggestURI(String fieldSpecificEndpoint, String coreName, HashMap<String,String> urlParams);
 
-    public String getSolrSelectURI(HashMap<String,String> urlParams);
+    public String getSolrSelectURI(String coreName, HashMap<String,String> urlParams);
 
     public String getUpdateCsvEndpoint(String coreName, HashMap<String,String> urlParams);
 
-    public String getSolrLukeURI(HashMap<String,String> urlParams);
+    public String getSolrLukeData();
 
-    public String getSolrCoreURI(String coreName);
+    public String getSolrLukeData(String coreName);
+
+    public String getSolrSchemaFieldName(String endpoint, boolean prefixField);
 
     public SolrServer getSolrServer();
 
-    public SolrServer getSolrServer(String url);
+    public boolean solrServerCommit(SolrServer server, SolrInputDocument doc);
 
-    public List<String> getFieldNamesFromLuke();
+    public boolean solrServerCommit(SolrServer server);
 
-    public boolean addJsonDocumentToSolr(JSONObject document, String coreName, String hdfsKey);
+    public boolean addDocumentToSolr(Object content, String hdfsKey);
 
-    public boolean addDocumentToSolr(String content, String coreName, String hdfsKey);
+    public boolean addDocumentToSolr(Object content, String hdfsKey, SolrServer server);
 
-    public boolean deleteIndex(String coreName);
+    public CoreAdminResponse getCores();
 
     public List<String> getCoreNames();
-
-    public JSONObject getCoreData(String coreName);
-
-    public Object getCoreDataIndexProperty(String coreName, String property);
 
     public JSONArray getAllCoreData();
 

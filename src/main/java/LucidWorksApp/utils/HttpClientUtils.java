@@ -1,8 +1,10 @@
 package LucidWorksApp.utils;
 
+import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
+//import org.apache.http.client.HttpClient;
+import org.apache.commons.httpclient.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -10,9 +12,12 @@ import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.*;
 import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class HttpClientUtils {
 
@@ -38,15 +43,14 @@ public class HttpClientUtils {
 
     public static String httpJsonPostRequest(String url, String json) {
 
-        HttpClient httpclient = new DefaultHttpClient();
-
+        DefaultHttpClient httpClient = new DefaultHttpClient();
         try {
             HttpPost postRequest = new HttpPost(url);
             StringEntity input = new StringEntity(json);
             input.setContentType(jsonContentType);
             postRequest.setEntity(input);
 
-            HttpResponse response = httpclient.execute(postRequest);
+            HttpResponse response = httpClient.execute(postRequest);
             HttpEntity responseEntity = response.getEntity();
 
             return getResponse(responseEntity);
@@ -64,7 +68,7 @@ public class HttpClientUtils {
 
     public static String httpBinaryDataPostRequest(String url, String fileName) {
 
-        HttpClient httpclient = new DefaultHttpClient();
+        DefaultHttpClient httpclient = new DefaultHttpClient();
 
         try {
             HttpPost postRequest = new HttpPost(url);
@@ -103,10 +107,34 @@ public class HttpClientUtils {
         return "";
     }
 
+    public static String httpPostRequest(String url, HashMap<String, String> parameters) {
+        HttpClient httpclient = new HttpClient();
 
+        PostMethod method = new PostMethod(url);
+
+        for(Map.Entry<String, String> entry : parameters.entrySet()) {
+            method.addParameter(entry.getKey(), entry.getValue());
+        }
+
+        try {
+            httpclient.executeMethod(method);
+            String response = method.getResponseBodyAsString();
+            System.out.println(response);
+            method.releaseConnection( );
+            return response;
+            //return getResponse(response.getEntity());
+
+        } catch (HttpClientErrorException e) {
+            System.out.println(e.getMessage());
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+
+        return "";
+    }
 
     public static String httpGetRequest(String url) {
-        HttpClient httpclient = new DefaultHttpClient();
+        DefaultHttpClient httpclient = new DefaultHttpClient();
 
         try {
             HttpGet httpget = new HttpGet(url);
@@ -126,7 +154,7 @@ public class HttpClientUtils {
     }
 
     public static String httpPutRequest(String url) {
-        HttpClient httpclient = new DefaultHttpClient();
+        DefaultHttpClient httpclient = new DefaultHttpClient();
 
         try {
             HttpPut httpPut = new HttpPut(url);
@@ -146,7 +174,7 @@ public class HttpClientUtils {
     }
 
     public static String httpJsonPutRequest(String url, String json) {
-        HttpClient httpclient = new DefaultHttpClient();
+        DefaultHttpClient httpclient = new DefaultHttpClient();
 
         try {
             HttpPut httpPut = new HttpPut(url);
@@ -171,7 +199,7 @@ public class HttpClientUtils {
     }
 
     public static String httpDeleteRequest(String url) {
-        HttpClient httpclient = new DefaultHttpClient();
+        DefaultHttpClient httpclient = new DefaultHttpClient();
 
         try {
             HttpDelete httpDelete = new HttpDelete(url);

@@ -2,7 +2,6 @@ package service;
 
 import LucidWorksApp.utils.DateUtils;
 import LucidWorksApp.utils.HttpClientUtils;
-import LucidWorksApp.utils.JsonParsingUtils;
 import LucidWorksApp.utils.Utils;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONException;
@@ -36,21 +35,29 @@ import java.util.regex.Pattern;
 public class SearchServiceImpl implements SearchService {
 
     private Pattern fieldNamesToIgnore;
-    /*= Pattern.compile("^(attr|_).*|.*(version|batch|body|text_all|" +
-                                                                 Utils.getSolrSchemaHdfskey() +
-                                                                "|boost|digest|host|segment|tstamp).*|.*id");
-      */
+    private String SOLR_DEFAULT_SORT_FIELD = "score";
+    private String SOLR_DEFAULT_QUERY = "*:*";
+    private int SOLR_DEFAULT_START = 0;
+    private int SOLR_DEFAULT_ROWS = 10;
+    private SolrQuery.ORDER SOLR_DEFAULT_SORT_ORDER = SolrQuery.ORDER.asc;
+
     private SolrService solrService;
+    private CoreService coreService;
 
     @Autowired
-    public void setServices(SolrService solrService) {
+    public void setServices(SolrService solrService, CoreService coreService) {
         this.solrService = solrService;
+        this.coreService = coreService;
         fieldNamesToIgnore = Pattern.compile("^(attr|_).*|.*(version|batch|body|text_all|" +
                 solrService.getSolrSchemaHDFSKey() +
                 "|boost|digest|host|segment|tstamp).*|.*id");
     }
 
-    public List<String> getSolrIndexDateRange(String collectionName) {
+    private SolrQuery.ORDER getSortOrder(String sortOrder) {
+        return sortOrder.equals("asc") ? SolrQuery.ORDER.asc : SolrQuery.ORDER.desc;
+    }
+
+    public List<String> getSolrIndexDateRange(String coreName) {
 
         int buckets = 10;
         HashMap<String,String> urlParams = new HashMap<String, String>();
@@ -60,7 +67,7 @@ public class SearchServiceImpl implements SearchService {
         urlParams.put("fl", "timestamp");
         urlParams.put("sort", "timestamp+asc");
 
-        String url = solrService.getSolrSelectURI(urlParams);
+        String url = solrService.getSolrSelectURI(coreName, urlParams);
 
         List<String> dateRange = new ArrayList<String>();
 
@@ -94,16 +101,11 @@ public class SearchServiceImpl implements SearchService {
         return fieldNamesSubset;
     }
 
-    private TreeMap<String, String> getFieldNamesAndTypesFromLuke(boolean facetFields) {
+    private TreeMap<String, String> getFieldNamesAndTypesFromLuke(String coreName, boolean facetFields) {
         TreeMap<String, String> namesAndTypes = new TreeMap<String, String>();
         List<String> fieldNames = new ArrayList<String>();
 
-        HashMap<String,String> urlParams = new HashMap<String, String>();
-        urlParams.put("numTerms", "0");
-        urlParams.put("wt", "json");
-        String url = solrService.getSolrLukeURI(urlParams);
-
-        String response = HttpClientUtils.httpGetRequest(url);
+        String response = solrService.getSolrLukeData(coreName);
 
         try {
             JSONObject json = JSONObject.fromObject(response);
@@ -141,30 +143,46 @@ public class SearchServiceImpl implements SearchService {
         return fq;
     }
 
-    public JSONObject suggest(String userInput, String fieldSpecificEndpoint) {
-        JSONObject ret = new JSONObject();
-        ret.put("suggestions", new JSONArray());
+    private String getSolrSuggestion(String coreName, String userInput, String prefixField, String fullField) {
 
+        HashMap<String,String> urlParams = new HashMap<String, String>();
+        urlParams.put("wt", "json");
+        urlParams.put("q", prefixField + ":" + userInput + "*");
+        urlParams.put("fl", fullField);
+        urlParams.put("group.field", fullField);
+        urlParams.put("group", "true");
+        String url = solrService.getSolrSelectURI(coreName, urlParams);
+        //http://denlx006.dn.gates.com:8983/solr/select?q=UserNamePrefix:c*&fl=User.UserName&group=true&group.field=User.UserName
+
+        return HttpClientUtils.httpGetRequest(url);
+    }
+
+    public JSONObject suggest(String coreName, String userInput, String fieldSpecificEndpoint) {
         try {
             userInput = URIUtil.encodeQuery(userInput);
         } catch (URIException e) {
             System.out.println(e.getMessage());
         }
-        HashMap<String,String> urlParams = new HashMap<String, String>();
-        urlParams.put("wt", "json");
-        urlParams.put("q", userInput);
 
-        String url = solrService.getSolrSuggestURI(fieldSpecificEndpoint, urlParams);
-        String response = HttpClientUtils.httpGetRequest(url);
+        JSONObject ret = new JSONObject();
+        JSONArray suggestions = new JSONArray();
+
+        String prefixField = solrService.getSolrSchemaFieldName(fieldSpecificEndpoint, true);
+        String fullField = solrService.getSolrSchemaFieldName(fieldSpecificEndpoint, false);
+        String response = getSolrSuggestion(coreName, userInput, prefixField, fullField);
 
         try {
             JSONObject jsonObject = JSONObject.fromObject(response);
-            if (jsonObject.has("spellcheck")) {
-                JSONObject spellcheck = (JSONObject) jsonObject.get("spellcheck");
-                if (spellcheck.has("suggestions")){
-                    JSONArray suggestions = (JSONArray) spellcheck.get("suggestions");
-                    if (suggestions.size() > 2) {
-                        ret.put("suggestions", ((JSONObject) suggestions.get(1)).get("suggestion"));
+            if (jsonObject.has("grouped")) {
+                JSONObject userName = jsonObject.getJSONObject("grouped").getJSONObject(fullField);
+                if (userName.has("groups")){
+                    JSONArray groups = userName.getJSONArray("groups");
+                    if (groups.size() > 0) {
+                        for(int i = 0; i < groups.size(); i++) {
+                            JSONObject g = ((JSONObject) groups.get(i)).getJSONObject("doclist");
+                            String suggest = (String) ((JSONObject) g.getJSONArray("docs").get(0)).get(fullField);
+                            suggestions.add(suggest + " (" + Integer.toString(g.getInt("numFound")) + ")");
+                        }
                     }
                 }
             }
@@ -172,16 +190,18 @@ public class SearchServiceImpl implements SearchService {
             System.out.println(e.getMessage());
         }
 
+        ret.put("suggestions", suggestions);
         return ret;
     }
 
     public void writeFacets(String coreName, TreeMap<String, String> facetFields, StringWriter writer) {
         if (facetFields == null || facetFields.size() == 0) {
-            facetFields = getFieldNamesAndTypesFromLuke(true);
+            facetFields = getFieldNamesAndTypesFromLuke(coreName, true);
         }
 
         try {
-            QueryResponse rsp = execQuery("*:*", coreName, "asc", "date", 0, 10, null, facetFields);
+            QueryResponse rsp = execQuery(SOLR_DEFAULT_QUERY, coreName, SOLR_DEFAULT_SORT_FIELD, SOLR_DEFAULT_SORT_ORDER,
+                    SOLR_DEFAULT_START, SOLR_DEFAULT_ROWS, null, facetFields);
             writeResponse(false, rsp, 0, writer);
 
         } catch (IOException e) {
@@ -194,11 +214,11 @@ public class SearchServiceImpl implements SearchService {
                            int start, int rows, String fq, TreeMap<String, String> facetFields, StringWriter writer) {
 
         if (facetFields == null || facetFields.size() == 0) {
-            facetFields = getFieldNamesAndTypesFromLuke(true);
+            facetFields = getFieldNamesAndTypesFromLuke(coreName, true);
         }
 
         try {
-            QueryResponse rsp = execQuery(queryString, coreName, sortType, sortOrder, start, rows, fq, facetFields);
+            QueryResponse rsp = execQuery(queryString, coreName, sortType, getSortOrder(sortOrder), start, rows, fq, facetFields);
             writeResponse(true, rsp, start, writer);
 
         } catch (IOException e) {
@@ -222,10 +242,10 @@ public class SearchServiceImpl implements SearchService {
         g.close();
     }
 
-    public QueryResponse execQuery(String queryString, String coreName, String sortType, String sortOrder,
-                                    int start, int rows, String fq, TreeMap<String, String> facetFields) throws IOException {
+    public QueryResponse execQuery(String queryString, String coreName, String sortField, SolrQuery.ORDER sortOrder,
+                                    int start, int rows, String fq, TreeMap<String, String> facetFields) {
 
-        String url = solrService.getSolrServerURI();
+        String url = solrService.getSolrServerURI(coreName);
 
         try {
             SolrServer server = new CommonsHttpSolrServer(url);
@@ -237,6 +257,8 @@ public class SearchServiceImpl implements SearchService {
 
             if (facetFields != null && facetFields.size() > 0) {
                 query.add("facet", "true");
+                query.add("facet.method", "enum");
+                query.add("facet.missing", "true");
                 query.setFacetLimit(facetFields.size());
 
                 for (Map.Entry field : facetFields.entrySet()) {
@@ -248,13 +270,8 @@ public class SearchServiceImpl implements SearchService {
                         query.add("facet.date.gap", dateRange.get(2));
 
                         fq = editFilterQueryDateRange(fq, (String) field.getKey());
-                        if (sortType.equals("date")) {
-                            query.addSortField((String) field.getKey(),
-                                    sortOrder.equals("asc") ? SolrQuery.ORDER.asc : SolrQuery.ORDER.desc);
-                        }
                     } else {
                         query.add("facet.field", (String) field.getKey());
-                        query.add("facet.method", "enum");
                     }
                 }
             }
@@ -262,10 +279,12 @@ public class SearchServiceImpl implements SearchService {
             if (fq != null) {
                 query.addFilterQuery(fq);
             }
-            if (!sortType.equals("date")) {
-                query.addSortField(sortType, sortOrder.equals("asc") ? SolrQuery.ORDER.asc : SolrQuery.ORDER.desc);
+
+            if (coreService.isFieldMultiValued(server, sortField)) {
+                sortField = "score";
             }
 
+            query.addSortField(sortField, sortOrder);
             return server.query(query);
 
         } catch (MalformedURLException e) {
@@ -323,7 +342,11 @@ public class SearchServiceImpl implements SearchService {
             if (facetField.getValues() == null) continue;
 
             g.writeStartObject();
-            g.writeStringField("name", facetField.getName());
+            String name = facetField.getName();
+            if (name.endsWith(".facet")) {
+                name = name.substring(0, name.lastIndexOf(".facet"));
+            }
+            g.writeStringField("name", name);
 
             g.writeArrayFieldStart("values");
             for(FacetField.Count count : facetField.getValues()) {

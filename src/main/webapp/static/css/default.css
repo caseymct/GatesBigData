@@ -195,7 +195,7 @@ form div.form-buttons {
     bottom:0;
     left:0;
     width:100%;
-    z-index: 3;
+    z-index: 6;
 }
 
 #footer_container {
@@ -232,17 +232,18 @@ form div.form-buttons {
     list-style:none;
     padding:0;
     margin:0;
+    background: #efefef;
 }
 #nav li {
     padding:5px 5px 5px 10px;
     margin:0;
-    color:#888;
-    border-bottom:1px solid #dfdfdf;
+    color:#444444;
+    border-bottom:1px solid #AAA;
 }
 #nav li a {
-    color: #6e6e6e;
+    color: #444;
 }
-#nav li a:hover {
+#nav li:hover {
     color: #333;
     text-shadow: 0 1px 0 #fff;
     -webkit-transition: border-color .218s;
@@ -303,4 +304,12 @@ a:hover {
     float : left;
     width : 300px;
     font-size: 12px;
+}
+
+#facet_container {
+    float: left;
+    position: relative;
+    top: 90px;
+    z-index: 4;
+    visibility: hidden;
 }

@@ -1,7 +1,9 @@
 package LucidWorksApp.api;
 
 import net.sf.json.JSONObject;
+import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.util.SimpleOrderedMap;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.PrettyPrinter;
@@ -47,6 +49,40 @@ public class ExportAPIController extends APIController {
         this.exportJSONService = exportJSONService;
     }
 
+    private void exportHeaderData(HashMap<String, String> searchParams, ExportService exportService, PrintWriter writer) throws IOException {
+        String query = searchParams.get(SESSION_SEARCH_QUERY), fq = searchParams.get(SESSION_SEARCH_FQ),
+               coreName = searchParams.get(SESSION_SEARCH_CORE_NAME);
+
+        QueryResponse rsp = searchService.execQuery(query, coreName, solrService.getSolrSchemaHDFSKey(),
+                                                    SolrQuery.ORDER.asc, 0, 0, fq, null);
+        exportService.exportHeaderData(rsp.getResults().getNumFound(), query, fq, coreName, writer);
+    }
+
+    private void export(boolean onlyJsonContentType, HashMap<String, String> searchParams,
+                        ExportService exportService, PrintWriter writer) throws IOException, IllegalAccessException, InvocationTargetException, NoSuchMethodException{
+        String fq = searchParams.get(SESSION_SEARCH_FQ);
+        fq = (fq == null ? "" : fq) + (onlyJsonContentType ? "+" : "-") + "content_type:\"application/json\"";
+        int start = 0;
+        long numDocs = -1;
+
+        do {
+            QueryResponse rsp = searchService.execQuery(searchParams.get(SESSION_SEARCH_QUERY),
+                    searchParams.get(SESSION_SEARCH_CORE_NAME), solrService.getSolrSchemaHDFSKey(),
+                    SolrQuery.ORDER.asc, start, PAGE_SIZE, fq, null);
+
+            if (numDocs == -1) numDocs = rsp.getResults().getNumFound();
+
+            if (numDocs > 0) {
+                if (onlyJsonContentType) {
+                    exportService.exportJSONDocs(rsp.getResults(), searchParams.get(SESSION_SEARCH_CORE_NAME), writer);
+                } else {
+                    exportService.export(rsp.getResults(), searchParams.get(SESSION_SEARCH_CORE_NAME), writer);
+                }
+            }
+            start += PAGE_SIZE;
+        } while (start < numDocs);
+    }
+
     @RequestMapping("/export")
     public void exportSearchResults(@RequestParam(value = EXPORT_FILENAME, required = true) String fileName,
                                     @RequestParam(value = EXPORT_FILETYPE, required = true) String fileType,
@@ -68,22 +104,11 @@ public class ExportAPIController extends APIController {
         HashMap<String, String> searchParams = (HashMap<String,String>) session.getAttribute(SESSION_SEARCH_PARAMS);
 
         if (searchParams != null) {
-            long numDocs = -1;
-            int start = 0;
-
             try {
-                do {
-                    QueryResponse rsp = searchService.execQuery(searchParams.get(SESSION_SEARCH_QUERY),
-                            searchParams.get(SESSION_SEARCH_CORE_NAME), solrService.getSolrSchemaHDFSKey(),
-                            "asc", start, PAGE_SIZE, searchParams.get(SESSION_SEARCH_FQ), null);
-                    if (numDocs == -1) {
-                        numDocs = rsp.getResults().getNumFound();
-                        exportService.exportHeaderData(numDocs, rsp.getResponseHeader().get("params").toString(), writer);
-                    }
-
-                    exportService.export(rsp.getResults(), searchParams.get(SESSION_SEARCH_CORE_NAME), writer);
-                    start += PAGE_SIZE;
-                } while (start < numDocs);
+                exportHeaderData(searchParams, exportService, writer);
+                export(true, searchParams, exportService, writer);
+                exportService.writeDefaultNewline(writer);
+                export(false, searchParams, exportService, writer);
 
             } catch (InvocationTargetException e) {
                 System.out.println(e.getMessage());
@@ -97,7 +122,7 @@ public class ExportAPIController extends APIController {
         }
 
         exportService.closeWriters(writer);
-        System.out.println("TIME " + (System.currentTimeMillis() - time));
+        System.out.println("EXPORT TIME " + (System.currentTimeMillis() - time));
     }
 
 }

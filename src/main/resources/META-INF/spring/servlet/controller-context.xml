@@ -17,12 +17,9 @@
 	<mvc:annotation-driven />
     <mvc:view-controller path="/" view-name="index" />
     <mvc:view-controller path="/index.html" view-name="index" />
-    <mvc:view-controller path="/search" view-name="search" />
-
-    <mvc:view-controller path="/collection/{collectionName}" view-name="collectionDetails"/>
-    <mvc:view-controller path="/collection/{collectionName}/datasource/{datasourceId}" view-name="datasourceDetails"/>
-    <mvc:view-controller path="/collection/{collectionName}/type/web/datasource/{datasourceId}" view-name="datasourceTypes/webdatasource"/>
-    <mvc:view-controller path="/collection/{collectionName}/type/importcsv/datasource/{datasourceId}" view-name="datasourceTypes/importcsv"/>
+    <mvc:view-controller path="/search/NA_data" view-name="search/NA_data" />
+    <mvc:view-controller path="/search/test_data" view-name="search/test_data" />
     <mvc:view-controller path="/core/document/view" view-name="documentView" />
+    <mvc:view-controller path="/core/document/viewtest" view-name="documentViewerTest" />
 
 </beans>

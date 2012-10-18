@@ -3,11 +3,13 @@ package service;
 
 import net.sf.json.JSONObject;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Text;
 import org.apache.nutch.protocol.Content;
 import org.codehaus.jackson.JsonGenerator;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.TreeMap;
 
@@ -47,13 +49,19 @@ public interface HDFSService {
 
     public boolean removeFile(String remoteFilePath);
 
-    public JSONObject getJSONFileContents(Path remoteFilePath);
-
-    public String getFileContents(Path remoteFilePath);
+    public byte[] getFileContents(Path remoteFilePath);
 
     public Content getFileContents(String coreName, String segment, String fileName) throws IOException;
 
     public List<Content> getFileContents(String coreName, String segment, List<String> fileNames) throws IOException;
+
+    public Content getContent(String coreName, String segment, String filePath, StringWriter writer) throws IOException;
+
+    public HashMap<Text, Content> getAllContents(String coreName) throws IOException;
+
+    public void generateThumbnails(String coreName) throws IOException;
+
+    public Path getHDFSThumbnailPathFromHDFSDocPath(String coreName, String segment, String hdfsPath);
 
     public List<String> listFiles(Path hdfsDirectory, boolean recurse);
 

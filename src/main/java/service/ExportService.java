@@ -5,23 +5,42 @@ import org.apache.solr.common.SolrDocumentList;
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
 
-public interface ExportService {
+public abstract class ExportService {
 
     static final String DEFAULT_DELIMETER = ",";
     static final String DEFAULT_NEWLINE = "\n";
+    public static List<String> FIELDS_TO_EXPORT = new ArrayList<String>(Arrays.asList("title", "id", "content_type", "preview"));
 
-    void exportHeaderData(long numDocs, String solrParams, final Writer writer);
+    public void writeDefaultNewline(final Writer writer) throws IOException {
+        writer.append(DEFAULT_NEWLINE);
+    }
 
-    void exportHeaderData(long numDocs, String solrParams, final Writer writer, String delimiter, String newLine);
+    public void exportHeaderData(long numDocs, String query, String fq, String coreName, final Writer writer) {
+        exportHeaderData(numDocs, query, fq, coreName, writer, DEFAULT_DELIMETER, DEFAULT_NEWLINE);
+    }
 
-    void export(SolrDocumentList docs, String coreName, final Writer writer) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException;
+    public void export(SolrDocumentList docs, String coreName, final Writer writer) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
+        export(docs, coreName, writer, DEFAULT_DELIMETER, DEFAULT_NEWLINE);
+    }
 
-    void export(SolrDocumentList docs, String coreName, final Writer writer, String delimeter, String newLine) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException;
+    public void exportJSONDocs(SolrDocumentList docs, String coreName, final Writer writer) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
+        exportJSONDocs(docs, coreName, writer, DEFAULT_DELIMETER, DEFAULT_NEWLINE);
+    }
 
-    void writeEmptyResultSet(final Writer writer);
+    public abstract void exportHeaderData(long numDocs, String query, String fq, String coreName, final Writer writer, String delimiter, String newLine);
 
-    void closeWriters(final Writer writer);
+    public abstract void exportJSONDocs(SolrDocumentList docs, String coreName, final Writer writer, String delimeter, String newLine) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException;
+
+    public abstract void export(SolrDocumentList docs, String coreName, final Writer writer, String delimeter, String newLine) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException;
+
+    public abstract void writeEmptyResultSet(final Writer writer);
+
+    public abstract void closeWriters(final Writer writer);
+
 }

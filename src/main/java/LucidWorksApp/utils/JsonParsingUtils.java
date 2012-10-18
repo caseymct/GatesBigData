@@ -12,35 +12,6 @@ import java.util.*;
 public class JsonParsingUtils {
 
 
-
-    public static List<Object> getPropertiesFromDataSourceJson(String propertyName, String dataSourceFullJson) {
-
-        List<Object> properties = new ArrayList<Object>();
-
-        //JSONObject dataSourceJsonObject = JSONObject.fromObject("{ obj : " + dataSourceFullJson + "}");
-
-        //if (dataSourceJsonObject.get("obj") instanceof JSONObject) {
-        if (dataSourceFullJson.startsWith("{")) {
-            JSONObject jsonObject = JSONObject.fromObject(dataSourceFullJson);
-            //JSONObject jsonObject = (JSONObject) dataSourceJsonObject.get("obj");
-            if (jsonObject.has(propertyName)) {
-                properties.add(jsonObject.get(propertyName));
-            }
-        //} else if (dataSourceJsonObject.get("obj") instanceof JSONArray) {
-        } else if (dataSourceFullJson.startsWith("[")) {
-
-            //for (Object o : (JSONArray) dataSourceJsonObject.get("obj")) {
-            for(Object o : JSONArray.fromObject(dataSourceFullJson)) {
-                JSONObject jsonObject = (JSONObject) o;
-                if (jsonObject.has(propertyName)) {
-                    properties.add(jsonObject.get(propertyName));
-                }
-            }
-        }
-
-        return properties;
-    }
-
     public static Object getPropertyFromJsonString(String propertyName, String jsonString) {
         JSONObject jsonObject = JSONObject.fromObject(jsonString);
 

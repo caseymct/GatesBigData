@@ -69,7 +69,7 @@
 
             Connect.initHeader('Content-Type', 'application/json');
             Connect.setDefaultPostHeader('application/json');
-            Connect.asyncRequest('POST', '<c:url value="/collection/create" />' , {
+            Connect.asyncRequest('POST', '<c:url value="/core/create" />' , {
                 success: function (o) {
                     if (!LWA.ui.alertErrors(o)) {
                         window.location.reload();
@@ -79,7 +79,7 @@
                     alert("Could not create new collection");
                     console.log(e);
                 }
-            }, YAHOO.lang.JSON.stringify(newcollectioninfo));
+            }, YAHOO.lang.JSON.stringify(newcoreinfo));
         });
 
     })();

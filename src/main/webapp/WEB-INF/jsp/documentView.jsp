@@ -18,8 +18,10 @@
     </div>
     <div class="clearboth"></div>
 
-    <div id="tree_view"></div>
+    <!--<div id="tree_view"></div>-->
     <div id="doc_view"></div>
+
+    <script type="text/javascript" src="<c:url value="/static/js/search.js" />"></script>
 
     <script type="text/javascript">
     (function() {
@@ -31,7 +33,7 @@
             ButtonGroup = YAHOO.widget.ButtonGroup,
             Json = YAHOO.lang.JSON;
 
-        var treeView = new TreeView("tree_view");
+        SEARCH.ui.changeShowOverlayButtonVisibility(false);
 
         var remoteSeg = YAHOO.deconcept.util.getRequestParameter("segment");
         var remoteFile = YAHOO.deconcept.util.getRequestParameter("file");
@@ -49,13 +51,13 @@
         LWA.ui.initWait();
         LWA.ui.showWait();
 
-        Connect.asyncRequest('GET', '<c:url value="/data/nutch" />' + urlParams, {
+        Connect.asyncRequest('GET', '<c:url value="/document/nutch/get" />' + urlParams, {
             success : function(o) {
-                var i, result = o.responseText;
+                var result = o.responseText;
                 LWA.ui.hideWait();
-
+                console.log(result);
                 if (LWA.util.isValidJSON(result)) {
-                    LWA.ui.buildTreeViewFromJson(Json.parse(result), treeView);
+                    LWA.ui.buildTreeViewFromJson(Json.parse(result), new TreeView("doc_view"));
                 } else {
                     Dom.get("doc_view").innerHTML = o.responseText;
                 }

@@ -33,7 +33,6 @@ public class HDFSAPIController extends APIController {
     private static final String PARAM_REMOTEFILENAME = "remotefile";
     private static final String PARAM_LOCALDIR = "localdir";
     private static final String PARAM_REMOTEDIR = "remotedir";
-    private static final String PARAM_HDFSSEGMENT = "segment";
 
     private HDFSService hdfsService;
     private static final Logger logger = Logger.getLogger(HDFSAPIController.class);
@@ -45,7 +44,7 @@ public class HDFSAPIController extends APIController {
 
     @RequestMapping(value = "/add", method = RequestMethod.GET)
     public ResponseEntity<String> addRawData(@RequestParam(value = PARAM_LOCALFILENAME, required = true) String localFilename,
-                                                 @RequestParam(value = PARAM_REMOTEFILENAME, required = true) String remoteFilename) {
+                                             @RequestParam(value = PARAM_REMOTEFILENAME, required = true) String remoteFilename) {
 
         boolean added = hdfsService.addFile(remoteFilename, localFilename);
         JSONObject success = new JSONObject();
@@ -58,7 +57,7 @@ public class HDFSAPIController extends APIController {
 
     @RequestMapping(value = "/add/all", method = RequestMethod.GET)
     public ResponseEntity<String> addAllRawData(@RequestParam(value = PARAM_LOCALDIR, required = true) String localDir,
-                                             @RequestParam(value = PARAM_REMOTEDIR, required = true) String remoteDir) {
+                                                @RequestParam(value = PARAM_REMOTEDIR, required = true) String remoteDir) {
 
         int added = hdfsService.addAllFilesInLocalDirectory(remoteDir, localDir);
         JSONObject success = new JSONObject();
@@ -67,16 +66,6 @@ public class HDFSAPIController extends APIController {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(success.toString(), httpHeaders, OK);
-    }
-
-    @RequestMapping(value = "/read", method = RequestMethod.GET)
-    public ResponseEntity<String> readRawData(@RequestParam(value = PARAM_REMOTEFILENAME, required = true) String remoteFile) {
-
-        JSONObject contents = hdfsService.getJSONFileContents(new Path(remoteFile));
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>(contents.toString(), httpHeaders, OK);
     }
 
     @RequestMapping(value = "/listfiles", method = RequestMethod.GET)
@@ -101,21 +90,6 @@ public class HDFSAPIController extends APIController {
         return new ResponseEntity<String>(success.toString(), httpHeaders, OK);
     }
 
-    @RequestMapping(value = "/nutch", method = RequestMethod.GET)
-    public ResponseEntity<String> readNutchFileFromHDFS(@RequestParam(value = PARAM_HDFSSEGMENT, required = true) String segment,
-                                                        @RequestParam(value = PARAM_FILENAME, required = true) String key,
-                                                        @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
-                                                        @RequestParam(value = PARAM_VIEWTYPE, required = false) String viewType) throws IOException {
-        StringWriter writer = new StringWriter();
-
-        boolean preview = viewType != null && viewType.equals("preview");
-        hdfsService.printFileContents(coreName, segment, key, writer, preview);
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
-    }
-
     @RequestMapping(value = "/test", method = RequestMethod.GET)
     public ResponseEntity<String> test(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
         hdfsService.testCrawlData(coreName, "");
@@ -125,14 +99,12 @@ public class HDFSAPIController extends APIController {
         return new ResponseEntity<String>("", httpHeaders, OK);
     }
 
-    @RequestMapping(value = "/nutch/listincrawl", method = RequestMethod.GET)
-    public ResponseEntity<String> readNutchFileFromHDFS(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
-        StringWriter writer = new StringWriter();
-
-        hdfsService.listFilesInCrawlDirectory(coreName, writer);
+    @RequestMapping(value = "/thumbnails", method = RequestMethod.GET)
+    public ResponseEntity<String> generateThumbnails(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
+        hdfsService.generateThumbnails(coreName);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
+        return new ResponseEntity<String>("", httpHeaders, OK);
     }
 }

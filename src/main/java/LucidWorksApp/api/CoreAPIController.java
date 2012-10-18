@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import service.CoreService;
 import service.HDFSService;
 import service.SolrService;
 
@@ -33,11 +34,13 @@ import static org.springframework.http.HttpStatus.OK;
 public class CoreAPIController extends APIController {
 
     private SolrService solrService;
+    private CoreService coreService;
     private HDFSService hdfsService;
 
     @Autowired
-    public CoreAPIController(SolrService solrService, HDFSService hdfsService) {
+    public CoreAPIController(SolrService solrService, CoreService coreService, HDFSService hdfsService) {
         this.solrService = solrService;
+        this.coreService = coreService;
         this.hdfsService = hdfsService;
     }
 
@@ -70,7 +73,7 @@ public class CoreAPIController extends APIController {
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>(solrService.getCoreData(coreName).toString(), httpHeaders, OK);
+        return new ResponseEntity<String>(coreService.getCoreData(coreName).toString(), httpHeaders, OK);
     }
 
     @RequestMapping(value="/info/all", method = RequestMethod.GET)
@@ -84,7 +87,7 @@ public class CoreAPIController extends APIController {
     @RequestMapping(value="/empty", method = RequestMethod.GET)
     public ResponseEntity<String> deleteIndex(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) {
 
-        boolean deleted = solrService.deleteIndex(coreName);
+        boolean deleted = coreService.deleteIndex(coreName);
 
         JSONObject response = new JSONObject();
         response.put("Core", coreName);
@@ -110,7 +113,7 @@ public class CoreAPIController extends APIController {
         if (!jsonDocument.equals("")) {
             try {
                 JSONObject jsonObject = JSONObject.fromObject(jsonDocument);
-                added = solrService.addJsonDocumentToSolr(jsonObject, coreName, hdfsKey);
+                added = coreService.addDocumentToSolr(jsonObject, hdfsKey, coreName);
             } catch (JSONException e) {
                 System.err.println(e.getMessage());
             }
@@ -158,7 +161,7 @@ public class CoreAPIController extends APIController {
                                                          @RequestParam(value = PARAM_HDFS, required = true) String hdfsDir) {
         JSONObject response = new JSONObject();
 
-        boolean deleted = solrService.deleteIndex(coreName);
+        boolean deleted = coreService.deleteIndex(coreName);
         if (!deleted) {
             response.put("Error", "Could not delete index for core " + coreName);
 

@@ -12,6 +12,12 @@ import java.util.Map;
 
 
 public class Utils {
+    private static final String FILE_ERROR_MESSAGE = "<h1>ERROR</h1>";
+
+    public static String addToUrlIfNotEmpty(String url, String endpoint) {
+        if (endpoint == null || endpoint.equals("")) return url;
+        return url + "/" + endpoint;
+    }
 
     public static String constructUrlParams(HashMap<String,String> params) {
         if (params == null) return "";
@@ -83,5 +89,70 @@ public class Utils {
         }
 
         return sb.toString();
+    }
+
+    public static String stripFileExtension(String fileName) {
+        int index = fileName.lastIndexOf(".");
+        return (index == -1) ? fileName : fileName.substring(0, index);
+    }
+
+    public static String changeFileExtension(String filePath, String newExt, boolean fullPath) {
+        File f = new File(filePath);
+        String fileName = f.getName();
+        String newFileName = stripFileExtension(fileName)+ "." + newExt;
+
+        return fullPath ? new File(f.getParentFile(), newFileName).getPath() : newFileName;
+    }
+
+    public static boolean removeLocalFile(String filePath) {
+        return removeLocalFile(new File(filePath));
+    }
+
+    public static boolean removeLocalFile(File f) {
+        return f.exists() && f.isFile() && f.delete();
+    }
+
+    public static boolean writeLocalFile(String filePath, byte[] content) throws IOException {
+        return writeLocalFile(new File(filePath), content);
+    }
+
+    public static boolean writeLocalFile(File f, byte[] content) throws IOException {
+        if (f.exists() && !f.canWrite()) {
+            return false;
+        }
+
+        FileOutputStream fos = new FileOutputStream(f);
+        fos.write(content);
+        fos.flush();
+        fos.close();
+        return f.exists();
+    }
+
+    public static void printFileErrorMessage(StringWriter writer, String message) {
+        printFileError(writer);
+        writer.append("<p>").append(message).append("</p>");
+    }
+
+    public static void printFileError(StringWriter writer) {
+        writer.append(FILE_ERROR_MESSAGE);
+    }
+
+    public static boolean hasFileErrorMessage(String s) {
+        return s.contains(FILE_ERROR_MESSAGE);
+    }
+
+    public static String getFileErrorString() {
+        return FILE_ERROR_MESSAGE;
+    }
+
+
+    public static void closeResource(Closeable resource) {
+        if (resource != null) {
+            try {
+                resource.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

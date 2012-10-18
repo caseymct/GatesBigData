@@ -14,8 +14,10 @@
     <context:component-scan base-package="LucidWorksApp"/>
 
     <bean id="hdfsService" class="service.HDFSServiceImpl"/>
-    <bean id="solrServce" class="service.SolrServiceImpl" />
+    <bean id="solrService" class="service.SolrServiceImpl" />
+    <bean id="coreService" class="service.CoreServiceImpl" />
     <bean id="searchService" class="service.SearchServiceImpl" />
     <bean id="exportCSVService" class="service.ExportCSVServiceImpl" />
     <bean id="exportJSONService" class="service.ExportJSONServiceImpl" />
+    <bean id="documentConversionService" class="service.DocumentConversionServiceImpl" />
 </beans>

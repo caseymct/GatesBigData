@@ -95,10 +95,11 @@ public class SearchAPIController extends APIController {
     }
 
     @RequestMapping(value="/suggest", method = RequestMethod.GET)
-    public ResponseEntity<String> suggest(@RequestParam(value = PARAM_USER_INPUT, required = true) String userInput,
+    public ResponseEntity<String> suggest(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
+                                          @RequestParam(value = PARAM_USER_INPUT, required = true) String userInput,
                                           @RequestParam(value = PARAM_FIELD_SUGGEST_ENDPOINT, required = true) String field) throws IOException {
 
-        JSONObject suggestions = searchService.suggest(userInput, field);
+        JSONObject suggestions = searchService.suggest(coreName, userInput, field);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));

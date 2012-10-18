@@ -1,16 +1,13 @@
 package service;
 
-import LucidWorksApp.utils.FieldUtils;
 import LucidWorksApp.utils.HttpClientUtils;
 import LucidWorksApp.utils.JsonParsingUtils;
 import LucidWorksApp.utils.Utils;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONException;
-import net.sf.json.JSONNull;
 import net.sf.json.JSONObject;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
 import org.apache.solr.client.solrj.request.AbstractUpdateRequest;
 import org.apache.solr.client.solrj.request.CoreAdminRequest;
@@ -22,12 +19,7 @@ import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.CoreAdminParams;
 import org.apache.solr.common.util.NamedList;
-import org.apache.solr.common.util.SimpleOrderedMap;
-import org.apache.solr.core.CoreContainer;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.*;
@@ -38,14 +30,33 @@ public class SolrServiceImpl implements SolrService {
     static final String SOLR_SCHEMA_HDFSKEY     = "HDFSKey";
     static final String SOLR_SCHEMA_HDFSSEGMENT = "HDFSSegment";
 
-    public static final String SOLR_SERVER = "http://denlx006.dn.gates.com:8983";
-    //public static final String SOLR_SERVER = "http://localhost:8983";
-    public static final String SOLR_ENDPOINT = "solr";
-    public static final String SOLR_SUGGEST_ENDPOINT = "suggest";
-    public static final String SOLR_SELECT_ENDPOINT = "select";
+    static final String SOLR_SCHEMA_USER_FULL_FIELD        = "User.UserName";
+    static final String SOLR_SCHEMA_SUPPLIER_FULL_FIELD    = "Supplier.SupplierName";
+    static final String SOLR_SCHEMA_COMPANYSITE_FULL_FIELD = "CompanySite.SiteName";
+    static final String SOLR_SCHEMA_ACCOUNT_FULL_FIELD     = "Account.AccountName";
+    static final String SOLR_SCHEMA_COSTCENTER_FULL_FIELD  = "CostCenter.CostCenterName";
 
-    public static final String UPDATECSV_ENDPOINT = "update/csv";
-    public static final String LUKE_ENDPOINT = "admin/luke";
+    static final String SOLR_SCHEMA_USER_PREFIX_FIELD        = "UserNamePrefix";
+    static final String SOLR_SCHEMA_SUPPLIER_PREFIX_FIELD    = "SupplierNamePrefix";
+    static final String SOLR_SCHEMA_COMPANYSITE_PREFIX_FIELD = "CompanySiteNamePrefix";
+    static final String SOLR_SCHEMA_ACCOUNT_PREFIX_FIELD     = "AccountNamePrefix";
+    static final String SOLR_SCHEMA_COSTCENTER_PREFIX_FIELD  = "CostCenterNamePrefix";
+
+    static final int SOLR_SUGGEST_USER_INDEX          = 0;
+    static final int SOLR_SUGGEST_SUPPLIER_INDEX      = 1;
+    static final int SOLR_SUGGEST_ACCOUNT_INDEX       = 2;
+    static final int SOLR_SUGGEST_COMPANYSITE_INDEX   = 3;
+    static final int SOLR_SUGGEST_COSTCENTER_INDEX    = 4;
+    static final List<String> SOLR_SUGGEST_ENDPOINT_LIST = new ArrayList<String>(
+            Arrays.asList("user", "supplier", "account", "companysite", "costcenter"));
+
+    public static final String SOLR_SERVER = "http://denlx006.dn.gates.com:8984";
+    //public static final String SOLR_SERVER = "http://localhost:8983";
+    public static final String SOLR_ENDPOINT         = "solr";
+    public static final String SOLR_SUGGEST_ENDPOINT = "suggest";
+    public static final String SOLR_SELECT_ENDPOINT  = "select";
+    public static final String UPDATECSV_ENDPOINT    = "update/csv";
+    public static final String LUKE_ENDPOINT         = "admin/luke";
 
     public String getSolrSchemaHDFSKey() {
         return SOLR_SCHEMA_HDFSKEY;
@@ -55,37 +66,60 @@ public class SolrServiceImpl implements SolrService {
         return SOLR_SCHEMA_HDFSSEGMENT;
     }
 
-    public String getSolrServerURI() {
-        return SOLR_SERVER + "/" + SOLR_ENDPOINT;
+    public String getSolrServerURI(String coreName) {
+        return Utils.addToUrlIfNotEmpty(SOLR_SERVER + "/" + SOLR_ENDPOINT, coreName);
     }
 
-    public String getSolrSuggestURI(String fieldSpecificEndpoint, HashMap<String,String> urlParams) {
-        String uri = getSolrServerURI() + "/" + SOLR_SUGGEST_ENDPOINT;
-        if (fieldSpecificEndpoint != null && !fieldSpecificEndpoint.equals("")) {
-            uri += "/" + fieldSpecificEndpoint;
-        }
-        return uri + Utils.constructUrlParams(urlParams);
+    public String getSolrSuggestURI(String fieldSpecificEndpoint, String coreName, HashMap<String,String> urlParams) {
+        String uri = getSolrServerURI(coreName) + "/" + SOLR_SUGGEST_ENDPOINT;
+        return Utils.addToUrlIfNotEmpty(uri, fieldSpecificEndpoint) + Utils.constructUrlParams(urlParams);
     }
 
-    public String getSolrSelectURI(HashMap<String,String> urlParams) {
-        return getSolrServerURI() + "/" + SOLR_SELECT_ENDPOINT + Utils.constructUrlParams(urlParams);
+    public String getSolrSelectURI(String coreName, HashMap<String,String> urlParams) {
+        return getSolrServerURI(coreName) + "/" + SOLR_SELECT_ENDPOINT + Utils.constructUrlParams(urlParams);
     }
 
     public String getUpdateCsvEndpoint(String coreName, HashMap<String,String> urlParams) {
-        return getSolrServerURI() + "/" + coreName + "/" + UPDATECSV_ENDPOINT + Utils.constructUrlParams(urlParams);
+        return getSolrServerURI(coreName) + "/" + UPDATECSV_ENDPOINT + Utils.constructUrlParams(urlParams);
     }
 
-    public String getSolrLukeURI(HashMap<String,String> urlParams) {
-        return getSolrServerURI() + "/" + LUKE_ENDPOINT + Utils.constructUrlParams(urlParams);
+    public String getSolrLukeData() {
+        return getSolrLukeData(null);
     }
 
-    public String getSolrCoreURI(String coreName) {
-        return getSolrServerURI() + "/" + coreName;
+    public String getSolrLukeData(String coreName) {
+        HashMap<String,String> urlParams = new HashMap<String, String>();
+        urlParams.put("numTerms", "0");
+        urlParams.put("wt", "json");
+        String url = getSolrServerURI(coreName) + "/" + LUKE_ENDPOINT + Utils.constructUrlParams(urlParams);
+
+        return HttpClientUtils.httpGetRequest(url);
+    }
+
+    private int getSolrSuggestEndpointIndexFromString(String endpoint) {
+        return SOLR_SUGGEST_ENDPOINT_LIST.indexOf(endpoint);
+    }
+
+    public String getSolrSchemaFieldName(String endpoint, boolean prefixField) {
+        switch (getSolrSuggestEndpointIndexFromString(endpoint)) {
+            case SOLR_SUGGEST_ACCOUNT_INDEX:
+                return prefixField ? SOLR_SCHEMA_ACCOUNT_PREFIX_FIELD : SOLR_SCHEMA_ACCOUNT_FULL_FIELD;
+            case SOLR_SUGGEST_COMPANYSITE_INDEX:
+                return prefixField ? SOLR_SCHEMA_COMPANYSITE_PREFIX_FIELD : SOLR_SCHEMA_COMPANYSITE_FULL_FIELD;
+            case SOLR_SUGGEST_COSTCENTER_INDEX:
+                return prefixField ? SOLR_SCHEMA_COSTCENTER_PREFIX_FIELD : SOLR_SCHEMA_COSTCENTER_FULL_FIELD;
+            case SOLR_SUGGEST_SUPPLIER_INDEX:
+                return prefixField ? SOLR_SCHEMA_SUPPLIER_PREFIX_FIELD : SOLR_SCHEMA_SUPPLIER_FULL_FIELD;
+            case SOLR_SUGGEST_USER_INDEX:
+                return prefixField ? SOLR_SCHEMA_USER_PREFIX_FIELD : SOLR_SCHEMA_USER_FULL_FIELD;
+            default:
+                return null;
+        }
     }
 
     public SolrServer getSolrServer() {
         try {
-            return new CommonsHttpSolrServer(getSolrServerURI());
+            return new CommonsHttpSolrServer(getSolrServerURI(null));
 
         } catch (MalformedURLException e) {
             System.out.println(e.getMessage());
@@ -93,17 +127,7 @@ public class SolrServiceImpl implements SolrService {
         return null;
     }
 
-    public SolrServer getSolrServer(String url) {
-        try {
-            return new CommonsHttpSolrServer(url);
-
-        } catch (MalformedURLException e) {
-            System.out.println(e.getMessage());
-        }
-        return null;
-    }
-
-    private boolean solrServerCommit(SolrServer server, SolrInputDocument doc) {
+    public boolean solrServerCommit(SolrServer server, SolrInputDocument doc) {
         try {
             server.commit();
 
@@ -127,80 +151,36 @@ public class SolrServiceImpl implements SolrService {
         return true;
     }
 
-    private boolean solrServerCommit(SolrServer server) {
+    public boolean solrServerCommit(SolrServer server) {
         return solrServerCommit(server, null);
     }
 
-    public List<String> getFieldNamesFromLuke() {
-        List<String> fieldNames = new ArrayList<String>();
-
-        HashMap<String,String> urlParams = new HashMap<String, String>();
-        urlParams.put("numTerms", "0");
-        urlParams.put("wt", "json");
-
-        String response = HttpClientUtils.httpGetRequest(getSolrLukeURI(urlParams));
-
-        try {
-            JSONObject json = JSONObject.fromObject(response);
-            JSONObject fields = (JSONObject) json.get("fields");
-
-            List<Object> fieldNameObjects = Arrays.asList(fields.names().toArray());
-            for(Object f : fieldNameObjects) {
-                fieldNames.add((String) f);
-            }
-
-        } catch (JSONException e) {
-            System.out.println(e.getMessage());
-        }
-        return fieldNames;
+    public boolean addDocumentToSolr(Object content, String hdfsKey) {
+        return addDocumentToSolr(content, hdfsKey, getSolrServer());
     }
 
-    public boolean addJsonDocumentToSolr(JSONObject document, String coreName, String hdfsKey) {
+    public boolean addDocumentToSolr(Object content, String hdfsKey, SolrServer server) {
 
         SolrInputDocument doc = new SolrInputDocument();
-
         doc.addField(SOLR_SCHEMA_HDFSKEY, hdfsKey);
 
-        for(Object key : document.keySet()) {
-            if (document.get(key) instanceof JSONObject) {
-                JSONObject subDocument = (JSONObject) document.get(key);
-                for (Object subKey : subDocument.keySet()) {
-                    doc.addField((String) key + "." + (String) subKey, subDocument.get(subKey));
+        if (content instanceof JSONObject) {
+            JSONObject document = (JSONObject) content;
+            for(Object key : document.keySet()) {
+                if (document.get(key) instanceof JSONObject) {
+                    JSONObject subDocument = (JSONObject) document.get(key);
+                    for (Object subKey : subDocument.keySet()) {
+                        doc.addField(key + "." + subKey, subDocument.get(subKey));
+                    }
+                } else {
+                    doc.addField((String) key, document.get(key), 1.0f);
                 }
-            } else {
-                doc.addField((String) key, document.get(key), 1.0f);
             }
+        } else {
+            doc.addField("content", content);
         }
 
-        return solrServerCommit(getSolrServer(), doc);
-    }
-
-    public boolean addDocumentToSolr(String content, String coreName, String hdfsKey) {
-
-        SolrInputDocument doc = new SolrInputDocument();
-        doc.addField(SOLR_SCHEMA_HDFSKEY, hdfsKey);
-        doc.addField("content", content);
-
-        return solrServerCommit(getSolrServer(), doc);
-    }
-
-    public boolean deleteIndex(String coreName) {
-
-        try {
-            SolrServer server = getSolrServer();
-            server.deleteByQuery("*:*");
-            solrServerCommit(server);
-
-        } catch (SolrServerException e) {
-            System.out.println(e.getMessage());
-            return false;
-
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-            return false;
-        }
-
-        return true;
+        return solrServerCommit(server, doc);
     }
 
     public String importCsvFileOnServerToSolr(String coreName, String fileName) {
@@ -243,77 +223,45 @@ public class SolrServiceImpl implements SolrService {
         return response;
     }
 
-    public List<String> getCoreNames() {
-        List<String> coreList = new ArrayList<String>();
-
+    public CoreAdminResponse getCores() {
         try {
             CoreAdminRequest request = new CoreAdminRequest();
             request.setAction(CoreAdminParams.CoreAdminAction.STATUS);
-            CoreAdminResponse cores = request.process(getSolrServer());
-
-            for (int i = 0; i < cores.getCoreStatus().size(); i++) {
-                coreList.add(cores.getCoreStatus().getName(i));
-            }
+            return request.process(getSolrServer());
 
         } catch (SolrServerException e) {
             System.out.println(e.getMessage());
         } catch (IOException e) {
             System.out.println(e.getMessage());
+        }
+        return null;
+    }
+
+    public List<String> getCoreNames() {
+        List<String> coreList = new ArrayList<String>();
+
+        CoreAdminResponse cores = getCores();
+        if (cores != null) {
+            for (int i = 0; i < cores.getCoreStatus().size(); i++) {
+                coreList.add(cores.getCoreStatus().getName(i));
+            }
         }
 
         return coreList;
     }
 
-    public JSONObject getCoreData(String coreName) {
-
-        try {
-            CoreAdminRequest request = new CoreAdminRequest();
-            request.setAction(CoreAdminParams.CoreAdminAction.STATUS);
-            CoreAdminResponse cores = request.process(getSolrServer());
-
-            return JsonParsingUtils.constructJSONObjectFromNamedList(cores.getCoreStatus(coreName));
-
-        } catch (SolrServerException e) {
-            System.out.println(e.getMessage());
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
-
-        return new JSONObject();
-    }
-
-    public Object getCoreDataIndexProperty(String coreName, String property) {
-        JSONObject coreData = getCoreData(coreName);
-        if (coreData.has("index")) {
-            JSONObject index = (JSONObject) coreData.get("index");
-            if (index.has(property)) {
-                return index.get(property);
-            }
-        }
-        return null;
-    }
-
     public JSONArray getAllCoreData() {
         JSONArray coreInfo = new JSONArray();
 
-        try {
-            CoreAdminRequest request = new CoreAdminRequest();
-            request.setAction(CoreAdminParams.CoreAdminAction.STATUS);
-            CoreAdminResponse cores = request.process(getSolrServer());
-
+        CoreAdminResponse cores = getCores();
+        if (cores != null) {
             for (Object o : cores.getCoreStatus()) {
                 Map.Entry coreData = (Map.Entry) o;
                 coreInfo.add(JsonParsingUtils.constructJSONObjectFromNamedList((NamedList) coreData.getValue()));
             }
-            return coreInfo;
-
-        } catch (SolrServerException e) {
-            System.out.println(e.getMessage());
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
         }
 
-        return new JSONArray();
+        return coreInfo;
     }
 
     public HashMap<String, List<String>> getSegmentToFilesMap(SolrDocumentList docs) {
