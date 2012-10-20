@@ -12,6 +12,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.MapFileOutputFormat;
 import org.apache.hadoop.mapred.Partitioner;
 import org.apache.hadoop.mapred.lib.HashPartitioner;
+import org.apache.log4j.Logger;
 import org.apache.nutch.crawl.CrawlDatum;
 import org.apache.nutch.metadata.Metadata;
 import org.apache.nutch.protocol.Content;
@@ -51,6 +52,8 @@ public class HDFSServiceImpl implements HDFSService {
     private static final String FILE_DOES_NOT_EXIST_METADATA_KEY = "FILE_DOES_NOT_EXIST";
 
     private static final Partitioner PARTITIONER = new HashPartitioner();
+
+    private static final Logger logger = Logger.getLogger(HDFSServiceImpl.class);
 
     @Autowired
     public void setServices(DocumentConversionService documentConversionService) {
@@ -203,58 +206,51 @@ public class HDFSServiceImpl implements HDFSService {
         return false;
     }
 
-    public byte[] getFileContents(Path remoteFilePath) {
-        byte[] contents = null;
+    public String getFileContents(Path remoteFilePath) {
+        return new String(getFileContentsAsBytes(remoteFilePath));
+    }
 
+    public byte[] getFileContentsAsBytes(Path remoteFilePath) {
         try {
             FileSystem fs = getHDFSFileSystem();
             if (!fs.exists(remoteFilePath)) {
+                logger.error("File " + remoteFilePath.toString() + " does not exist on HDFS. ");
                 return new byte[0];
             }
 
             long length = fs.getContentSummary(remoteFilePath).getLength();
+            byte[] contents = new byte[(int)length];
+
             if (length > Integer.MAX_VALUE) {
-                System.out.println("File is too large. ");
+                logger.error("File " + remoteFilePath.toString() + " is too large. ");
                 return new byte[0];
             }
 
             DataInputStream d = new DataInputStream(fs.open(remoteFilePath));
-
-            contents = new byte[(int)length];
-
-            // Read in the bytes
             int offset = 0, numRead = 0;
             while (offset < contents.length
-                    && (numRead= d.read(contents, offset, contents.length-offset)) >= 0) {
+                    && (numRead = d.read(contents, offset, contents.length-offset)) >= 0) {
                 offset += numRead;
             }
 
-            // Ensure all the bytes have been read in
             if (offset < contents.length) {
                 throw new IOException("Could not completely read file " + remoteFilePath);
             }
 
             d.close();
-            /*
-            DataInputStream d = new DataInputStream(fs.open(remoteFilePath));
-            BufferedReader reader = new BufferedReader(new InputStreamReader(d));
+            return contents;
 
-            while ((reader.readLine()) != null){
-            }
-            reader.close();
-            d.close();
-            fs.close();
-             */
         } catch (IOException e) {
-            System.err.println(e.getMessage());
+            logger.error(e.getMessage());
         }
-        return contents;
+
+        return new byte[0];
     }
 
     public TreeMap<String, String> getHDFSFacetFields(String coreName) {
         TreeMap<String, String> namesAndTypes = new TreeMap<String, String>();
 
-        String response = new String(getFileContents(getHDFSFacetFieldsCustomFile(coreName)));
+        String response = getFileContents(getHDFSFacetFieldsCustomFile(coreName));
         if (!response.startsWith(HDFS_ERROR_STRING)) {
             for(String ret : response.split(",")) {
                 String[] n = ret.split(":");
@@ -267,7 +263,7 @@ public class HDFSServiceImpl implements HDFSService {
 
     public List<String> getHDFSPreviewFields(String coreName) {
         List<String> fields = new ArrayList<String>();
-        String response = new String(getFileContents(getHDFSPreviewFieldsCustomFile(coreName)));
+        String response = getFileContents(getHDFSPreviewFieldsCustomFile(coreName));
         if (!response.startsWith(HDFS_ERROR_STRING)) {
             fields = Arrays.asList(response.split(","));
         }
@@ -418,8 +414,11 @@ public class HDFSServiceImpl implements HDFSService {
 
                 String thumbnail = documentConversionService.convertContentToThumbnail(value, key);
                 if (!thumbnail.equals("") && !Utils.hasFileErrorMessage(thumbnail)) {
-                    fs.moveFromLocalFile(new Path(thumbnail),
-                            getHDFSThumbnailPathFromHDFSDocPath(coreName, segment, key.toString()));
+                    Path hdfsThumbnailPath = getHDFSThumbnailPathFromHDFSDocPath(coreName, segment, key.toString());
+                    if (fs.exists(hdfsThumbnailPath)) {
+                        fs.delete(hdfsThumbnailPath, false);
+                    }
+                    fs.moveFromLocalFile(new Path(thumbnail), hdfsThumbnailPath);
                 }
             } while(true);
         }

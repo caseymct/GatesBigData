@@ -16,6 +16,8 @@ SEARCH.util = {};
     SEARCH.ui.shortStringWidth = 80;
     SEARCH.ui.facetContainerEl = "facet_container";
     SEARCH.ui.facetTreeViewEl  = "tree_view";
+    SEARCH.ui.contentContainer = Dom.get("content_container");
+    SEARCH.ui.contentContainerMinHeight = parseInt(Dom.getStyle("content_container", "height").replace("px", ""));
 
     /* Set core name and header for this search file */
     Dom.setStyle(SEARCH.ui.facetContainerEl, "visibility", "visible");
@@ -24,6 +26,45 @@ SEARCH.util = {};
 
     SEARCH.ui.setSearchHeader = function(containerEl) {
         Dom.get(containerEl).innerHTML = "Search Core: " + SEARCH.ui.coreName;
+    };
+
+    SEARCH.ui.previewContainer = null;
+    SEARCH.ui.previewImageName = "preview_image";
+    SEARCH.ui.initPreviewContainer = function(containerEl) {
+        SEARCH.ui.previewContainer = Dom.get(containerEl);
+    };
+    SEARCH.ui.setPreviewContainerImage = function(title, imgString) {
+        Dom.setStyle(SEARCH.ui.previewContainer, "border", "1px solid gray");
+        SEARCH.ui.previewContainer.innerHTML =
+            "<span style='margin-left: 5px; font-size: 10px'>Document: <b>" + title + "</b>" +
+                "<a style='float: right' class='button zoom_out' id='previewzoomout'></a>" +
+                "<a style='float: right' class='button zoom_in' id='previewzoomin'></a>" +
+                "</span><hr><br>" +
+            "<img src=\"" + imgString + "\" height='400px' width='400px' id='preview_image'>";
+
+        Dom.setStyle(SEARCH.ui.previewImageName, 'zoom', 2);
+        Dom.setStyle(SEARCH.ui.previewImageName, 'margin-left', '-50px');
+
+        Event.addListener('previewzoomin', 'click', function(e) {
+            Dom.setStyle(SEARCH.ui.previewImageName, 'zoom', parseInt(Dom.getStyle(SEARCH.ui.previewImageName, 'zoom')) + 1);
+        });
+
+        Event.addListener('previewzoomout', 'click', function(e) {
+            var zoom = parseInt(Dom.getStyle(SEARCH.ui.previewImageName, 'zoom'));
+            Dom.setStyle(SEARCH.ui.previewImageName, 'zoom', (zoom > 1) ? zoom - 1 : zoom);
+        });
+    };
+
+    SEARCH.ui.setPreviewContainerLoadingImage = function(img) {
+        SEARCH.ui.previewContainer.innerHTML = "";
+        Dom.setStyle(SEARCH.ui.previewContainer, "background-image", "url(\"" + img + "\")");
+        Dom.setStyle(SEARCH.ui.previewContainer, "background-position", "50% 10%");
+        Dom.setStyle(SEARCH.ui.previewContainer, "background-repeat", "no-repeat");
+    };
+
+    SEARCH.ui.clearPreviewContainerImage = function() {
+        Dom.setStyle(SEARCH.ui.previewContainer, "border", "none");
+        SEARCH.ui.previewContainer.innerHTML = "";
     };
 
     /* Set a variable for the general query search input */
@@ -69,13 +110,13 @@ SEARCH.util = {};
     /* Tooltip code */
     SEARCH.ui.tooltip = new Tooltip("tool_tip", { zIndex : 20 });
 
-    SEARCH.ui.showTooltip = function (oArgs) {
-        var target = oArgs.target;
-        var column = this.getColumn(target), record = this.getRecord(target);
+    SEARCH.ui.showTooltip = function (target, record, column, x, y) {
+        //var target = oArgs.target;
+        //var column = this.getColumn(target), record = this.getRecord(target);
         var s = target.innerText.replace(/\n$/, '');
         if (s.substring(s.length - 3) == "...") {
             SEARCH.ui.tooltip.setBody(record.getData()[column.getField()]);
-            SEARCH.ui.tooltip.cfg.setProperty('xy', [oArgs.event.pageX, oArgs.event.pageY]);
+            SEARCH.ui.tooltip.cfg.setProperty('xy', [x, y]);
             SEARCH.ui.tooltip.show();
         }
     };
@@ -169,6 +210,33 @@ SEARCH.util = {};
         SEARCH.ui.pag.setStartIndex(0);
     };
 
+    SEARCH.ui.dataTableCellMouseoverEvent = function (e, dataTable, loadingImg, thumbnailUrl) {
+        var target = e.target;
+        var record = dataTable.getRecord(target),
+            column = dataTable.getColumn(target),
+            data = record.getData();
+
+        var urlParams = "?core=" + SEARCH.ui.coreName + "&segment=" + data.HDFSSegment + "&file=" + data.HDFSKey;
+        var callback = {
+            success: function(o) {
+                this.argument.table.updateCell(record, "thumbnail", o.responseText);
+                SEARCH.ui.setPreviewContainerImage(record.getData().title, o.responseText);
+            },
+            argument: { table: dataTable, record: record}
+        };
+
+        if (column.getField() == "preview") {
+            if (data.thumbnail == undefined) {
+                SEARCH.ui.setPreviewContainerLoadingImage(loadingImg);
+                YAHOO.util.Connect.asyncRequest('GET', thumbnailUrl + urlParams, callback);
+            } else {
+                SEARCH.ui.setPreviewContainerImage(data.title, data.thumbnail);
+            }
+        } else {
+            SEARCH.ui.showTooltip(target, record, column, e.event.pageX, e.event.pageY);
+        }
+    };
+
     SEARCH.ui.dataTableCellClickEvent = function(data, baseUrl) {
         window.open(baseUrl + "?core=" + SEARCH.ui.coreName + "&segment=" +
             data.HDFSSegment + "&file=" + data.HDFSKey + "&view=preview", "_blank");
@@ -237,7 +305,7 @@ SEARCH.util = {};
         visible: false
     });
 
-    SEARCH.ui.overlay.render(Dom.get("content_container"));
+    SEARCH.ui.overlay.render(SEARCH.ui.contentContainer);
 
     SEARCH.ui.showOverlay = function() {
         SEARCH.ui.overlay.show();
@@ -280,17 +348,27 @@ SEARCH.util = {};
                 facets[i].name = facetChildName;
             }
 
-            /*if (facets[i].values.length > 0 &&
-                !(facets[i].values.length == 1 && facets[i].values[0].match(/^\s\([0-9]+\)$/))) { */
+            if (facets[i].values.length > 0 &&
+                  !(facets[i].values.length == 1 && facets[i].values[0].match(/^null\s\([0-9]+\)$/))) {
                 nameNode = new TextNode(facets[i].name, parent, false);
 
                 for(j = 0; j < facets[i].values.length; j++) {
                     valueNode = new TextNode(facets[i].values[j], nameNode, false);
                     valueNode.isLeaf = true;
                 }
-           // }
+            }
         }
+
         SEARCH.ui.facetTreeView.render();
+
+        var adjustContentContainerHeight = function () {
+            var oh = parseInt(Dom.getStyle("overlay", "height").replace("px", "")) + 300;
+            var h = (oh > SEARCH.ui.contentContainerMinHeight) ? oh : SEARCH.ui.contentContainerMinHeight;
+            Dom.setStyle(SEARCH.ui.contentContainer, "height", h + "px");
+        };
+        SEARCH.ui.facetTreeView.subscribe("expandComplete", adjustContentContainerHeight);
+        SEARCH.ui.facetTreeView.subscribe("collapseComplete", adjustContentContainerHeight);
+
         SEARCH.ui.facetTreeView.subscribe("clickEvent", function(e) {
             Event.stopEvent(e);
             if (SEARCH.ui.facetTreeView.getRoot() == e.node.parent) {

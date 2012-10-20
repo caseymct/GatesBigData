@@ -10,6 +10,8 @@ import net.sf.json.JSONObject;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.util.URIUtil;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.net.util.Base64;
+import org.apache.hadoop.fs.Path;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;

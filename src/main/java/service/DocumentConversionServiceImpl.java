@@ -22,7 +22,7 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
     private static final String PRISM_CONVERT_URL = "http://localhost:18680/convert2swf";
     private static final String LOCAL_TMP_DIRECTORY = "C:/tmp/";
     private static final String RELATIVE_TMP_DIRECTORY = "../../tmp/";
-
+    private static final String THUMBNAIL_SIZE = "5000x5000";
     private static final String SWF_EXTENSION = "swf";
     private static final String IMG_EXTENSION = "png";
 
@@ -53,10 +53,29 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
         }
     }
 
+    public String getSwfFileNameFromLocalFileName(String localFilePath) {
+        return getSwfFileNameFromLocalFileName(new File(localFilePath));
+    }
+
+    public String getSwfFileNameFromLocalFileName(File localFile) {
+        return Utils.changeFileExtension(localFile.getName(), SWF_EXTENSION, false);
+    }
+
+    public File getSwfFile(String localFilePath) {
+        String swfFileName = getSwfFileNameFromLocalFileName(new File(localFilePath));
+        return new File(LOCAL_TMP_DIRECTORY, swfFileName);
+    }
+
+    public File getSwfFile(File localFile) {
+        String swfFileName = getSwfFileNameFromLocalFileName(localFile);
+        return new File(LOCAL_TMP_DIRECTORY, swfFileName);
+    }
+
     public String convertDocumentToSwf(String localFilePath) {
 
         File localFile = new File(localFilePath);
-        String swfFileName = Utils.changeFileExtension(localFile.getName(), SWF_EXTENSION, false);
+        String swfFileName = getSwfFileNameFromLocalFileName(localFile);
+        //String swfFileName = Utils.changeFileExtension(localFile.getName(), SWF_EXTENSION, false);
 
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("source", RELATIVE_TMP_DIRECTORY + localFile.getName());
@@ -66,7 +85,7 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
 
         cleanupTempDir(localFile);
 
-        File localSwfFile = new File(LOCAL_TMP_DIRECTORY, swfFileName);
+        File localSwfFile = getSwfFile(localFile);
         return localSwfFile.exists() ? localSwfFile.getPath() : Utils.getFileErrorString();
     }
 
@@ -105,7 +124,7 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
                 HashMap<String, String> params = new HashMap<String, String>();
                 params.put("source", RELATIVE_TMP_DIRECTORY + fileName);
                 params.put("target", RELATIVE_TMP_DIRECTORY + imgFileName);
-                params.put("thumbnail", "1000x1000");
+                //params.put("thumbnail", THUMBNAIL_SIZE);
                 params.put("pages", "1");
 
                 HttpClientUtils.httpGetRequest(PRISM_CONVERT_URL + Utils.constructUrlParams(params));
@@ -128,12 +147,6 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
         String pdfFileName = Utils.changeFileExtension(localFile.getName(), "pdf", false);
         Utils.removeLocalFile(localFile);
         Utils.removeLocalFile(new File(LOCAL_TMP_DIRECTORY, pdfFileName));
-    }
-
-    public void test(HashMap<Text, Content> allContents) {
-        for (Map.Entry<Text, Content> entry : allContents.entrySet()) {
-            convertContentToThumbnail(entry.getValue(), entry.getKey());
-        }
     }
 
 }

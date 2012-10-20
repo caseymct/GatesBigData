@@ -63,11 +63,12 @@
     </div>
 
     <div>
-        <div id="search_result_container" >
+        <div id="search_result_container" style="width: 58%">
             <div id = "show_query"></div>
             <div id = "num_found"></div>
             <div id = "search_results" ></div>
         </div>
+        <div id = "preview_container"></div>
         <div class = "clearboth"></div>
     </div>
 
@@ -79,14 +80,16 @@
     (function() {
         var     Event   = YAHOO.util.Event,         Dom  = YAHOO.util.Dom,
                 Connect = YAHOO.util.Connect,       Json = YAHOO.lang.JSON,
-                TabView  = YAHOO.widget.TabView,    ScrollingDataTable = YAHOO.widget.ScrollingDataTable;
+                TabView  = YAHOO.widget.TabView,    ScrollingDataTable = YAHOO.widget.ScrollingDataTable,
+                LocalDataSource = YAHOO.util.LocalDataSource;
 
         var searchTab = new TabView('search_tab');
 
         var columnDefs = [
             {key:'title', label:'Title', sortable:true, formatter:SEARCH.ui.formatLink, width:SEARCH.ui.longStringWidth},
             {key:'preview', label:'Preview', sortable:true, formatter:SEARCH.ui.formatLink, width: SEARCH.ui.longStringWidth},
-            {key:'content_type', label:'Content Type', sortable:true, formatter:SEARCH.ui.formatLink, width:SEARCH.ui.longStringWidth}
+            {key:'content_type', label:'Content Type', sortable:true, formatter:SEARCH.ui.formatLink, width:SEARCH.ui.longStringWidth},
+            {key:'thumbnail', label:'thumbnail', hidden: true}
         ];
         var dataSourceFields = [
             {key:'title', parser:'text'},
@@ -94,12 +97,14 @@
             {key:'content_type', parser:'text'},
             {key:'url', parser:'text'},
             {key:'HDFSKey', parser:'text'},
-            {key:'HDFSSegment', parser:'text'}
+            {key:'HDFSSegment', parser:'text'},
+            {key:'thumbnail', parser:'text'}
         ];
 
         LWA.ui.initWait();
         SEARCH.ui.setSearchHeader("search_header");
         SEARCH.ui.initGeneralQuerySearchInput("general_query_search_input");
+        SEARCH.ui.initPreviewContainer("preview_container");
         SEARCH.ui.initPaginator("pag1");
         SEARCH.ui.initSortOrderButtonGroup("sort_ascdesc_buttongroup");
         SEARCH.ui.initSelectData(columnDefs);
@@ -116,11 +121,12 @@
         });
 
         var buildSearchResultHtml = function(result) {
-            var dataSource = new YAHOO.util.LocalDataSource(result.response);
-            dataSource.responseSchema = {
-                resultsList:'docs',
-                fields: dataSourceFields
-            };
+            var dataSource = new LocalDataSource(result.response, {
+                    responseSchema : {
+                        resultsList:'docs',
+                        fields: dataSourceFields
+                    }
+            });
 
             var dataTable = new ScrollingDataTable('search_results', columnDefs, dataSource, { width:"100%" });
 
@@ -135,29 +141,34 @@
                 SEARCH.ui.dataTableCellClickEvent(this.getRecord(e.target).getData(), '<c:url value="/core/document/viewtest" />');
             });
 
-            //dataTable.on('cellMouseoverEvent', SEARCH.ui.showTooltip);
-            dataTable.on('cellMouseoverEvent', function (oArgs) {
-                var target = oArgs.target;
+            dataTable.on('cellMouseoverEvent', function (e) {
+                SEARCH.ui.dataTableCellMouseoverEvent(e, dataTable, "<c:url value="/static/images/loading.png" />",
+                        '<c:url value="/document/thumbnail/get" />');
+                /*
+                var target = e.target;
                 var record = this.getRecord(target),
                     column = this.getColumn(target),
-                    data = record.getData();
-                var s = target.innerText.replace(/\n$/, '');
+                      data = record.getData();
+
+                var urlParams = "?core=" + SEARCH.ui.coreName + "&segment=" + data.HDFSSegment + "&file=" + data.HDFSKey;
+                var callback = {
+                    success: function(o) {
+                        this.argument.table.updateCell(record, "thumbnail", o.responseText);
+                        SEARCH.ui.setPreviewContainerImage(record.getData().title, o.responseText);
+                    },
+                    argument: { table: dataTable, record: record}
+                };
 
                 if (column.getField() == "preview") {
-                    var urlParams = "?core=" + SEARCH.ui.coreName + "&segment=" + data.HDFSSegment + "&file=" + data.HDFSKey;
-
-                    Connect.asyncRequest('GET', '<c:url value="/document/thumbnail/get" />' + urlParams, {
-                        success: function(o) {
-                            SEARCH.ui.tooltip.setBody("<img height='300px' width='300px' src='" + o.responseText + "'>");
-                            SEARCH.ui.tooltip.cfg.setProperty('xy', [oArgs.event.pageX, oArgs.event.pageY]);
-                            SEARCH.ui.tooltip.show();
-                        }
-                    });
-                } else if (s.substring(s.length - 3) == "...") {
-                    SEARCH.ui.tooltip.setBody(record.getData()[column.getField()]);
-                    SEARCH.ui.tooltip.cfg.setProperty('xy', [oArgs.event.pageX, oArgs.event.pageY]);
-                    SEARCH.ui.tooltip.show();
-                }
+                    if (data.thumbnail == undefined) {
+                        SEARCH.ui.setPreviewContainerLoadingImage("<c:url value="/static/images/loading.png" />")
+                        Connect.asyncRequest('GET', '<c:url value="/document/thumbnail/get" />' + urlParams, callback);
+                    } else {
+                        SEARCH.ui.setPreviewContainerImage(data.title, data.thumbnail);
+                    }
+                } else {
+                    SEARCH.ui.showTooltip(target, record, column, e.event.pageX, e.event.pageY);
+                }   */
             });
             dataTable.on('cellMouseoutEvent', SEARCH.ui.hideTooltip);
         };

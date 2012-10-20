@@ -55,7 +55,7 @@
             success : function(o) {
                 var result = o.responseText;
                 LWA.ui.hideWait();
-                console.log(result);
+
                 if (LWA.util.isValidJSON(result)) {
                     LWA.ui.buildTreeViewFromJson(Json.parse(result), new TreeView("doc_view"));
                 } else {

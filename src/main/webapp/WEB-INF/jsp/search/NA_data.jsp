@@ -233,7 +233,7 @@
 
             dataTable.subscribe("cellClickEvent", function (e) {
                 Event.stopEvent(e.event);
-                SEARCH.ui.dataTableCellClickEvent(this.getRecord(e.target).getData(), '<c:url value="/core/document/viewtest" />');
+                SEARCH.ui.dataTableCellClickEvent(this.getRecord(e.target).getData(), '<c:url value="/core/document/view" />');
             });
 
             dataTable.on('cellMouseoverEvent', SEARCH.ui.showTooltip);

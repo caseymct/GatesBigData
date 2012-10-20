@@ -136,25 +136,13 @@ public class NutchDocumentAPIController extends APIController {
         return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
     }
 
-    @RequestMapping(value = "/test", method = RequestMethod.GET)
-    public ResponseEntity<String> test(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
-
-        HashMap<Text, Content> allContents = hdfsService.getAllContents(coreName);
-
-        documentConversionService.test(allContents);
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>("", httpHeaders, OK);
-    }
-
     @RequestMapping(value = "/thumbnail/get", method = RequestMethod.GET)
     public ResponseEntity<String> getThumbnail(@RequestParam(value = PARAM_HDFSSEGMENT, required = true) String segment,
                                             @RequestParam(value = PARAM_FILENAME, required = true) String hdfsPath,
                                             @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
 
         Path hdfsImgPath = hdfsService.getHDFSThumbnailPathFromHDFSDocPath(coreName, segment, hdfsPath);
-        byte[] content = hdfsService.getFileContents(hdfsImgPath);
+        byte[] content = hdfsService.getFileContentsAsBytes(hdfsImgPath);
         String base64String = Base64.encodeBase64String(content);
 
         StringWriter writer = new StringWriter();

@@ -263,3 +263,10 @@ form div.row {
     padding: 2px;
     margin-left: 1px;
 }
+
+#preview_container {
+    overflow: hidden;
+    float: right;
+    width: 400px;
+    height: 400px;
+}

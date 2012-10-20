@@ -1,9 +1,11 @@
 package service;
 
 
+import LucidWorksApp.utils.Utils;
 import org.apache.hadoop.io.Text;
 import org.apache.nutch.protocol.Content;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
@@ -18,7 +20,13 @@ public interface DocumentConversionService {
 
     public String convertContentToThumbnail(Content content, Text url);
 
-    public void test(HashMap<Text, Content> allContents);
-
     public String getThumbnailNameFromHDFSPath(String hdfsPath);
+
+    public String getSwfFileNameFromLocalFileName(String localFilePath);
+
+    public String getSwfFileNameFromLocalFileName(File localFile);
+
+    public File getSwfFile(String localFilePath);
+
+    public File getSwfFile(File localFile);
 }

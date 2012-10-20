@@ -49,7 +49,9 @@ public interface HDFSService {
 
     public boolean removeFile(String remoteFilePath);
 
-    public byte[] getFileContents(Path remoteFilePath);
+    public String getFileContents(Path remoteFilePath);
+
+    public byte[] getFileContentsAsBytes(Path remoteFilePath);
 
     public Content getFileContents(String coreName, String segment, String fileName) throws IOException;
 
