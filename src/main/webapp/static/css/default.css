@@ -184,7 +184,7 @@ form div.form-buttons {
     padding:25px 30px;
     background:#fff;
     color:#666666;
-    width: 980px;
+    width:980px;
     border:1px solid #f4f4f4;
     overflow:hidden;
 }
@@ -311,7 +311,13 @@ a:hover {
     float: left;
     position: relative;
     top: 90px;
-    left: -80px;
+    left: -180px;
     z-index: 4;
     visibility: hidden;
 }
+
+.string { color: darkred; }
+.number { color: darkorange; }
+.boolean { color: darkblue; }
+.null { color: magenta; }
+.key { color: black; }

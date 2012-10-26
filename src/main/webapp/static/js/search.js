@@ -9,7 +9,7 @@ SEARCH.util = {};
              Dom = YAHOO.util.Dom,              Button = YAHOO.widget.Button,
         TreeView = YAHOO.widget.TreeView,         Json = YAHOO.lang.JSON,
        Paginator = YAHOO.widget.Paginator,     TabView = YAHOO.widget.TabView,
-     ButtonGroup = YAHOO.widget.ButtonGroup,
+     ButtonGroup = YAHOO.widget.ButtonGroup,   Connect = YAHOO.util.Connect,
     SimpleDialog = YAHOO.widget.SimpleDialog;
 
     SEARCH.ui.longStringWidth  = 210;
@@ -28,30 +28,76 @@ SEARCH.util = {};
         Dom.get(containerEl).innerHTML = "Search Core: " + SEARCH.ui.coreName;
     };
 
+    SEARCH.ui.beginDatePick  = null;
+    SEARCH.ui.endDatePick    = null;
+    SEARCH.ui.beginDateInput = null;
+    SEARCH.ui.endDateInput   = null;
+    SEARCH.ui.dateConstraintField = "";
+    SEARCH.ui.initDatePickers = function(beginDateEl, endDateEl, constrainByEl, dateConstraintField) {
+        SEARCH.ui.beginDateInput = beginDateEl;
+        SEARCH.ui.beginDatePick = new JsDatePick({ useMode:2, dateFormat:"%M-%d-%Y", imgPath:"../static/images/jsdatepick/",
+            target:beginDateEl
+        });
+
+        SEARCH.ui.endDateInput = endDateEl;
+        SEARCH.ui.endDatePick = new JsDatePick({ useMode:2, dateFormat:"%M-%d-%Y", imgPath:"../static/images/jsdatepick/",
+            target:endDateEl
+        });
+        SEARCH.ui.dateConstraintField = dateConstraintField;
+        Dom.get(constrainByEl).innerHTML = SEARCH.ui.dateConstraintField;
+    };
+
+    SEARCH.ui.initDateRangeText = function(url, dateEl) {
+        Connect.asyncRequest('GET', url + "?core=" + SEARCH.ui.coreName + "&field=" + SEARCH.ui.dateConstraintField, {
+            success : function(o) {
+                var dateStr = o.responseText.split(" to ");
+                Dom.get(dateEl).innerHTML = SEARCH.ui.dateConstraintField + ": <i>" + dateStr[0] + "</i> to " +
+                    "<i>" + dateStr[1] + "</i>";
+                var start = dateStr[0].match(/([0-9]+)-([0-9]+)-([0-9]+)/),
+                      end = dateStr[1].match(/([0-9]+)-([0-9]+)-([0-9]+)/);
+
+                SEARCH.ui.beginDatePick.setSelectedDay({ day:start[2], month:start[1], year:start[3] });
+                SEARCH.ui.endDatePick.setSelectedDay({ day:end[2], month:end[1], year:end[3] });
+            }
+        });
+    };
+
     SEARCH.ui.previewContainer = null;
-    SEARCH.ui.previewImageName = "preview_image";
+    SEARCH.ui.previewDataName = "preview_image";
     SEARCH.ui.initPreviewContainer = function(containerEl) {
         SEARCH.ui.previewContainer = Dom.get(containerEl);
     };
-    SEARCH.ui.setPreviewContainerImage = function(title, imgString) {
+    SEARCH.ui.setPreviewContainerData = function(title, dataString, dataType) {
         Dom.setStyle(SEARCH.ui.previewContainer, "border", "1px solid gray");
-        SEARCH.ui.previewContainer.innerHTML =
-            "<span style='margin-left: 5px; font-size: 10px'>Document: <b>" + title + "</b>" +
+        var titleString = (title == undefined) ? "<b>Search result preview</b>" : "Document: <b>" + title + "</b>";
+        var htmlString =
+            "<span style='margin-left: 5px; font-size: 10px'>" + titleString +
                 "<a style='float: right' class='button zoom_out' id='previewzoomout'></a>" +
                 "<a style='float: right' class='button zoom_in' id='previewzoomin'></a>" +
-                "</span><hr><br>" +
-            "<img src=\"" + imgString + "\" height='400px' width='400px' id='preview_image'>";
+                "</span><hr>";
 
-        Dom.setStyle(SEARCH.ui.previewImageName, 'zoom', 2);
-        Dom.setStyle(SEARCH.ui.previewImageName, 'margin-left', '-50px');
+        if (dataType == "image") {
+            htmlString += "<img src='" + dataString + "' height='400px' width='400px' id='" + SEARCH.ui.previewDataName + "'>";
+        } else {
+            htmlString += "<div id='" + SEARCH.ui.previewDataName + "'>" + SEARCH.util.jsonSyntaxHighlight(dataString) + "</div>";
+        }
+
+        SEARCH.ui.previewContainer.innerHTML = htmlString;
+        Dom.setStyle(SEARCH.ui.previewContainer, "background-image", "none");
+
+        if (dataType == "image") {
+            Dom.setStyle(SEARCH.ui.previewDataName, 'zoom', 2);
+        } else {
+            Dom.setStyle(SEARCH.ui.previewDataName, 'font-size', '10px');
+        }
 
         Event.addListener('previewzoomin', 'click', function(e) {
-            Dom.setStyle(SEARCH.ui.previewImageName, 'zoom', parseInt(Dom.getStyle(SEARCH.ui.previewImageName, 'zoom')) + 1);
+            Dom.setStyle(SEARCH.ui.previewDataName, 'zoom', parseInt(Dom.getStyle(SEARCH.ui.previewDataName, 'zoom')) + 1);
         });
 
         Event.addListener('previewzoomout', 'click', function(e) {
-            var zoom = parseInt(Dom.getStyle(SEARCH.ui.previewImageName, 'zoom'));
-            Dom.setStyle(SEARCH.ui.previewImageName, 'zoom', (zoom > 1) ? zoom - 1 : zoom);
+            var zoom = parseInt(Dom.getStyle(SEARCH.ui.previewDataName, 'zoom'));
+            Dom.setStyle(SEARCH.ui.previewDataName, 'zoom', (zoom > 1) ? zoom - 1 : zoom);
         });
     };
 
@@ -213,28 +259,28 @@ SEARCH.util = {};
     SEARCH.ui.dataTableCellMouseoverEvent = function (e, dataTable, loadingImg, thumbnailUrl) {
         var target = e.target;
         var record = dataTable.getRecord(target),
-            column = dataTable.getColumn(target),
+           // column = dataTable.getColumn(target),
             data = record.getData();
 
         var urlParams = "?core=" + SEARCH.ui.coreName + "&segment=" + data.HDFSSegment + "&file=" + data.HDFSKey;
         var callback = {
             success: function(o) {
-                this.argument.table.updateCell(record, "thumbnail", o.responseText);
-                SEARCH.ui.setPreviewContainerImage(record.getData().title, o.responseText);
+                var response = Json.parse(o.responseText);
+                this.argument.table.updateCell(record, "thumbnail", response.Contents);
+                this.argument.table.updateCell(record, "thumbnailType", response.contentType);
+                SEARCH.ui.setPreviewContainerData(record.getData().title, response.Contents, response.contentType);
             },
             argument: { table: dataTable, record: record}
         };
 
-        if (column.getField() == "preview") {
-            if (data.thumbnail == undefined) {
-                SEARCH.ui.setPreviewContainerLoadingImage(loadingImg);
-                YAHOO.util.Connect.asyncRequest('GET', thumbnailUrl + urlParams, callback);
-            } else {
-                SEARCH.ui.setPreviewContainerImage(data.title, data.thumbnail);
-            }
+        if (data.thumbnail == undefined) {
+            SEARCH.ui.setPreviewContainerLoadingImage(loadingImg);
+            Connect.asyncRequest('GET', thumbnailUrl + urlParams, callback);
         } else {
-            SEARCH.ui.showTooltip(target, record, column, e.event.pageX, e.event.pageY);
+            SEARCH.ui.setPreviewContainerData(data.title, data.thumbnail, data.thumbnailType);
         }
+
+       // SEARCH.ui.showTooltip(target, record, column, e.event.pageX, e.event.pageY);
     };
 
     SEARCH.ui.dataTableCellClickEvent = function(data, baseUrl) {
@@ -276,12 +322,15 @@ SEARCH.util = {};
         }
     };
 
+    SEARCH.ui.colStringMaxChars = 20;
+    SEARCH.ui.colDateStringMaxChars = 30;
     /* Formatters for the search results table */
     SEARCH.ui.formatLink = function(el, record, column, data) {
+        var max = (column.label.match(/ Date/) != null) ? SEARCH.ui.colDateStringMaxChars : SEARCH.ui.colStringMaxChars;
         if (data == undefined) {
             data = "<i>No value</i>";
-        } else if (data.length > 20) {
-            data = data.substring(0, 20) + " ...";
+        } else if (data.length > max) {
+            data = data.substring(0, max) + " ...";
         }
         el.innerHTML = '<a href="#">' + data + '</a>';
     };
@@ -327,6 +376,11 @@ SEARCH.util = {};
     }, SEARCH.ui.overlay, true);
 
 
+    SEARCH.ui.adjustContentContainerHeight = function () {
+        var oh = parseInt(Dom.getStyle("overlay", "height").replace("px", "")) + 300;
+        var h = (oh > SEARCH.ui.contentContainerMinHeight) ? oh : SEARCH.ui.contentContainerMinHeight;
+        Dom.setStyle(SEARCH.ui.contentContainer, "height", h + "px");
+    };
 
     /* Facet Tree code
      */
@@ -361,13 +415,8 @@ SEARCH.util = {};
 
         SEARCH.ui.facetTreeView.render();
 
-        var adjustContentContainerHeight = function () {
-            var oh = parseInt(Dom.getStyle("overlay", "height").replace("px", "")) + 300;
-            var h = (oh > SEARCH.ui.contentContainerMinHeight) ? oh : SEARCH.ui.contentContainerMinHeight;
-            Dom.setStyle(SEARCH.ui.contentContainer, "height", h + "px");
-        };
-        SEARCH.ui.facetTreeView.subscribe("expandComplete", adjustContentContainerHeight);
-        SEARCH.ui.facetTreeView.subscribe("collapseComplete", adjustContentContainerHeight);
+        SEARCH.ui.facetTreeView.subscribe("expandComplete", SEARCH.ui.adjustContentContainerHeight);
+        SEARCH.ui.facetTreeView.subscribe("collapseComplete", SEARCH.ui.adjustContentContainerHeight);
 
         SEARCH.ui.facetTreeView.subscribe("clickEvent", function(e) {
             Event.stopEvent(e);
@@ -431,6 +480,31 @@ SEARCH.util = {};
         return urlParams;
     };
 
+    var formatDateString = function(day, month, year) {
+        return year + "-" + (((month < 10) ? "0" : "") + month) + "-" + (((day < 10) ? "0" : "") + day);
+    };
+
+    var monthAbbrev = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+    var getDateConstraint = function(inputName, datePicker) {
+        if (datePicker == false) return "*";
+
+        //first check the input
+        var input = Dom.get(inputName).value.trim();
+        if (input.match(/^[\s]*[\\*]*$/) != null) return "*";
+
+        var datePickerRep = formatDateString(parseInt(datePicker.day), parseInt(datePicker.month), parseInt(datePicker.year));
+        var match = input.match(/^([a-zA-Z]{3})-([0-9]{2})-([0-9]{4})$/);
+        if (match != null) {
+            var inputMonth = monthAbbrev.indexOf(match[1]) + 1;
+            var inputDay = parseInt(match[2].replace(/^0/,""));
+            var inputYear = parseInt(match[3]);
+            if (inputMonth != parseInt(datePicker.month) || inputDay != parseInt(datePicker.day) || inputYear != datePicker.year) {
+                return formatDateString(inputDay, inputMonth, inputYear);
+            }
+        }
+        return datePickerRep;
+    };
+
     SEARCH.util.getFilterQueryString = function() {
         var facetOptions = {}, domFacets = Dom.get("facet_options").children;
         for (var i = 0; i < domFacets.length; i++) {
@@ -448,7 +522,51 @@ SEARCH.util = {};
             }
         }
 
+        var startDate = getDateConstraint(SEARCH.ui.beginDateInput, SEARCH.ui.beginDatePick.getSelectedDay());
+        var endDate = getDateConstraint(SEARCH.ui.endDateInput, SEARCH.ui.endDatePick.getSelectedDay());
+        if (!(startDate == "*" && endDate == "*")) {
+            fqStr += "%2B" + SEARCH.ui.dateConstraintField + ":[" + startDate + " TO " + endDate + "] ";
+        }
         return fqStr;
     };
 
+    SEARCH.util.jsonSyntaxHighlight = function (json) {
+        json = JSON.stringify(json, undefined, 3);
+
+        json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        json = json.replace(/\n/g, "<br>").replace(/\s/g, "&nbsp;");
+
+        return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+            var cls = 'number';
+            if (/^"/.test(match)) {
+                if (/:$/.test(match)) {
+                    cls = 'key';
+                } else {
+                    cls = 'string';
+                }
+            } else if (/true|false/.test(match)) {
+                cls = 'boolean';
+            } else if (/null/.test(match)) {
+                cls = 'null';
+            }
+
+            if (match.length > 40) {
+                var m = match.split("&nbsp;"), newmatch = "", i = 0, newlines = [];
+                while (i < m.length) {
+                    if (newmatch.length + m[i].length > 40) {
+                        newlines.push(newmatch);
+                        newmatch = "";
+                    } else {
+                        newmatch += m[i] + " ";
+                    }
+                    i++;
+                }
+                if (newmatch != "") {
+                    newlines.push(newmatch);
+                }
+                match = newlines.join("<br>&nbsp;&nbsp;");
+            }
+            return '<span class="' + cls + '">' + match + '</span>';
+        });
+    }
 })();

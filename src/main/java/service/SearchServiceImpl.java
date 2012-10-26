@@ -3,6 +3,8 @@ package service;
 import LucidWorksApp.utils.DateUtils;
 import LucidWorksApp.utils.HttpClientUtils;
 import LucidWorksApp.utils.Utils;
+import model.FacetFieldEntry;
+import model.FacetFieldEntryList;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONException;
 import net.sf.json.JSONNull;
@@ -59,43 +61,16 @@ public class SearchServiceImpl implements SearchService {
         return sortOrder.equals("asc") ? SolrQuery.ORDER.asc : SolrQuery.ORDER.desc;
     }
 
-    public List<String> getSolrIndexDateRange(String coreName) {
-
-        int buckets = 10;
-        HashMap<String,String> urlParams = new HashMap<String, String>();
-        urlParams.put("q", "timestamp:*");
-        urlParams.put("rows", "1");
-        urlParams.put("wt", "json");
-        urlParams.put("fl", "timestamp");
-        urlParams.put("sort", "timestamp+asc");
-
-        String url = solrService.getSolrSelectURI(coreName, urlParams);
-
-        List<String> dateRange = new ArrayList<String>();
-
-        JSONObject jsonObject = JSONObject.fromObject(HttpClientUtils.httpGetRequest(url));
-        dateRange.add((String) ((JSONObject) ((JSONArray) ((JSONObject) jsonObject.get("response")).get("docs")).get(0)).get("timestamp"));
-
-        urlParams.put("sort", "timestamp+desc");
-        jsonObject = JSONObject.fromObject(HttpClientUtils.httpGetRequest(url));
-        dateRange.add((String) ((JSONObject) ((JSONArray) ((JSONObject) jsonObject.get("response")).get("docs")).get(0)).get("timestamp"));
-
-        try {
-            Long ms = (DateField.parseDate(dateRange.get(1)).getTime() - DateField.parseDate(dateRange.get(0)).getTime())/buckets;
-            dateRange.add(DateUtils.getDateGapString(ms));
-        } catch (ParseException e) {
-            System.err.println(e.getCause());
-        }
-
-        return dateRange;
+    private boolean validFieldName(String fieldName, boolean isFacetField) {
+        Matcher m = fieldNamesToIgnore.matcher(fieldName);
+        return (!isFacetField && fieldName.equals(solrService.getSolrSchemaHDFSKey())) || !m.matches();
     }
 
-    private List<String> getFieldNameSubset(Collection<String> fieldNames, boolean facetFields) {
+    private List<String> getFieldNameSubset(Collection<String> fieldNames, boolean isFacetField) {
         List<String> fieldNamesSubset = new ArrayList<String>();
 
         for(String fieldName : fieldNames) {
-            Matcher m = fieldNamesToIgnore.matcher(fieldName);
-            if ((!facetFields && fieldName.equals(solrService.getSolrSchemaHDFSKey())) || !m.matches()) {
+            if (validFieldName(fieldName, isFacetField)) {
                 fieldNamesSubset.add(fieldName);
             }
         }
@@ -103,44 +78,49 @@ public class SearchServiceImpl implements SearchService {
         return fieldNamesSubset;
     }
 
-    private TreeMap<String, String> getFieldNamesAndTypesFromLuke(String coreName, boolean facetFields) {
-        TreeMap<String, String> namesAndTypes = new TreeMap<String, String>();
-        List<String> fieldNames = new ArrayList<String>();
+    public FacetFieldEntryList getFacetFieldsFromLuke(String coreName, boolean facetFields) {
+        FacetFieldEntryList facetFieldEntryList = new FacetFieldEntryList();
 
         String response = solrService.getSolrLukeData(coreName);
 
         try {
-            JSONObject json = JSONObject.fromObject(response);
-            JSONObject fields = (JSONObject) json.get("fields");
+            JSONObject fields = JSONObject.fromObject(response).getJSONObject("fields");
+            Iterator<?> keys = fields.keys();
 
-            List<Object> fieldNameObjects = Arrays.asList(fields.names().toArray());
-            for(Object f : fieldNameObjects) {
-                fieldNames.add((String) f);
-            }
-
-            for(String field : getFieldNameSubset(fieldNames, facetFields)) {
-                JSONObject fieldInfo = (JSONObject) fields.get(field);
-
-                if (fieldInfo.containsKey("type") && !(fieldInfo.get("type") instanceof JSONNull)) {
-                    namesAndTypes.put(field, (String) fieldInfo.get("type"));
+            while(keys.hasNext()){
+                String key = (String)keys.next();
+                if (validFieldName(key, facetFields)) {
+                    JSONObject fieldInfo = fields.getJSONObject(key);
+                    if (fieldInfo.containsKey("type") && !(fieldInfo.get("type") instanceof JSONNull) &&
+                            fieldInfo.containsKey("schema") && !(fieldInfo.get("schema") instanceof JSONNull)) {
+                        facetFieldEntryList.add(key, fieldInfo.getString("type"), fieldInfo.getString("schema"));
+                    }
                 }
             }
+
         } catch (JSONException e) {
             System.out.println(e.getMessage());
         }
-        return namesAndTypes;
+        return facetFieldEntryList;
     }
 
     private String editFilterQueryDateRange(String fq, String fieldName) {
         if (fq == null || !fq.contains(fieldName)) return fq;
-
-        Pattern p = Pattern.compile(".*\\+" + fieldName + ":\\(([^\\)]*)\\)(\\+.*)*");
+        Pattern p = Pattern.compile(".*\\+" + fieldName + ":([\\(|\\[])([^\\)|\\]]*)([\\)|\\]])(\\+.*)*");
         Matcher m = p.matcher(fq);
         if (m.matches()) {
-            String[] dates = m.group(1).replaceAll("^\"|\"$", "").split(" - ");
-            String newDateFq = DateUtils.getSolrDateFromDateString(dates[0]) + " TO " + DateUtils.getSolrDateFromDateString(dates[1]);
+            String newDateFq = "";
+            String[] newDates = m.group(2).split("\" \"");
 
-            fq = fq.replace(fieldName + ":(" + m.group(1) + ")", fieldName + ":[" + newDateFq + "]");
+            for(String d : newDates) {
+                String[] dates = d.replaceAll("^\"|\"$", "").split("\\s(-|TO|to)\\s");
+                newDateFq += fieldName + ":[" + DateUtils.getSolrDate(dates[0]) + " TO " + DateUtils.getSolrDate(dates[1]) + "] ";
+            }
+            // If it's just one date, then use the + to indicate AND
+            if (newDates.length == 1) {
+                newDateFq = "+" + newDateFq;
+            }
+            fq = fq.replace("+" + fieldName + ":" + m.group(1) + m.group(2) + m.group(3), newDateFq);
         }
         return fq;
     }
@@ -196,9 +176,9 @@ public class SearchServiceImpl implements SearchService {
         return ret;
     }
 
-    public void writeFacets(String coreName, TreeMap<String, String> facetFields, StringWriter writer) {
+    public void writeFacets(String coreName, FacetFieldEntryList facetFields, StringWriter writer) {
         if (facetFields == null || facetFields.size() == 0) {
-            facetFields = getFieldNamesAndTypesFromLuke(coreName, true);
+            facetFields = getFacetFieldsFromLuke(coreName, true);
         }
 
         try {
@@ -213,10 +193,10 @@ public class SearchServiceImpl implements SearchService {
 
 
     public void solrSearch(String queryString, String coreName, String sortType, String sortOrder,
-                           int start, int rows, String fq, TreeMap<String, String> facetFields, StringWriter writer) {
+                           int start, int rows, String fq, FacetFieldEntryList facetFields, StringWriter writer) {
 
         if (facetFields == null || facetFields.size() == 0) {
-            facetFields = getFieldNamesAndTypesFromLuke(coreName, true);
+            getFacetFieldsFromLuke(coreName, true);
         }
 
         try {
@@ -245,7 +225,7 @@ public class SearchServiceImpl implements SearchService {
     }
 
     public QueryResponse execQuery(String queryString, String coreName, String sortField, SolrQuery.ORDER sortOrder,
-                                    int start, int rows, String fq, TreeMap<String, String> facetFields) {
+                                    int start, int rows, String fq, FacetFieldEntryList facetFields) {
 
         String url = solrService.getSolrServerURI(coreName);
 
@@ -263,17 +243,20 @@ public class SearchServiceImpl implements SearchService {
                 query.add("facet.missing", "true");
                 query.setFacetLimit(facetFields.size());
 
-                for (Map.Entry field : facetFields.entrySet()) {
-                    if (field.getValue().equals("date")) {
-                        List<String> dateRange = getSolrIndexDateRange(coreName);
-                        query.add("facet.date", (String) field.getKey());
+                for(FacetFieldEntry field : facetFields) {
+                    String fieldName = field.getFieldName();
+                    String fieldType = field.getFieldType();
+
+                    if (fieldType.equals("date") && !field.isMultiValued()) {
+                        List<String> dateRange = coreService.getSolrFieldDateRange(coreName, fieldName, DateUtils.SOLR_DATE);
+                        query.add("facet.date", fieldName);
                         query.add("facet.date.start", dateRange.get(0));
                         query.add("facet.date.end", dateRange.get(1));
                         query.add("facet.date.gap", dateRange.get(2));
 
-                        fq = editFilterQueryDateRange(fq, (String) field.getKey());
+                        fq = editFilterQueryDateRange(fq, fieldName);
                     } else {
-                        query.add("facet.field", (String) field.getKey());
+                        query.add("facet.field", fieldName);
                     }
                 }
             }
@@ -360,21 +343,24 @@ public class SearchServiceImpl implements SearchService {
             g.writeEndObject();
         }
 
-        if (!(rsp.getFacetDates().size() == 1 && rsp.getFacetDates().get(0).getValues() == null)) {
+        if (rsp.getFacetDates().size() >= 1 && rsp.getFacetDates().get(0).getValues() != null) {
             for(FacetField facetField : rsp.getFacetDates()) {
-                g.writeStartObject();
-                g.writeStringField("name", facetField.getName());
+                List<FacetField.Count> facetFieldValues = facetField.getValues();
+                if (facetFieldValues != null) {
+                    g.writeStartObject();
+                    g.writeStringField("name", facetField.getName());
 
-                g.writeArrayFieldStart("values");
-                for(FacetField.Count count : facetField.getValues()) {
-                    if (count.getCount() > 0) {
-                        g.writeString(DateUtils.getDateStringFromSolrDate(count.getName()) + " - " +
+                    g.writeArrayFieldStart("values");
+                    for(FacetField.Count count : facetFieldValues) {
+                        if (count.getCount() > 0) {
+                            g.writeString(DateUtils.getDateStringFromSolrDate(count.getName()) + " - " +
                                 DateUtils.solrDateMath(count.getName(), count.getFacetField().getGap())
                                 + " (" + count.getCount() + ")");
+                        }
                     }
+                    g.writeEndArray();
+                    g.writeEndObject();
                 }
-                g.writeEndArray();
-                g.writeEndObject();
             }
         }
         g.writeEndArray();

@@ -14,6 +14,8 @@ public interface CoreService {
 
     public boolean isFieldMultiValued(SolrServer server, String fieldName);
 
+    public boolean fieldExists(SolrServer server, String fieldName);
+
     public boolean addDocumentToSolr(Object content, String hdfsKey, String coreName);
 
     public boolean deleteIndex(String coreName);
@@ -22,4 +24,5 @@ public interface CoreService {
 
     public Object getCoreDataIndexProperty(String coreName, String property);
 
+    public List<String> getSolrFieldDateRange(String coreName, String field, String format);
 }

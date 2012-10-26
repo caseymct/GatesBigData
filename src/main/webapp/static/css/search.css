@@ -231,7 +231,7 @@ form div.row {
     background-color: white;
     border: 1px solid #CCC;
     padding: 5px;
-    max-width: 400px;
+    max-width: 300px;
     min-width: 193px;
 }
 
@@ -269,4 +269,13 @@ form div.row {
     float: right;
     width: 400px;
     height: 400px;
+}
+
+#constrain_by_date {
+    padding: 10px;
+    width: 600px;
+}
+
+#date_begin, #date_end {
+    padding: 2px;
 }

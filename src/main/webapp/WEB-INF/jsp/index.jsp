@@ -8,7 +8,7 @@
 
     <h2>Solr Cores</h2>
 
-    <div id="tree_view"></div>
+    <div id="solr_cores"></div>
 
     <form id="create_core_form">
         <div id="create_new_core_div">
@@ -50,7 +50,7 @@
                 TreeView = YAHOO.widget.TreeView,
                 TextNode = YAHOO.widget.TextNode;
 
-        var treeView = new TreeView("tree_view");
+        var treeView = new TreeView("solr_cores");
 
         // edit core page? http://localhost:8080/LucidWorksApp/core/empty?core=collection1
         Connect.asyncRequest('GET', '<c:url value="/core/info/all" />' , {

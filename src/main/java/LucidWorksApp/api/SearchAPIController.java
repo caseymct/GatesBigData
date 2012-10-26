@@ -2,6 +2,8 @@ package LucidWorksApp.api;
 
 import LucidWorksApp.utils.HttpClientUtils;
 import LucidWorksApp.utils.Utils;
+import model.FacetFieldEntry;
+import model.FacetFieldEntryList;
 import net.sf.json.JSONObject;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
@@ -20,6 +22,7 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.TreeMap;
 
 import static java.util.Collections.singletonList;
@@ -41,15 +44,24 @@ public class SearchAPIController extends APIController {
         this.hdfsService = hdfsService;
     }
 
-    private TreeMap<String, String> getFacetFields(String coreName, HttpSession session) {
+    private FacetFieldEntryList getFacetFields(String coreName, HttpSession session) {
         String hdfsDir = hdfsService.getHDFSCoreDirectory(false, coreName).toString();
 
-        TreeMap<String, String> facetFields = (TreeMap<String, String>) session.getAttribute(SESSION_HDFSDIR_TOKEN + hdfsDir);
-        if (facetFields == null || facetFields.size() == 0) {
-            facetFields = hdfsService.getHDFSFacetFields(coreName);
-            session.setAttribute(SESSION_HDFSDIR_TOKEN + hdfsDir, facetFields);
+        FacetFieldEntryList hdfsFacetFields = (FacetFieldEntryList) session.getAttribute(SESSION_HDFSDIR_TOKEN + hdfsDir);
+        if (hdfsFacetFields == null || hdfsFacetFields.size() == 0) {
+            hdfsFacetFields = hdfsService.getHDFSFacetFields(coreName);
+
+            FacetFieldEntryList newFacetFields = new FacetFieldEntryList();
+            List<String> lukeFacetFieldNames = searchService.getFacetFieldsFromLuke(coreName, true).getNames();
+            for(String name: hdfsFacetFields.getNames()) {
+                if (lukeFacetFieldNames.contains(name)) {
+                    newFacetFields.add(hdfsFacetFields.get(name));
+                }
+            }
+            session.setAttribute(SESSION_HDFSDIR_TOKEN + hdfsDir, newFacetFields);
+            return newFacetFields;
         }
-        return facetFields;
+        return hdfsFacetFields;
     }
 
     //http://localhost:8080/LucidWorksApp/search/solrquery?query=*:*&core=collection1t&sort=score&order=desc&start=0
@@ -71,7 +83,7 @@ public class SearchAPIController extends APIController {
         searchParams.put(SESSION_SEARCH_CORE_NAME, coreName);
         session.setAttribute(SESSION_SEARCH_PARAMS, searchParams);
 
-        TreeMap<String, String> facetFields = getFacetFields(coreName, session);
+        FacetFieldEntryList facetFields = getFacetFields(coreName, session);
         StringWriter writer = new StringWriter();
         searchService.solrSearch(query, coreName, sortType, sortOrder, (start == null) ? 0 : start,
                 (rows == null) ? 10 : rows, fq, facetFields, writer);
@@ -85,7 +97,7 @@ public class SearchAPIController extends APIController {
     public ResponseEntity<String> findFacets(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
                                                 HttpServletRequest request) throws IOException {
 
-        TreeMap<String, String> facetFields = getFacetFields(coreName, request.getSession());
+        FacetFieldEntryList facetFields = getFacetFields(coreName, request.getSession());
         StringWriter writer = new StringWriter();
         searchService.writeFacets(coreName, facetFields, writer);
 

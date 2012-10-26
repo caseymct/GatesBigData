@@ -1,9 +1,12 @@
 package LucidWorksApp.api;
 
 import LucidWorksApp.utils.CoreUtils;
+import LucidWorksApp.utils.DateUtils;
 import LucidWorksApp.utils.Utils;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
+import org.apache.solr.common.util.DateUtil;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -24,6 +27,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static java.util.Collections.singletonList;
@@ -35,13 +39,11 @@ public class CoreAPIController extends APIController {
 
     private SolrService solrService;
     private CoreService coreService;
-    private HDFSService hdfsService;
 
     @Autowired
-    public CoreAPIController(SolrService solrService, CoreService coreService, HDFSService hdfsService) {
+    public CoreAPIController(SolrService solrService, CoreService coreService) {
         this.solrService = solrService;
         this.coreService = coreService;
-        this.hdfsService = hdfsService;
     }
 
     //http://localhost:8080/LucidWorksApp/core/corenames
@@ -99,7 +101,7 @@ public class CoreAPIController extends APIController {
     }
 
     @RequestMapping(value="/addfile/json", method = RequestMethod.GET)
-    public ResponseEntity<String> addDocument(@RequestParam(value = PARAM_FILENAME, required = true) String fileName,
+    public ResponseEntity<String> addDocument(@RequestParam(value = PARAM_FILE_NAME, required = true) String fileName,
                                               @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
                                               @RequestParam(value = PARAM_HDFS, required = true) String hdfsKey) {
         boolean added = false;
@@ -186,5 +188,17 @@ public class CoreAPIController extends APIController {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(response.toString(), httpHeaders, OK);
+    }
+
+    @RequestMapping(value="/field/daterange", method = RequestMethod.GET)
+    public ResponseEntity<String> dateRange(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
+                                            @RequestParam(value = PARAM_FIELD_NAME, required = true) String field) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+
+        List<String> dateRange = coreService.getSolrFieldDateRange(coreName, field, DateUtils.SHORT_DATE);
+        String dateString = dateRange.get(0) + " to " + dateRange.get(1);
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        return new ResponseEntity<String>(dateString, httpHeaders, OK);
     }
 }

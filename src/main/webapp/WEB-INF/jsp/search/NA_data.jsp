@@ -79,6 +79,16 @@
                 <input id="sort_asc" type="radio" name="sorttype" value="asc" >
                 <input id="sort_desc" type="radio" name="sorttype" value="desc" checked>
             </div>
+            <div class="clearboth"></div>
+        </div>
+
+        <div id="constrain_by_date">
+            <label for="date_begin">Constrain by <span id="date_constraint_text"></span>: </label>
+            <input type="text" size="10" id="date_begin" value="*"/>
+            <label for="date_end">to</label>
+            <input type="text" size="10" id="date_end" value="*"/>
+            <br>
+            <span style="font-size:12px; padding-top:3px">Range for field <span id = "date_constraint_range"></span></span>
         </div>
 
         <div class="clearboth"></div>
@@ -104,16 +114,12 @@
     </div>
 
     <div>
-        <div id="search_result_container" >
+        <div id="search_result_container" style="width: 58%">
             <div id = "show_query"></div>
             <div id = "num_found"></div>
             <div id = "search_results" ></div>
         </div>
-
-        <div id="overlay" style="visibility:hidden">
-            <div id="tree_view" class="bd"></div>
-        </div>
-
+        <div id = "preview_container"></div>
         <div class = "clearboth"></div>
     </div>
 
@@ -134,6 +140,7 @@
 
         var columnDefs = [
             {key:'PaidDate', label:'Paid Date', sortable:true, formatter:SEARCH.ui.formatLink, width:SEARCH.ui.shortStringWidth },
+            {key:'InvoiceDate', label:'Invoice Date', sortable:true, formatter:SEARCH.ui.formatLink, width:SEARCH.ui.shortStringWidth },
             {key:'Account.AccountName', label:'Account Name', sortable:true, formatter:SEARCH.ui.formatLink, width:SEARCH.ui.longStringWidth},
             {key:'AccountCompanyCode', label:'Company Code', sortable:true, formatter:SEARCH.ui.formatLink},
             {key:'User.UserName', label:'User Name', sortable:true, formatter:SEARCH.ui.formatLink, width:SEARCH.ui.longStringWidth},
@@ -141,7 +148,9 @@
             {key:'Supplier.SupplierName', label:'Supplier Name', sortable:true, formatter:SEARCH.ui.formatLink, width:SEARCH.ui.longStringWidth},
             {key:'CostCenter.CostCenterName', label:'Cost Center Name', sortable:true, formatter:SEARCH.ui.formatLink, width:SEARCH.ui.longStringWidth},
             {key:'CostCenterId', label:'Cost Center ID', sortable:true, formatter:SEARCH.ui.formatLink},
-            {key:'InvoiceId', label:'Invoice ID', sortable:true, formatter:SEARCH.ui.formatLink}
+            {key:'InvoiceId', label:'Invoice ID', sortable:true, formatter:SEARCH.ui.formatLink},
+            {key:'thumbnail', label:'thumbnail', hidden: true},
+            {key:'thumbnailType', label:'thumbnailType', hidden: true}
         ];
 
         var dataSourceFields = [
@@ -155,6 +164,7 @@
             {key:'CostCenterId', parser:'text'},
             {key:'InvoiceId', parser:'number'},
             {key:'PaidDate', parser:'text'},
+            {key:'InvoiceDate', parser:'text'},
             {key:'url', parser:'text'},
             {key:'HDFSKey', parser:'text'},
             {key:'HDFSSegment', parser:'text'}
@@ -163,12 +173,16 @@
         LWA.ui.initWait();
         SEARCH.ui.setSearchHeader("search_header");
         SEARCH.ui.initGeneralQuerySearchInput("general_query_search_input");
+        SEARCH.ui.initPreviewContainer("preview_container");
         SEARCH.ui.initPaginator("pag1");
         SEARCH.ui.initSearchTab("search_tab");
         SEARCH.ui.initSortOrderButtonGroup("sort_ascdesc_buttongroup");
         SEARCH.ui.initSelectData(columnDefs);
         SEARCH.ui.initSortBySelect("sort_date_label", 0);
         SEARCH.ui.initExportUrl('<c:url value="/export" />');
+        SEARCH.ui.initDatePickers("date_begin", "date_end", "date_constraint_text", "InvoiceDate");
+        SEARCH.ui.initDateRangeText('<c:url value="/core/field/daterange" />', "date_constraint_range");
+        SEARCH.ui.adjustContentContainerHeight();
 
         Connect.asyncRequest('GET', '<c:url value="/search/solrfacets" />' + "?core=" + SEARCH.ui.coreName, {
             success : SEARCH.ui.buildInitialFacetTree
@@ -217,11 +231,12 @@
 
 
         var buildSearchResultHtml = function(result) {
-            var dataSource = new LocalDataSource(result.response);
-            dataSource.responseSchema = {
-                resultsList:'docs',
-                fields: dataSourceFields
-            };
+            var dataSource = new LocalDataSource(result.response, {
+                responseSchema : {
+                    resultsList:'docs',
+                    fields: dataSourceFields
+                }
+            });
 
             var dataTable = new ScrollingDataTable('search_results', columnDefs, dataSource, { width:"100%" });
 
@@ -236,8 +251,10 @@
                 SEARCH.ui.dataTableCellClickEvent(this.getRecord(e.target).getData(), '<c:url value="/core/document/view" />');
             });
 
-            dataTable.on('cellMouseoverEvent', SEARCH.ui.showTooltip);
-            dataTable.on('cellMouseoutEvent', SEARCH.ui.hideTooltip);
+            dataTable.on('rowMouseoverEvent', function (e) {
+                SEARCH.ui.dataTableCellMouseoverEvent(e, dataTable, "<c:url value="/static/images/loading.png" />",
+                        '<c:url value="/document/thumbnail/get" />');
+            });
         };
 
 

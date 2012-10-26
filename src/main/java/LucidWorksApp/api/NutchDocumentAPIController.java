@@ -1,9 +1,6 @@
 package LucidWorksApp.api;
 
 import LucidWorksApp.utils.Utils;
-import org.apache.commons.net.util.Base64;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.Text;
 import org.apache.log4j.Logger;
 import org.apache.nutch.protocol.Content;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +15,6 @@ import service.HDFSService;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.util.HashMap;
 
 import static java.util.Collections.singletonList;
 import static org.springframework.http.HttpStatus.OK;
@@ -96,7 +92,7 @@ public class NutchDocumentAPIController extends APIController {
 
     @RequestMapping(value = "/nutch/get", method = RequestMethod.GET)
     public ResponseEntity<String> readNutchFileFromHDFS(@RequestParam(value = PARAM_HDFSSEGMENT, required = true) String segment,
-                                                        @RequestParam(value = PARAM_FILENAME, required = true) String key,
+                                                        @RequestParam(value = PARAM_FILE_NAME, required = true) String key,
                                                         @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
                                                         @RequestParam(value = PARAM_VIEWTYPE, required = false) String viewType) throws IOException {
         StringWriter writer = new StringWriter();
@@ -111,10 +107,9 @@ public class NutchDocumentAPIController extends APIController {
 
     @RequestMapping(value = "/writelocal", method = RequestMethod.GET)
     public ResponseEntity<String> writeNutchFileFromHDFS(@RequestParam(value = PARAM_HDFSSEGMENT, required = true) String segment,
-                                                         @RequestParam(value = PARAM_FILENAME, required = true) String key,
+                                                         @RequestParam(value = PARAM_FILE_NAME, required = true) String key,
                                                          @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
         StringWriter writer = new StringWriter();
-
         Content content = hdfsService.getContent(coreName, segment, key, writer);
         if (content != null) {
             documentConversionService.writeLocalCopy(content, key, writer);
@@ -138,16 +133,11 @@ public class NutchDocumentAPIController extends APIController {
 
     @RequestMapping(value = "/thumbnail/get", method = RequestMethod.GET)
     public ResponseEntity<String> getThumbnail(@RequestParam(value = PARAM_HDFSSEGMENT, required = true) String segment,
-                                            @RequestParam(value = PARAM_FILENAME, required = true) String hdfsPath,
+                                            @RequestParam(value = PARAM_FILE_NAME, required = true) String key,
                                             @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
 
-        Path hdfsImgPath = hdfsService.getHDFSThumbnailPathFromHDFSDocPath(coreName, segment, hdfsPath);
-        byte[] content = hdfsService.getFileContentsAsBytes(hdfsImgPath);
-        String base64String = Base64.encodeBase64String(content);
-
         StringWriter writer = new StringWriter();
-        writer.append("data:image/png;base64,");
-        writer.append(base64String);
+        hdfsService.printFileContents(coreName, segment, key, writer, true);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));

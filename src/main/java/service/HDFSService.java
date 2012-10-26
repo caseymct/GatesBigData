@@ -1,6 +1,7 @@
 package service;
 
 
+import model.FacetFieldEntryList;
 import net.sf.json.JSONObject;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -37,7 +38,7 @@ public interface HDFSService {
 
     public Path getHDFSFacetFieldsCustomFile(String coreName);
 
-    public TreeMap<String, String> getHDFSFacetFields(String hdfsDir);
+    public FacetFieldEntryList getHDFSFacetFields(String hdfsDir);
 
     public Path getHDFSPreviewFieldsCustomFile(String coreName);
 

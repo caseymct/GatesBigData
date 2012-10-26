@@ -4,6 +4,10 @@
 
 <layout:main>
     <link rel="stylesheet" type="text/css" href="<c:url value="/static/css/search.css"/>" />
+    <!--<link rel="stylesheet" type="text/css" href="<c:url value="/static/css/jsdatepick/jsDatePick_ltr.min.css"/>" />
+
+    <script type="text/javascript" src="<c:url value="/static/js/jsdatepick/jsDatePick.min.1.3.js"/>"></script>-->
+
 
     <h1 id="search_header">Search Core</h1>
 
@@ -38,6 +42,16 @@
                 <input id="sort_asc" type="radio" name="sorttype" value="asc" >
                 <input id="sort_desc" type="radio" name="sorttype" value="desc" checked>
             </div>
+            <div class="clearboth"></div>
+        </div>
+
+        <div id="constrain_by_date">
+            <label for="date_begin">Constrain by <span id="date_constraint_text"></span>: </label>
+            <input type="text" size="10" id="date_begin" value="*"/>
+            <label for="date_end">to</label>
+            <input type="text" size="10" id="date_end" value="*"/>
+            <br>
+            <span style="font-size:12px; padding-top:3px">Range for field <span id = "date_constraint_range"></span></span>
         </div>
 
         <div class="clearboth"></div>
@@ -87,29 +101,42 @@
 
         var columnDefs = [
             {key:'title', label:'Title', sortable:true, formatter:SEARCH.ui.formatLink, width:SEARCH.ui.longStringWidth},
-            {key:'preview', label:'Preview', sortable:true, formatter:SEARCH.ui.formatLink, width: SEARCH.ui.longStringWidth},
+            {key:'author', label:'Author', sortable:true, formatter:SEARCH.ui.formatLink, width: SEARCH.ui.longStringWidth},
+            {key:'last_modified', label:'Last Modified Date', sortable:true, formatter:SEARCH.ui.formatLink, width: SEARCH.ui.longStringWidth},
+            {key:'creation_date', label:'Creation Date', sortable:true, formatter:SEARCH.ui.formatLink, width: SEARCH.ui.longStringWidth},
+            {key:'application_name', label:'Application', sortable:true, formatter:SEARCH.ui.formatLink, width: SEARCH.ui.longStringWidth},
+            {key:'company', label:'Company', sortable:true, formatter:SEARCH.ui.formatLink, width: SEARCH.ui.longStringWidth},
+            {key:'last_author', label:'Last Author', sortable:true, formatter:SEARCH.ui.formatLink, width: SEARCH.ui.longStringWidth},
             {key:'content_type', label:'Content Type', sortable:true, formatter:SEARCH.ui.formatLink, width:SEARCH.ui.longStringWidth},
-            {key:'thumbnail', label:'thumbnail', hidden: true}
+            {key:'thumbnail', label:'thumbnail', hidden: true},
+            {key:'thumbnailType', label:'thumbnail', hidden: true}
         ];
         var dataSourceFields = [
             {key:'title', parser:'text'},
-            {key:'preview', parser:'text'},
+            {key:'author', parser:'text'},
+            {key:'last_modified', parser:'text'},
+            {key:'creation_date', parser:'text'},
+            {key:'application_name', parser:'text'},
+            {key:'company', parser:'text'},
+            {key:'last_author', parser:'text'},
             {key:'content_type', parser:'text'},
             {key:'url', parser:'text'},
             {key:'HDFSKey', parser:'text'},
-            {key:'HDFSSegment', parser:'text'},
-            {key:'thumbnail', parser:'text'}
+            {key:'HDFSSegment', parser:'text'}
         ];
 
         LWA.ui.initWait();
         SEARCH.ui.setSearchHeader("search_header");
         SEARCH.ui.initGeneralQuerySearchInput("general_query_search_input");
         SEARCH.ui.initPreviewContainer("preview_container");
+        SEARCH.ui.initDatePickers("date_begin", "date_end", "date_constraint_text", "last_modified");
+        SEARCH.ui.initDateRangeText('<c:url value="/core/field/daterange" />', "date_constraint_range");
         SEARCH.ui.initPaginator("pag1");
         SEARCH.ui.initSortOrderButtonGroup("sort_ascdesc_buttongroup");
         SEARCH.ui.initSelectData(columnDefs);
         SEARCH.ui.initSortBySelect("sort_date_label", 0);
         SEARCH.ui.initExportUrl('<c:url value="/export" />');
+        SEARCH.ui.adjustContentContainerHeight();
 
         Connect.asyncRequest('GET', '<c:url value="/search/solrfacets" />' + "?core=" + SEARCH.ui.coreName, {
             success : SEARCH.ui.buildInitialFacetTree
@@ -141,36 +168,10 @@
                 SEARCH.ui.dataTableCellClickEvent(this.getRecord(e.target).getData(), '<c:url value="/core/document/viewtest" />');
             });
 
-            dataTable.on('cellMouseoverEvent', function (e) {
+            dataTable.on('rowMouseoverEvent', function (e) {
                 SEARCH.ui.dataTableCellMouseoverEvent(e, dataTable, "<c:url value="/static/images/loading.png" />",
                         '<c:url value="/document/thumbnail/get" />');
-                /*
-                var target = e.target;
-                var record = this.getRecord(target),
-                    column = this.getColumn(target),
-                      data = record.getData();
-
-                var urlParams = "?core=" + SEARCH.ui.coreName + "&segment=" + data.HDFSSegment + "&file=" + data.HDFSKey;
-                var callback = {
-                    success: function(o) {
-                        this.argument.table.updateCell(record, "thumbnail", o.responseText);
-                        SEARCH.ui.setPreviewContainerImage(record.getData().title, o.responseText);
-                    },
-                    argument: { table: dataTable, record: record}
-                };
-
-                if (column.getField() == "preview") {
-                    if (data.thumbnail == undefined) {
-                        SEARCH.ui.setPreviewContainerLoadingImage("<c:url value="/static/images/loading.png" />")
-                        Connect.asyncRequest('GET', '<c:url value="/document/thumbnail/get" />' + urlParams, callback);
-                    } else {
-                        SEARCH.ui.setPreviewContainerImage(data.title, data.thumbnail);
-                    }
-                } else {
-                    SEARCH.ui.showTooltip(target, record, column, e.event.pageX, e.event.pageY);
-                }   */
             });
-            dataTable.on('cellMouseoutEvent', SEARCH.ui.hideTooltip);
         };
 
         var handlePagination = function (newState) {

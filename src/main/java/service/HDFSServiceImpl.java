@@ -2,8 +2,10 @@ package service;
 
 import LucidWorksApp.utils.JsonParsingUtils;
 import LucidWorksApp.utils.Utils;
+import model.FacetFieldEntryList;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
+import org.apache.commons.net.util.Base64;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.MapFile;
@@ -247,28 +249,27 @@ public class HDFSServiceImpl implements HDFSService {
         return new byte[0];
     }
 
-    public TreeMap<String, String> getHDFSFacetFields(String coreName) {
-        TreeMap<String, String> namesAndTypes = new TreeMap<String, String>();
+    public FacetFieldEntryList getHDFSFacetFields(String coreName) {
+        FacetFieldEntryList facetFieldEntryList = new FacetFieldEntryList();
 
         String response = getFileContents(getHDFSFacetFieldsCustomFile(coreName));
         if (!response.startsWith(HDFS_ERROR_STRING)) {
             for(String ret : response.split(",")) {
                 String[] n = ret.split(":");
-                namesAndTypes.put(n[0], n[1]);
+                facetFieldEntryList.add(n[0], n[1], n[2]);
             }
         }
 
-        return namesAndTypes;
+        return facetFieldEntryList;
     }
 
     public List<String> getHDFSPreviewFields(String coreName) {
-        List<String> fields = new ArrayList<String>();
         String response = getFileContents(getHDFSPreviewFieldsCustomFile(coreName));
         if (!response.startsWith(HDFS_ERROR_STRING)) {
-            fields = Arrays.asList(response.split(","));
+            return Arrays.asList(response.split(","));
         }
 
-        return fields;
+        return null;
     }
 
     public List<String> listFiles(Path hdfsDirectory, boolean recurse) {
@@ -497,35 +498,56 @@ public class HDFSServiceImpl implements HDFSService {
 
     public void printFileContents(String coreName, String segment, String fileName, StringWriter writer, boolean preview) {
         try {
-            Content content = getContent(coreName, segment, fileName, writer);
+            JsonFactory f = new JsonFactory();
+            JsonGenerator g = f.createJsonGenerator(writer);
+
+            g.writeStartObject();
+
+            if (fileName.endsWith(".json")) {
+                printJSONFileContents(coreName, segment, fileName, g, preview);
+            } else {
+                printImageFileContents(coreName, segment, fileName, g);
+            }
+
+            g.writeEndObject();
+            g.close();
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private void printJSONFileContents(String coreName, String segment, String fileName, JsonGenerator g, boolean preview) {
+        try {
+            Content content = getContent(coreName, segment, fileName, new StringWriter());
             if (content == null) {
                 return;
             }
 
-            List<String> previewFields = preview ? getHDFSPreviewFields(coreName) : null;
-
-            if (content.getContentType().equals("application/json")) {
-                printJSONFileContents(writer, content, previewFields);
+            if (!content.getContentType().equals("application/json")) {
+                return;
             }
+
+            g.writeStringField("url", content.getUrl());
+            g.writeStringField("contentType", content.getContentType());
+            g.writeStringField("dateAdded", content.getMetadata().get("Last-Modified"));
+
+            List<String> previewFields = preview ? getHDFSPreviewFields(coreName) : null;
+            JSONObject jsonObject = JSONObject.fromObject(new String(content.getContent()));
+            JsonParsingUtils.printJSONObject(jsonObject, "Contents", "", previewFields, g);
 
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
     }
 
-    private void printJSONFileContents(StringWriter writer, Content content, List<String> previewFields) throws IOException {
-        JsonFactory f = new JsonFactory();
-        JsonGenerator g = f.createJsonGenerator(writer);
 
-        g.writeStartObject();
-        g.writeStringField("url", content.getUrl());
-        g.writeStringField("contentType", content.getContentType());
-        g.writeStringField("dateAdded", content.getMetadata().get("Last-Modified"));
+    public void printImageFileContents(String coreName, String segment, String fileName, JsonGenerator g) throws IOException {
+        Path hdfsImgPath = getHDFSThumbnailPathFromHDFSDocPath(coreName, segment, fileName);
+        byte[] content = getFileContentsAsBytes(hdfsImgPath);
+        String base64String = Base64.encodeBase64String(content);
 
-        JSONObject jsonObject = JSONObject.fromObject(new String(content.getContent()));
-        JsonParsingUtils.printJSONObject(jsonObject, "Contents", "", previewFields, g);
-
-        g.writeEndObject();
-        g.close();
+        g.writeStringField("url", fileName);
+        g.writeStringField("contentType", "image");
+        g.writeStringField("Contents", "data:image/png;base64," + base64String);
     }
 }

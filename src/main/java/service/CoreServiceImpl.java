@@ -1,9 +1,11 @@
 package service;
 
 
+import LucidWorksApp.utils.DateUtils;
 import LucidWorksApp.utils.HttpClientUtils;
 import LucidWorksApp.utils.JsonParsingUtils;
 import LucidWorksApp.utils.Utils;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import org.apache.solr.client.solrj.SolrServer;
@@ -14,10 +16,12 @@ import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.client.solrj.response.LukeResponse;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.util.NamedList;
+import org.apache.solr.schema.DateField;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -75,6 +79,20 @@ public class CoreServiceImpl implements CoreService {
         return false;
     }
 
+    public boolean fieldExists(SolrServer server, String fieldName) {
+        LukeRequest luke = new LukeRequest();
+        try {
+            LukeResponse.FieldInfo fieldInfo = luke.process(server).getFieldInfo(fieldName);
+            return fieldInfo != null;
+
+        } catch (SolrServerException e) {
+            System.out.println(e.getMessage());
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+        return false;
+    }
+
     public boolean deleteIndex(String coreName) {
 
         try {
@@ -121,5 +139,45 @@ public class CoreServiceImpl implements CoreService {
             }
         }
         return null;
+    }
+
+    private String parseDateFromSolrResponse(String url, String field) {
+        String response = HttpClientUtils.httpGetRequest(url);
+        JSONObject jsonObject = JSONObject.fromObject(response);
+        String date = jsonObject.getJSONObject("response").getJSONArray("docs").getJSONObject(0).getString(field);
+        return DateUtils.getSolrDate(date);
+    }
+
+    public List<String> getSolrFieldDateRange(String coreName, String field, String format) {
+        List<String> dateRange = new ArrayList<String>();
+
+        int buckets = 10;
+        HashMap<String,String> urlParams = new HashMap<String, String>();
+        urlParams.put("q", field + ":*");
+        urlParams.put("rows", "1");
+        urlParams.put("wt", "json");
+        urlParams.put("fl", field);
+        urlParams.put("sort", field + "+asc");
+
+        String date = parseDateFromSolrResponse(solrService.getSolrSelectURI(coreName, urlParams), field);
+        dateRange.add(DateUtils.getFormattedDateStringFromSolrDate(date, format));
+
+        urlParams.put("sort", field + "+desc");
+        date = parseDateFromSolrResponse(solrService.getSolrSelectURI(coreName, urlParams), field);
+        dateRange.add(DateUtils.getFormattedDateStringFromSolrDate(date, format));
+        /*url = solrService.getSolrSelectURI(coreName, urlParams);
+        jsonObject = JSONObject.fromObject(HttpClientUtils.httpGetRequest(url));
+        date = jsonObject.getJSONObject("response").getJSONArray("docs").getJSONObject(0).getString(field);
+        dateRange.add(DateUtils.getFormattedDateStringFromSolrDate(DateUtils.getSolrDate(date), format));   */
+
+        if (format.equals(DateUtils.SOLR_DATE)) {
+            try {
+                Long ms = (DateField.parseDate(dateRange.get(1)).getTime() - DateField.parseDate(dateRange.get(0)).getTime())/buckets;
+                dateRange.add(DateUtils.getDateGapString(ms));
+            } catch (ParseException e) {
+                System.err.println(e.getCause());
+            }
+        }
+        return dateRange;
     }
 }

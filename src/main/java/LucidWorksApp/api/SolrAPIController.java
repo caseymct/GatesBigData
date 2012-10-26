@@ -1,24 +1,15 @@
 package LucidWorksApp.api;
 
-import LucidWorksApp.utils.Utils;
-import net.sf.json.JSONException;
-import net.sf.json.JSONObject;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.type.TypeFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import service.SolrService;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.Map;
 
 import static java.util.Collections.singletonList;
 import static org.springframework.http.HttpStatus.OK;
@@ -35,7 +26,7 @@ public class SolrAPIController extends APIController {
     }
 
     @RequestMapping(value="/update/csv", method = RequestMethod.GET)
-    public ResponseEntity<String> execQuery(@RequestParam(value = PARAM_FILENAME, required = true) String fileName,
+    public ResponseEntity<String> execQuery(@RequestParam(value = PARAM_FILE_NAME, required = true) String fileName,
                                             @RequestParam(value = PARAM_FILE_ONSERVER, required = true) Boolean fileOnServer,
                                             @RequestParam(value = PARAM_CORE_NAME, required = true) String collectionName) throws IOException {
 

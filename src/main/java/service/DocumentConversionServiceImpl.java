@@ -21,7 +21,6 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
 
     private static final String PRISM_CONVERT_URL = "http://localhost:18680/convert2swf";
     private static final String LOCAL_TMP_DIRECTORY = "C:/tmp/";
-    private static final String RELATIVE_TMP_DIRECTORY = "../../tmp/";
     private static final String THUMBNAIL_SIZE = "5000x5000";
     private static final String SWF_EXTENSION = "swf";
     private static final String IMG_EXTENSION = "png";
@@ -75,15 +74,14 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
 
         File localFile = new File(localFilePath);
         String swfFileName = getSwfFileNameFromLocalFileName(localFile);
-        //String swfFileName = Utils.changeFileExtension(localFile.getName(), SWF_EXTENSION, false);
 
         HashMap<String, String> params = new HashMap<String, String>();
-        params.put("source", RELATIVE_TMP_DIRECTORY + localFile.getName());
-        params.put("target", RELATIVE_TMP_DIRECTORY + swfFileName);
+        params.put("source", LOCAL_TMP_DIRECTORY + localFile.getName());
+        params.put("target", LOCAL_TMP_DIRECTORY + swfFileName);
 
         HttpClientUtils.httpGetRequest(PRISM_CONVERT_URL + Utils.constructUrlParams(params));
-
-        cleanupTempDir(localFile);
+        System.out.println(PRISM_CONVERT_URL + Utils.constructUrlParams(params));
+       // cleanupTempDir(localFile);
 
         File localSwfFile = getSwfFile(localFile);
         return localSwfFile.exists() ? localSwfFile.getPath() : Utils.getFileErrorString();
@@ -122,8 +120,8 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
             if (Utils.writeLocalFile(localFile, content.getContent())) {
 
                 HashMap<String, String> params = new HashMap<String, String>();
-                params.put("source", RELATIVE_TMP_DIRECTORY + fileName);
-                params.put("target", RELATIVE_TMP_DIRECTORY + imgFileName);
+                params.put("source", LOCAL_TMP_DIRECTORY + fileName);
+                params.put("target", LOCAL_TMP_DIRECTORY + imgFileName);
                 //params.put("thumbnail", THUMBNAIL_SIZE);
                 params.put("pages", "1");
 

@@ -8,7 +8,7 @@
     </div>
 
     <div id="documentviewer"></div>
-    <script src="<c:url value="/static/js/swfobject.2.2.js"/>" type="text/javascript"></script>
+    <script src="<c:url value="/static/js/prizm/swfobject.2.2.js"/>" type="text/javascript"></script>
 
 
     <script type="text/javascript">
@@ -35,21 +35,20 @@
                 name: 'Viewer'
             };
 
-
             Connect.asyncRequest('GET', '<c:url value="/document/writelocal" />' + urlParams, {
                 success : function(o) {
                     var result = o.responseText;
-
                     if (result.match(/<h1>Error<\/h1>/)) {
                         Dom.get("documentviewer").innerHTML = result;
                     } else {
 
                         var flashvars = {
-                            documentname: result.replace(/\\/g, "/"),
-                            conversionLink: "<c:url value="/document/convert"/>"
+                            documentname: result.replace(/\\/g, '/'),
+                            conversionLink: '<c:url value="/document/convert"/>'
                         };
-                        swfobject.embedSWF("<c:url value="/static/prism/Viewer.swf"/>", "documentviewer",
-                                "620", "800", "10.0.0", false, flashvars, swfParams, swfAttributes);
+
+                        swfobject.embedSWF('<c:url value="/static/prizm/Viewer.swf"/>' + '?time=' + new Date(), 'documentviewer',
+                                '620', '800', '11.1.102', false, flashvars, swfParams, swfAttributes);
                     }
 
                 },
