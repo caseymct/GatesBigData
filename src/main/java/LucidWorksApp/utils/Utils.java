@@ -1,18 +1,22 @@
 package LucidWorksApp.utils;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonGenerator;
 
 import java.io.*;
+import java.net.URLDecoder;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 
 public class Utils {
     private static final String FILE_ERROR_MESSAGE = "<h1>ERROR</h1>";
+    private static final Logger logger = Logger.getLogger(Utils.class);
+    public static int INVALID_INTEGER   = -99999;
+    public static double INVALID_DOUBLE = -99999.99999;
 
     public static String addToUrlIfNotEmpty(String url, String endpoint) {
         if (endpoint == null || endpoint.equals("")) return url;
@@ -27,6 +31,23 @@ public class Utils {
             paramList.add(entry.getKey() + "=" + entry.getValue());
         }
         return "?" + StringUtils.join(paramList, "&");
+    }
+
+    public static String decodeUrl(String url) {
+        try {
+            url = URLDecoder.decode(url, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            logger.error("Could not decode URL: " + e.getMessage());
+        }
+        return url;
+    }
+
+    public static int getInteger(String s) {
+        try {
+            return Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+            return INVALID_INTEGER;
+        }
     }
 
     public static void writeValueByType(String key, Object value, JsonGenerator g) throws IOException {
@@ -154,5 +175,24 @@ public class Utils {
                 e.printStackTrace();
             }
         }
+    }
+
+    public static void addToZipFile(String fileName, ZipOutputStream zos) throws FileNotFoundException, IOException {
+
+        System.out.println("Writing '" + fileName + "' to zip file");
+
+        File file = new File(fileName);
+        FileInputStream fis = new FileInputStream(file);
+        ZipEntry zipEntry = new ZipEntry(fileName);
+        zos.putNextEntry(zipEntry);
+
+        byte[] bytes = new byte[1024];
+        int length;
+        while ((length = fis.read(bytes)) >= 0) {
+            zos.write(bytes, 0, length);
+        }
+
+        zos.closeEntry();
+        fis.close();
     }
 }

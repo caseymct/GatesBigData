@@ -1,19 +1,18 @@
 package service;
 
-import LucidWorksApp.utils.DateUtils;
-import LucidWorksApp.utils.HttpClientUtils;
-import LucidWorksApp.utils.Utils;
+import LucidWorksApp.utils.*;
 import model.FacetFieldEntry;
 import model.FacetFieldEntryList;
+import model.SuggestionList;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONException;
 import net.sf.json.JSONNull;
 import net.sf.json.JSONObject;
+import org.apache.commons.collections.map.ListOrderedMap;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.util.URIUtil;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.net.util.Base64;
-import org.apache.hadoop.fs.Path;
+import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -22,7 +21,6 @@ import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
-import org.apache.solr.schema.DateField;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.MalformedURLException;
-import java.text.ParseException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,12 +35,14 @@ import java.util.regex.Pattern;
 
 public class SearchServiceImpl implements SearchService {
 
-    private Pattern fieldNamesToIgnore;
+   // private Pattern fieldNamesToIgnore;
     private String SOLR_DEFAULT_SORT_FIELD = "score";
     private String SOLR_DEFAULT_QUERY = "*:*";
     private int SOLR_DEFAULT_START = 0;
     private int SOLR_DEFAULT_ROWS = 10;
     private SolrQuery.ORDER SOLR_DEFAULT_SORT_ORDER = SolrQuery.ORDER.asc;
+
+    private static final Logger logger = Logger.getLogger(SearchServiceImpl.class);
 
     private SolrService solrService;
     private CoreService coreService;
@@ -52,25 +51,25 @@ public class SearchServiceImpl implements SearchService {
     public void setServices(SolrService solrService, CoreService coreService) {
         this.solrService = solrService;
         this.coreService = coreService;
-        fieldNamesToIgnore = Pattern.compile("^(attr|_).*|.*(version|batch|body|text_all|" +
+     /*   fieldNamesToIgnore = Pattern.compile("^(attr|_).*|.*(version|batch|body|text_all|" +
                 solrService.getSolrSchemaHDFSKey() +
-                "|boost|digest|host|segment|tstamp).*|.*id");
+                "|boost|digest|host|segment|tstamp).*|.*id");*/
     }
 
-    private SolrQuery.ORDER getSortOrder(String sortOrder) {
+    public SolrQuery.ORDER getSortOrder(String sortOrder) {
         return sortOrder.equals("asc") ? SolrQuery.ORDER.asc : SolrQuery.ORDER.desc;
     }
 
-    private boolean validFieldName(String fieldName, boolean isFacetField) {
+    /*private boolean validFieldName(String fieldName, boolean isFacetField) {
         Matcher m = fieldNamesToIgnore.matcher(fieldName);
         return (!isFacetField && fieldName.equals(solrService.getSolrSchemaHDFSKey())) || !m.matches();
-    }
+    } */
 
     private List<String> getFieldNameSubset(Collection<String> fieldNames, boolean isFacetField) {
         List<String> fieldNamesSubset = new ArrayList<String>();
 
         for(String fieldName : fieldNames) {
-            if (validFieldName(fieldName, isFacetField)) {
+            if (SolrUtils.validFieldName(fieldName, isFacetField)) {
                 fieldNamesSubset.add(fieldName);
             }
         }
@@ -78,13 +77,11 @@ public class SearchServiceImpl implements SearchService {
         return fieldNamesSubset;
     }
 
-    public FacetFieldEntryList getFacetFieldsFromLuke(String coreName, boolean facetFields) {
+    /*public FacetFieldEntryList getFacetFieldsFromLuke(String coreName, boolean facetFields) {
         FacetFieldEntryList facetFieldEntryList = new FacetFieldEntryList();
 
-        String response = solrService.getSolrLukeData(coreName);
-
         try {
-            JSONObject fields = JSONObject.fromObject(response).getJSONObject("fields");
+            JSONObject fields = coreService.getLukeFieldsObject(coreName);
             Iterator<?> keys = fields.keys();
 
             while(keys.hasNext()){
@@ -102,7 +99,7 @@ public class SearchServiceImpl implements SearchService {
             System.out.println(e.getMessage());
         }
         return facetFieldEntryList;
-    }
+    }  */
 
     private String editFilterQueryDateRange(String fq, String fieldName) {
         if (fq == null || !fq.contains(fieldName)) return fq;
@@ -128,58 +125,77 @@ public class SearchServiceImpl implements SearchService {
     private String getSolrSuggestion(String coreName, String userInput, String prefixField, String fullField) {
 
         HashMap<String,String> urlParams = new HashMap<String, String>();
+        String queryStr = prefixField + ":" + userInput + "*";
+        String[] userInputPieces = userInput.split("%20| ");
+        if (userInputPieces.length > 1) {
+            queryStr = "%2B" + prefixField + ":" + StringUtils.join(userInputPieces, "%20%2B" + prefixField + ":");
+        }
+        urlParams.put("q", queryStr);
         urlParams.put("wt", "json");
-        urlParams.put("q", prefixField + ":" + userInput + "*");
-        urlParams.put("fl", fullField);
+        urlParams.put("fl", fullField + ",score");
         urlParams.put("group.field", fullField);
+        urlParams.put("group.sort", "score%20desc");
         urlParams.put("group", "true");
-        String url = solrService.getSolrSelectURI(coreName, urlParams);
-        //http://denlx006.dn.gates.com:8983/solr/select?q=UserNamePrefix:c*&fl=User.UserName&group=true&group.field=User.UserName
 
+        String url = SolrUtils.getSolrSelectURI(coreName, urlParams);
         return HttpClientUtils.httpGetRequest(url);
     }
 
-    public JSONObject suggest(String coreName, String userInput, String fieldSpecificEndpoint) {
+    private SuggestionList getTopNListings(JSONObject jsonObject, String fullField, int n) {
+        SuggestionList suggestionList = new SuggestionList();
+        JSONArray groups = (JSONArray) JsonParsingUtils.extractJSONProperty(jsonObject,
+                Arrays.asList("grouped", fullField, "groups"), JSONArray.class, new JSONArray());
+
+        for(int i = 0; i < groups.size() && suggestionList.size() < n; i++) {
+            JSONObject g = groups.getJSONObject(i);
+            String text = (String) JsonParsingUtils.extractJSONProperty(g, Arrays.asList("doclist", "docs", "0", fullField), String.class, null);
+            int numFound = (Integer) JsonParsingUtils.extractJSONProperty(g, Arrays.asList("doclist", "numFound"), Integer.class, Utils.INVALID_INTEGER);
+            double score = (Double) JsonParsingUtils.extractJSONProperty(g, Arrays.asList("doclist", "docs", "0", "score"), Double.class, Utils.INVALID_DOUBLE);
+
+            if (text != null && numFound != Utils.INVALID_INTEGER && score != Utils.INVALID_DOUBLE) {
+                suggestionList.add(text, fullField, numFound, score);
+            }
+        }
+
+        return suggestionList ;
+    }
+
+    public JSONObject suggest(String coreName, String userInput, HashMap<String, String> fieldMap, int listingsPerField) {
         try {
             userInput = URIUtil.encodeQuery(userInput);
         } catch (URIException e) {
-            System.out.println(e.getMessage());
+            logger.error(e.getMessage());
         }
 
         JSONObject ret = new JSONObject();
-        JSONArray suggestions = new JSONArray();
+        SuggestionList suggestions = new SuggestionList();
 
-        String prefixField = solrService.getSolrSchemaFieldName(fieldSpecificEndpoint, true);
-        String fullField = solrService.getSolrSchemaFieldName(fieldSpecificEndpoint, false);
-        String response = getSolrSuggestion(coreName, userInput, prefixField, fullField);
+        for(Map.Entry<String, String> entry : fieldMap.entrySet()) {
+            String prefixField = entry.getKey();
+            String fullField = entry.getValue();
+            String response = getSolrSuggestion(coreName, userInput, prefixField, fullField);
 
-        try {
-            JSONObject jsonObject = JSONObject.fromObject(response);
-            if (jsonObject.has("grouped")) {
-                JSONObject userName = jsonObject.getJSONObject("grouped").getJSONObject(fullField);
-                if (userName.has("groups")){
-                    JSONArray groups = userName.getJSONArray("groups");
-                    if (groups.size() > 0) {
-                        for(int i = 0; i < groups.size(); i++) {
-                            JSONObject g = ((JSONObject) groups.get(i)).getJSONObject("doclist");
-                            String suggest = (String) ((JSONObject) g.getJSONArray("docs").get(0)).get(fullField);
-                            suggestions.add(suggest + " (" + Integer.toString(g.getInt("numFound")) + ")");
-                        }
-                    }
-                }
+            try {
+                JSONObject jsonObject = JSONObject.fromObject(response);
+                suggestions.concat(getTopNListings(jsonObject, fullField, listingsPerField));
+            } catch (JSONException e) {
+                logger.error(e.getMessage());
             }
-        } catch (JSONException e) {
-            System.out.println(e.getMessage());
         }
 
-        ret.put("suggestions", suggestions);
+        ret.put("suggestions", JsonParsingUtils.convertStringListToJSONArray(suggestions.getSortedSuggestions()));
         return ret;
     }
 
-    public void writeFacets(String coreName, FacetFieldEntryList facetFields, StringWriter writer) {
+    private FacetFieldEntryList checkFacetFieldEntryList(FacetFieldEntryList facetFields, String coreName) {
         if (facetFields == null || facetFields.size() == 0) {
-            facetFields = getFacetFieldsFromLuke(coreName, true);
+            facetFields = SolrUtils.getLukeFacetFieldEntryList(coreName);
         }
+        return facetFields;
+    }
+
+    public void writeFacets(String coreName, FacetFieldEntryList facetFields, StringWriter writer) {
+        facetFields = checkFacetFieldEntryList(facetFields, coreName);
 
         try {
             QueryResponse rsp = execQuery(SOLR_DEFAULT_QUERY, coreName, SOLR_DEFAULT_SORT_FIELD, SOLR_DEFAULT_SORT_ORDER,
@@ -194,10 +210,7 @@ public class SearchServiceImpl implements SearchService {
 
     public void solrSearch(String queryString, String coreName, String sortType, String sortOrder,
                            int start, int rows, String fq, FacetFieldEntryList facetFields, StringWriter writer) {
-
-        if (facetFields == null || facetFields.size() == 0) {
-            getFacetFieldsFromLuke(coreName, true);
-        }
+        facetFields = checkFacetFieldEntryList(facetFields, coreName);
 
         try {
             QueryResponse rsp = execQuery(queryString, coreName, sortType, getSortOrder(sortOrder), start, rows, fq, facetFields);
@@ -227,7 +240,7 @@ public class SearchServiceImpl implements SearchService {
     public QueryResponse execQuery(String queryString, String coreName, String sortField, SolrQuery.ORDER sortOrder,
                                     int start, int rows, String fq, FacetFieldEntryList facetFields) {
 
-        String url = solrService.getSolrServerURI(coreName);
+        String url = SolrUtils.getSolrServerURI(coreName);
 
         try {
             SolrServer server = new CommonsHttpSolrServer(url);

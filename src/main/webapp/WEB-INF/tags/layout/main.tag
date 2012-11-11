@@ -78,7 +78,7 @@
                 hidedelay:  750,
                 lazyload: false });
 
-            Connect.asyncRequest('GET', '<c:url value="/core/corenames" />' , {
+            Connect.asyncRequest('GET', '<c:url value="/solr/corenames" />' , {
                 success : function(o) {
                     var names = Json.parse(o.responseText).names;
                     for(var i = 0; i < names.length; i++) {

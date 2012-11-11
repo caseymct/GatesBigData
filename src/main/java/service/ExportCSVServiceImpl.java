@@ -1,5 +1,6 @@
 package service;
 
+import LucidWorksApp.utils.SolrUtils;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
@@ -69,16 +70,18 @@ public class ExportCSVServiceImpl extends ExportService {
     }
 
 
-    public void exportJSONDocs(SolrDocumentList docs, String coreName, final Writer writer, String delimeter, String newLine) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+    public void exportJSONDocs(SolrDocumentList docs, List<String> fields, String coreName, final Writer writer, String delimeter, String newLine) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         logger.debug("Exporting JSON docs to CSV");
 
         writer.append("Documents with Content-type : application/json").append(newLine);
 
         // build the csv header row
-        List<String> fields = coreService.getFieldNamesFromLuke(coreName);
+        if (fields.size() == 0) {
+            fields = SolrUtils.getLukeFieldNames(coreName);
+        }
         buildCSVHeaderRow(fields, newLine, delimeter, writer);
 
-        HashMap<String, List<String>> segToFileMap = solrService.getSegmentToFilesMap(docs);
+        HashMap<String, List<String>> segToFileMap = SolrUtils.getSegmentToFilesMap(docs);
 
         for (Map.Entry<String, List<String>> entry : segToFileMap.entrySet()) {
             for (Content content : hdfsService.getFileContents(coreName, entry.getKey(), entry.getValue())) {
@@ -110,11 +113,11 @@ public class ExportCSVServiceImpl extends ExportService {
         writer.flush();
     }
 
-    public void export(SolrDocumentList docs, String coreName, final Writer writer, String delimeter, String newLine) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+    public void export(SolrDocumentList docs, List<String> fields, String coreName, final Writer writer, String delimeter, String newLine) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         logger.debug("Exporting to CSV");
 
         // build the csv header row
-        List<String> fields = FIELDS_TO_EXPORT;
+        fields = FIELDS_TO_EXPORT;
         buildCSVHeaderRow(fields, newLine, delimeter, writer);
 
         for(SolrDocument doc: docs) {

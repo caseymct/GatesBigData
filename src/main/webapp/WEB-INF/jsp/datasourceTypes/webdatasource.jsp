@@ -114,7 +114,6 @@
                             var el = Dom.get(key);
 
                             if (el != null) {
-                                console.log(el.type);
                                 if (el.type == "checkbox") {
                                     el.checked = result[key];
                                 } else if (el.type == "text") {

@@ -1,12 +1,8 @@
 package LucidWorksApp.api;
 
-import LucidWorksApp.utils.HttpClientUtils;
-import LucidWorksApp.utils.Utils;
-import model.FacetFieldEntry;
+import LucidWorksApp.utils.SolrUtils;
 import model.FacetFieldEntryList;
 import net.sf.json.JSONObject;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -21,9 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.TreeMap;
+import java.util.*;
 
 import static java.util.Collections.singletonList;
 import static org.springframework.http.HttpStatus.OK;
@@ -33,7 +27,8 @@ import static org.springframework.http.HttpStatus.OK;
 @RequestMapping("/search")
 public class SearchAPIController extends APIController {
 
-    public static final String SESSION_HDFSDIR_TOKEN = "currentHDFSDir";
+    public static final String SESSION_HDFSDIR_TOKEN               = "currentHDFSDir";
+    public static final String SESSION_PREFIXTOFULLFIELD_MAP_TOKEN = "prefixToFullFieldMap";
 
     private SearchService searchService;
     private HDFSService hdfsService;
@@ -52,7 +47,7 @@ public class SearchAPIController extends APIController {
             hdfsFacetFields = hdfsService.getHDFSFacetFields(coreName);
 
             FacetFieldEntryList newFacetFields = new FacetFieldEntryList();
-            List<String> lukeFacetFieldNames = searchService.getFacetFieldsFromLuke(coreName, true).getNames();
+            List<String> lukeFacetFieldNames = SolrUtils.getLukeFacetFieldNames(coreName);
             for(String name: hdfsFacetFields.getNames()) {
                 if (lukeFacetFieldNames.contains(name)) {
                     newFacetFields.add(hdfsFacetFields.get(name));
@@ -62,6 +57,18 @@ public class SearchAPIController extends APIController {
             return newFacetFields;
         }
         return hdfsFacetFields;
+    }
+
+
+    private HashMap<String, String> getPrefixToFullFieldMap(String coreName, HttpSession session) {
+        String fullToken = coreName + "_" + SESSION_PREFIXTOFULLFIELD_MAP_TOKEN;
+        HashMap<String, String> map = (HashMap<String, String>) session.getAttribute(fullToken);
+
+        if (map == null || map.size() == 0) {
+            map = SolrUtils.getPrefixFieldMap(coreName);
+            session.setAttribute(fullToken, map);
+        }
+        return map;
     }
 
     //http://localhost:8080/LucidWorksApp/search/solrquery?query=*:*&core=collection1t&sort=score&order=desc&start=0
@@ -75,16 +82,10 @@ public class SearchAPIController extends APIController {
                                                 @RequestParam(value = PARAM_FQ, required = false) String fq,
                                                 HttpServletRequest request) throws IOException {
 
-        // Save in the session for exporting
-        HttpSession session = request.getSession();
-        HashMap<String, String> searchParams = new HashMap<String, String>();
-        searchParams.put(SESSION_SEARCH_QUERY, query);
-        searchParams.put(SESSION_SEARCH_FQ, fq);
-        searchParams.put(SESSION_SEARCH_CORE_NAME, coreName);
-        session.setAttribute(SESSION_SEARCH_PARAMS, searchParams);
-
-        FacetFieldEntryList facetFields = getFacetFields(coreName, session);
         StringWriter writer = new StringWriter();
+        HttpSession session = request.getSession();
+        FacetFieldEntryList facetFields = getFacetFields(coreName, session);
+
         searchService.solrSearch(query, coreName, sortType, sortOrder, (start == null) ? 0 : start,
                 (rows == null) ? 10 : rows, fq, facetFields, writer);
 
@@ -109,12 +110,34 @@ public class SearchAPIController extends APIController {
     @RequestMapping(value="/suggest", method = RequestMethod.GET)
     public ResponseEntity<String> suggest(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
                                           @RequestParam(value = PARAM_USER_INPUT, required = true) String userInput,
-                                          @RequestParam(value = PARAM_FIELD_SUGGEST_ENDPOINT, required = true) String field) throws IOException {
+                                          @RequestParam(value = PARAM_PREFIX_FIELD, required = false) String prefixField,
+                                          @RequestParam(value = PARAM_NUM_SUGGESTIONS_PER_FIELD, required = true) int n,
+                                          HttpServletRequest request) throws IOException {
 
-        JSONObject suggestions = searchService.suggest(coreName, userInput, field);
+        HashMap<String, String> fieldMap = getPrefixToFullFieldMap(coreName, request.getSession());
+        HashMap<String, String> singleMap = new HashMap<String, String>();
+        if (prefixField != null) {
+            singleMap.put(prefixField, fieldMap.get(prefixField));
+        }
+
+        JSONObject suggest = searchService.suggest(coreName, userInput, (prefixField != null) ? singleMap : fieldMap, n);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>(suggestions.toString(), httpHeaders, OK);
+        return new ResponseEntity<String>(suggest.toString(), httpHeaders, OK);
+    }
+
+    @RequestMapping(value="/suggest/all", method = RequestMethod.GET)
+    public ResponseEntity<String> suggest(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
+                                          @RequestParam(value = PARAM_USER_INPUT, required = true) String userInput,
+                                          @RequestParam(value = PARAM_NUM_SUGGESTIONS_PER_FIELD, required = true) int n,
+                                          HttpServletRequest request) throws IOException {
+
+        HashMap<String, String> fieldMap = getPrefixToFullFieldMap(coreName, request.getSession());
+        JSONObject suggest = searchService.suggest(coreName, userInput, fieldMap, n);
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        return new ResponseEntity<String>(suggest.toString(), httpHeaders, OK);
     }
 }

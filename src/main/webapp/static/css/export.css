@@ -1,0 +1,62 @@
+.buttons {
+    padding-bottom: 5px;
+}
+
+.overlay_div {
+    background: white;
+    border: 1px solid black;
+    z-index: 10;
+    padding: 10px;
+    margin: 5px;
+}
+
+.overlay_el {
+    width: 250px;
+    float: left;
+    padding: 2px;
+}
+
+.overlay_inner_el {
+    width: 600px;
+}
+
+.overlay_a {
+    float: left;
+    margin-right: 3px;
+}
+
+.info_label {
+    float: left;
+    width: 12%;
+    font-size: 12px;
+}
+
+.info_value {
+    float: left;
+    width: 85%;
+    font-size: 12px;
+}
+
+#search_info {
+    border: 1px dotted gainsboro;
+    border-radius: 2px;
+    padding: 10px;
+}
+
+#export_file_div {
+    padding: 10px 0px 10px 0px;
+    font-weight: bold;
+}
+
+#xport_file_name {
+    padding: 2px;
+}
+
+#export_options {
+    width: 900px;
+}
+
+#content {
+    height: 1000px;
+}
+

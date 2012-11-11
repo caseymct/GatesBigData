@@ -1,5 +1,6 @@
 package service;
 
+import LucidWorksApp.utils.SolrUtils;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.nutch.protocol.Content;
@@ -73,13 +74,13 @@ public class ExportJSONServiceImpl extends ExportService {
         }
     }
 
-    public void exportJSONDocs(SolrDocumentList docs, String coreName, final Writer writer, String delimeter, String newLine) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
+    public void exportJSONDocs(SolrDocumentList docs, List<String> fields, String coreName, final Writer writer, String delimeter, String newLine) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
 
         g.writeArrayFieldStart("JSON document results");
         g.flush();
         writer.append(newLine);
 
-        HashMap<String, List<String>> segToFileMap = solrService.getSegmentToFilesMap(docs);
+        HashMap<String, List<String>> segToFileMap = SolrUtils.getSegmentToFilesMap(docs);
 
         for (Map.Entry<String, List<String>> entry : segToFileMap.entrySet()) {
             for (Content content : hdfsService.getFileContents(coreName, entry.getKey(), entry.getValue())) {
@@ -96,10 +97,10 @@ public class ExportJSONServiceImpl extends ExportService {
         writer.flush();
     }
 
-    public void export(SolrDocumentList docs, String coreName, final Writer writer, String delimeter, String newLine) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
+    public void export(SolrDocumentList docs, List<String> fields, String coreName, final Writer writer, String delimeter, String newLine) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
         g.writeArrayFieldStart("Non-JSON document results");
 
-        List<String> fields = FIELDS_TO_EXPORT;
+        //fields = FIELDS_TO_EXPORT;
 
         for (SolrDocument doc : docs) {
             g.writeStartObject();

@@ -3,9 +3,15 @@
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
 <layout:main>
-    <div style="font-weight:bold; margin-bottom: 5px">File:
-        <span style="font-weight:normal" id="viewerheader"></span>
+    <div style="font-weight:bold; margin-bottom: 5px">
+        <a id="save" style="float:left" class="button save"></a>
+        <div style="float:left; padding-top: 5px">
+            File:<span style="font-weight:normal" id="viewerheader"></span><br>
+        </div>
+        <div class="clearboth"></div>
     </div>
+
+    <div class="clearboth"></div>
 
     <div id="documentviewer"></div>
     <script src="<c:url value="/static/js/prizm/swfobject.2.2.js"/>" type="text/javascript"></script>
@@ -20,6 +26,11 @@
             var remoteFile = YAHOO.deconcept.util.getRequestParameter("file");
             var coreName   = YAHOO.deconcept.util.getRequestParameter("core");
             var urlParams  = "?segment=" + remoteSeg + "&core=" + coreName + "&file=" + remoteFile;
+            var saveDoc = '<c:url value="/document/save?"/>' + "file=" + remoteFile + "&segment=" + remoteSeg + "&core=" + coreName;
+
+            Event.addListener("save", "click", function(e) {
+                window.open(saveDoc);
+            });
 
             Dom.get("viewerheader").innerHTML = remoteFile;
 
@@ -44,7 +55,8 @@
 
                         var flashvars = {
                             documentname: result.replace(/\\/g, '/'),
-                            conversionLink: '<c:url value="/document/convert"/>'
+                            conversionLink: '<c:url value="/document/convert"/>',
+                            saveDocument: 'no'
                         };
 
                         swfobject.embedSWF('<c:url value="/static/prizm/Viewer.swf"/>' + '?time=' + new Date(), 'documentviewer',

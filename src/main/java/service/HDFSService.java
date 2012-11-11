@@ -2,17 +2,17 @@ package service;
 
 
 import model.FacetFieldEntryList;
-import net.sf.json.JSONObject;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
+import org.apache.nutch.parse.ParseData;
 import org.apache.nutch.protocol.Content;
-import org.codehaus.jackson.JsonGenerator;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.List;
-import java.util.TreeMap;
 
 public interface HDFSService {
 
@@ -21,6 +21,8 @@ public interface HDFSService {
     public Path getHDFSCoreDirectory(boolean includeURI, String coreName);
 
     public Path getHDFSCrawlDBCurrentDataFile(boolean includeURI, String coreName);
+
+    public Path getHDFSCrawlDBCurrentIndexFile(boolean includeURI, String coreName);
 
     public Path getHDFSCrawlDirectory(boolean includeURI, String coreName);
 
@@ -36,7 +38,15 @@ public interface HDFSService {
 
     public Path getHDFSContentDataFile(boolean includeURI, String coreName, String segment);
 
+    public Path getHDFSParseDataFile(boolean includeURI, String coreName, String segment);
+
     public Path getHDFSFacetFieldsCustomFile(String coreName);
+
+    public Configuration getHDFSConfiguration();
+
+    public Configuration getNutchConfiguration();
+
+    public FileSystem getHDFSFileSystem();
 
     public FacetFieldEntryList getHDFSFacetFields(String hdfsDir);
 
@@ -47,6 +57,8 @@ public interface HDFSService {
     public boolean addFile(String remoteFilePath, String localFilePath);
 
     public int addAllFilesInLocalDirectory(String remoteFileDirectory, String localFileDirectory);
+
+    public long getFetched(String coreName);
 
     public boolean removeFile(String remoteFilePath);
 
@@ -60,7 +72,7 @@ public interface HDFSService {
 
     public Content getContent(String coreName, String segment, String filePath, StringWriter writer) throws IOException;
 
-    public HashMap<Text, Content> getAllContents(String coreName) throws IOException;
+    public <T> T getContents(String coreName, Path dataFile, Class<T> clazz, Class<T> returnClass) throws IOException;
 
     public void generateThumbnails(String coreName) throws IOException;
 
@@ -73,4 +85,6 @@ public interface HDFSService {
     public void listFilesInCrawlDirectory(String coreName, StringWriter writer);
 
     public void printFileContents(String coreName, String hdfsDate, String fileName, StringWriter writer, boolean preview);
+
+    public String getContentTypeFromParseData(ParseData parseData);
 }

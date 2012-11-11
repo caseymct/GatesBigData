@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,6 +20,8 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
 
     private static final String PRISM_CONVERT_URL = "http://localhost:18680/convert2swf";
     private static final String LOCAL_TMP_DIRECTORY = "C:/tmp/";
+    //private static final String PRISM_CONVERT_URL = "http://denlx006.dn.gates.com:18880/convert2swf";
+    //private static final String LOCAL_TMP_DIRECTORY = "/tmp/prizm/";
     private static final String THUMBNAIL_SIZE = "5000x5000";
     private static final String SWF_EXTENSION = "swf";
     private static final String IMG_EXTENSION = "png";
@@ -80,15 +81,15 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
         params.put("target", LOCAL_TMP_DIRECTORY + swfFileName);
 
         HttpClientUtils.httpGetRequest(PRISM_CONVERT_URL + Utils.constructUrlParams(params));
-        System.out.println(PRISM_CONVERT_URL + Utils.constructUrlParams(params));
-       // cleanupTempDir(localFile);
+        //System.out.println(PRISM_CONVERT_URL + Utils.constructUrlParams(params));
+        cleanupTempDir(localFile);
 
         File localSwfFile = getSwfFile(localFile);
         return localSwfFile.exists() ? localSwfFile.getPath() : Utils.getFileErrorString();
     }
 
     public String getTempDocNameFromHDFSId(String hdfsPath) {
-        hdfsPath = decode(hdfsPath);
+        hdfsPath = Utils.decodeUrl(hdfsPath);
         return hdfsPath.replaceAll("^.*:\\/\\/", "").replaceAll("/", "_").replaceAll(" |\\$|~", "");
     }
 
@@ -96,17 +97,8 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
         return Utils.changeFileExtension(getTempDocNameFromHDFSId(hdfsPath), IMG_EXTENSION, false);
     }
 
-    public String decode(String url) {
-        try {
-            url = URLDecoder.decode(url, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            System.out.println(e.getMessage());
-        }
-        return url;
-    }
-
     public String convertContentToThumbnail(Content content, Text url) {
-        String uri = decode(url.toString());
+        String uri = Utils.decodeUrl(url.toString());
         if (uri.endsWith("/")) {
             return "";
         }

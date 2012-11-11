@@ -9,14 +9,13 @@ import org.codehaus.jackson.JsonGenerator;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.List;
-import java.util.TreeMap;
+import java.util.*;
 
 public interface SearchService {
 
-    public FacetFieldEntryList getFacetFieldsFromLuke(String coreName, boolean facetFields);
+    public SolrQuery.ORDER getSortOrder(String sortOrder);
 
-    public JSONObject suggest(String coreName, String userInput, String fieldSpecificEndpoint);
+    public JSONObject suggest(String coreName, String userInput, HashMap<String, String> fieldMap, int entriesPerField);
 
     public QueryResponse execQuery(String queryString, String coreName, String sortType, SolrQuery.ORDER sortOrder,
                                    int start, int rows, String fq, FacetFieldEntryList facetFields) throws IOException;

@@ -21,5 +21,6 @@
     <mvc:view-controller path="/search/test_data" view-name="search/test_data" />
     <mvc:view-controller path="/core/document/view" view-name="documentView" />
     <mvc:view-controller path="/core/document/viewtest" view-name="documentViewerTest" />
+    <mvc:view-controller path="/core/document/export" view-name="export/NA_export" />
 
 </beans>

@@ -25,19 +25,19 @@ public abstract class ExportService {
         exportHeaderData(numDocs, query, fq, coreName, writer, DEFAULT_DELIMETER, DEFAULT_NEWLINE);
     }
 
-    public void export(SolrDocumentList docs, String coreName, final Writer writer) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
-        export(docs, coreName, writer, DEFAULT_DELIMETER, DEFAULT_NEWLINE);
+    public void export(SolrDocumentList docs, List<String> fields, String coreName, final Writer writer) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
+        export(docs, fields, coreName, writer, DEFAULT_DELIMETER, DEFAULT_NEWLINE);
     }
 
-    public void exportJSONDocs(SolrDocumentList docs, String coreName, final Writer writer) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
-        exportJSONDocs(docs, coreName, writer, DEFAULT_DELIMETER, DEFAULT_NEWLINE);
+    public void exportJSONDocs(SolrDocumentList docs, List<String> fields, String coreName, final Writer writer) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
+        exportJSONDocs(docs, fields, coreName, writer, DEFAULT_DELIMETER, DEFAULT_NEWLINE);
     }
 
     public abstract void exportHeaderData(long numDocs, String query, String fq, String coreName, final Writer writer, String delimiter, String newLine);
 
-    public abstract void exportJSONDocs(SolrDocumentList docs, String coreName, final Writer writer, String delimeter, String newLine) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException;
+    public abstract void exportJSONDocs(SolrDocumentList docs, List<String> fields, String coreName, final Writer writer, String delimeter, String newLine) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException;
 
-    public abstract void export(SolrDocumentList docs, String coreName, final Writer writer, String delimeter, String newLine) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException;
+    public abstract void export(SolrDocumentList docs, List<String> fields, String coreName, final Writer writer, String delimeter, String newLine) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException;
 
     public abstract void writeEmptyResultSet(final Writer writer);
 

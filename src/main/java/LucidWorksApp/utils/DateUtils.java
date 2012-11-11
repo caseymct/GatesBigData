@@ -17,6 +17,7 @@ public class DateUtils {
 
     private static TimeZone UTC = TimeZone.getTimeZone("UTC");
     private static DateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US);
+    private static SimpleDateFormat solrDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'Z'");
     private static DateMathParser p = new DateMathParser(UTC, Locale.US);
     private static Pattern dateStringNoMilliseconds = Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z");
     private static Pattern solrDateString = Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z");
@@ -57,6 +58,10 @@ public class DateUtils {
             date = date.replaceAll("(\\d{2})Z", "$1\\.000Z");
         }
         return date;
+    }
+
+    public static String formatToSolr(Date date) {
+        return solrDateFormat.format(date);
     }
 
     public static Date solrDateMath(String solrDate, String gap) {

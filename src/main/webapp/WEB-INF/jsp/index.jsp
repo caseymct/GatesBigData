@@ -53,7 +53,7 @@
         var treeView = new TreeView("solr_cores");
 
         // edit core page? http://localhost:8080/LucidWorksApp/core/empty?core=collection1
-        Connect.asyncRequest('GET', '<c:url value="/core/info/all" />' , {
+        Connect.asyncRequest('GET', '<c:url value="/solr/info/all" />' , {
             success : function(o) {
                 LWA.ui.buildTreeViewFromJson(Json.parse(o.responseText), treeView);
             },
@@ -77,7 +77,6 @@
                 },
                 failure: function (e) {
                     alert("Could not create new collection");
-                    console.log(e);
                 }
             }, YAHOO.lang.JSON.stringify(newcoreinfo));
         });

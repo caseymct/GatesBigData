@@ -1,7 +1,9 @@
 package LucidWorksApp.utils;
 
 import net.sf.json.JSONArray;
+import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
+import org.apache.commons.collections.map.ListOrderedMap;
 import org.apache.solr.common.util.NamedList;
 import org.codehaus.jackson.JsonGenerator;
 
@@ -11,12 +13,57 @@ import java.util.*;
 
 public class JsonParsingUtils {
 
+    public static List<String> convertJSONArrayToStringList(JSONArray jsonArray) {
+        List<String> s = new ArrayList<String>();
+
+        for(int i = 0; i < jsonArray.size(); i++) {
+            s.add(jsonArray.getString(i));
+        }
+        return s;
+    }
+
+    public static Object extractJSONProperty(JSONObject jsonObject, List<String> fields, Class expectedReturnClass,
+                                             Object defaultReturnValue) {
+        Object currObject = jsonObject;
+
+        for(int i = 0; i < fields.size(); i++) {
+            String field = fields.get(i);
+            if (currObject instanceof JSONObject && ((JSONObject) currObject).has(field)) {
+                currObject = ((JSONObject) currObject).get(field);
+            } else if (currObject instanceof JSONArray) {
+                int index = Utils.getInteger(field);
+                if (index >= 0 && index <= ((JSONArray) currObject).size()) {
+                    currObject = ((JSONArray) currObject).get(index);
+                }
+            } else if (i < fields.size()) {
+                return null;
+            }
+        }
+
+        try {
+            Class currObjClass = currObject.getClass();
+            return (currObjClass != null && currObjClass.equals(expectedReturnClass)) ? currObject : defaultReturnValue;
+        } catch (NullPointerException e) {
+            return defaultReturnValue;
+        }
+    }
+
+    public static JSONArray convertStringListToJSONArray(List<String> l) {
+        JSONArray ret = new JSONArray();
+        for(String s : l) {
+            ret.add(s);
+        }
+        return ret;
+    }
 
     public static Object getPropertyFromJsonString(String propertyName, String jsonString) {
-        JSONObject jsonObject = JSONObject.fromObject(jsonString);
-
-        if (jsonObject.has(propertyName)) {
-            return jsonObject.get(propertyName);
+        try {
+            JSONObject jsonObject = JSONObject.fromObject(jsonString);
+            if (jsonObject.has(propertyName)) {
+                return jsonObject.get(propertyName);
+            }
+        } catch (JSONException e) {
+            System.out.println(e.getMessage());
         }
 
         return null;

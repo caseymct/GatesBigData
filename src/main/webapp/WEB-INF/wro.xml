@@ -21,6 +21,8 @@
         <css>/static/css/buttons.css</css>
 
         <js>/static/js/yui/2.9/yahoo-dom-event/yahoo-dom-event.js</js>
+        <js>/static/js/yui/2.9/event/event-min.js</js>
+        <js>/static/js/yui/2.9/dom/dom-min.js</js>
         <js>/static/js/yui/2.9/container/container_core-min.js</js>
         <js>/static/js/yui/2.9/menu/menu-min.js</js>
         <js>/static/js/yui/2.9/element/element-min.js</js>

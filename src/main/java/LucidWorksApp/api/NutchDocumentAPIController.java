@@ -1,6 +1,7 @@
 package LucidWorksApp.api;
 
 import LucidWorksApp.utils.Utils;
+import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
 import org.apache.nutch.protocol.Content;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import service.DocumentConversionService;
 import service.HDFSService;
 
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 
@@ -46,6 +48,26 @@ public class NutchDocumentAPIController extends APIController {
     public NutchDocumentAPIController(HDFSService hdfsService, DocumentConversionService documentConversionService) {
         this.hdfsService = hdfsService;
         this.documentConversionService = documentConversionService;
+    }
+
+    @RequestMapping(value = "/save", method = RequestMethod.GET)
+    public HttpServletResponse saveFile(@RequestParam(value = PARAM_HDFSSEGMENT, required = true) String segment,
+                                        @RequestParam(value = PARAM_FILE_NAME, required = true) String key,
+                                        @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
+                                        HttpServletResponse response) throws IOException {
+
+        Content content = hdfsService.getFileContents(coreName, segment, key);
+        if (content != null) {
+            String fileName = new File(key).getName();
+            response.setContentType(content.getContentType());
+            response.setHeader("Content-Disposition", "attachment; fileName=" + fileName);
+
+            OutputStream outputStream = response.getOutputStream();
+            outputStream.write(content.getContent());
+            outputStream.close();
+        }
+
+        return response;
     }
 
     @RequestMapping(value = "/convert", method = RequestMethod.POST)

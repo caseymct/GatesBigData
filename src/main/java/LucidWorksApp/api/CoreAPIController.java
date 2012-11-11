@@ -1,12 +1,10 @@
 package LucidWorksApp.api;
 
-import LucidWorksApp.utils.CoreUtils;
 import LucidWorksApp.utils.DateUtils;
+import LucidWorksApp.utils.SolrUtils;
 import LucidWorksApp.utils.Utils;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
-import org.apache.solr.common.util.DateUtil;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -20,8 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import service.CoreService;
-import service.HDFSService;
-import service.SolrService;
+import service.SolrReindexService;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -37,18 +34,17 @@ import static org.springframework.http.HttpStatus.OK;
 @RequestMapping("/core")
 public class CoreAPIController extends APIController {
 
-    private SolrService solrService;
     private CoreService coreService;
+    private SolrReindexService solrReindexService;
 
     @Autowired
-    public CoreAPIController(SolrService solrService, CoreService coreService) {
-        this.solrService = solrService;
+    public CoreAPIController(CoreService coreService, SolrReindexService solrReindexService) {
         this.coreService = coreService;
+        this.solrReindexService = solrReindexService;
     }
 
-    //http://localhost:8080/LucidWorksApp/core/corenames
-    @RequestMapping(value="/corenames", method = RequestMethod.GET)
-    public ResponseEntity<String> getCollectionNames() throws IOException {
+    @RequestMapping(value="/fieldnames", method = RequestMethod.GET)
+    public ResponseEntity<String> getFieldNames(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
 
         StringWriter writer = new StringWriter();
         JsonFactory f = new JsonFactory();
@@ -57,7 +53,7 @@ public class CoreAPIController extends APIController {
         g.writeStartObject();
         g.writeArrayFieldStart("names");
 
-        for(String name : solrService.getCoreNames()) {
+        for(String name : SolrUtils.getLukeFieldNames(coreName)) {
             g.writeString(name);
         }
 
@@ -76,14 +72,6 @@ public class CoreAPIController extends APIController {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(coreService.getCoreData(coreName).toString(), httpHeaders, OK);
-    }
-
-    @RequestMapping(value="/info/all", method = RequestMethod.GET)
-    public ResponseEntity<String> coreInfoAll() throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>(solrService.getAllCoreData().toString(), httpHeaders, OK);
     }
 
     @RequestMapping(value="/empty", method = RequestMethod.GET)
@@ -115,7 +103,7 @@ public class CoreAPIController extends APIController {
         if (!jsonDocument.equals("")) {
             try {
                 JSONObject jsonObject = JSONObject.fromObject(jsonDocument);
-                added = coreService.addDocumentToSolr(jsonObject, hdfsKey, coreName);
+                added = coreService.createAndAddDocumentToSolr(jsonObject, hdfsKey, coreName);
             } catch (JSONException e) {
                 System.err.println(e.getMessage());
             }
@@ -132,7 +120,6 @@ public class CoreAPIController extends APIController {
         ObjectMapper mapper = new ObjectMapper();
         Map<String, Object> map = mapper.readValue(body, TypeFactory.mapType(HashMap.class, String.class, Object.class));
 
-
         //response = solrService.addJsonDocumentToSolr(jsonDocument, "")
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
@@ -148,7 +135,7 @@ public class CoreAPIController extends APIController {
         HashMap<String, Object> properties = new HashMap<String, Object>();
         properties.put("name", coreName);
 
-        String result = CoreUtils.createCore(properties);
+        String result = "";
         //http://localhost:8983/solr/admin/cores?action=CREATE&name=coreX&instanceDir=path_to_instance_directory&config=config_file_name.xml&schema=schem_file_name.xml&dataDir=data
 
         HttpHeaders httpHeaders = new HttpHeaders();
@@ -158,31 +145,16 @@ public class CoreAPIController extends APIController {
 
 
 
-    @RequestMapping(value="/repopulate", method = RequestMethod.GET)
-    public ResponseEntity<String> repopulateCoreFromHDFS(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
-                                                         @RequestParam(value = PARAM_HDFS, required = true) String hdfsDir) {
+    @RequestMapping(value="/reindex", method = RequestMethod.GET)
+    public ResponseEntity<String> repopulateCoreFromHDFS(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) {
         JSONObject response = new JSONObject();
 
         boolean deleted = coreService.deleteIndex(coreName);
         if (!deleted) {
             response.put("Error", "Could not delete index for core " + coreName);
-
         } else {
-            /*
-            for(String hdfsFilePath : hdfsService.listFiles(hdfsDir)) {
-                boolean added = false;
-
-                if (hdfsFilePath.endsWith(".json")) {
-                    JSONObject contents = hdfsService.getJSONFileContents(hdfsFilePath);
-                    added = solrService.addJsonDocumentToSolr(contents, coreName, hdfsFilePath);
-                } else {
-                    String contents = hdfsService.getFileContents(hdfsFilePath);
-                    added = solrService.addDocumentToSolr(contents, coreName, hdfsFilePath);
-                }
-
-                response.put("Added " + hdfsFilePath, added);
-            }
-            */
+            solrReindexService.reindexSolrCoreFromHDFS(coreName);
+            response.put("Success", "Successfully reindexed " + coreName);
         }
 
         HttpHeaders httpHeaders = new HttpHeaders();

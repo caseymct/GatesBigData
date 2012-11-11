@@ -20,18 +20,25 @@ LWA.util = {};
         el.parentNode.removeChild(el);
     };
 
-    LWA.ui.createDomElement = function (elType, parentNode, attributes) {
-        var el = document.createElement(elType);
-        parentNode.appendChild(el);
+    LWA.ui.createDomElement = function(type, parentNode, attributes, styles) {
+        var i, el = document.createElement(type);
 
-
-        for(var i = 0; i < attributes.length; i++) {
-            if (attributes[i].key.match(/text/)) {
-                el.innerHTML = attributes[i].value;
-            } else {
-                el.setAttribute(attributes[i].key, attributes[i].value);
+        if (attributes != undefined && attributes != null) {
+            for(i = 0; i < attributes.length; i++) {
+                el[attributes[i].key] = attributes[i].value;
             }
         }
+        if (styles != undefined && styles != null) {
+            for(i = 0; i < styles.length; i++) {
+                if (styles[i].key == "class") {
+                    YAHOO.util.Dom.addClass(el, styles[i].value);
+                } else {
+                    YAHOO.util.Dom.setStyle(el, styles[i].key, styles[i].value);
+                }
+            }
+        }
+
+        parentNode.appendChild(el);
         return el;
     };
 
@@ -71,16 +78,19 @@ LWA.util = {};
         var containerDiv, childDiv, resultsTable = Dom.get(tableName);
 
         for(var i = 0; i < keys.length; i++) {
-            containerDiv = LWA.ui.createDomElement("div", resultsTable, [ { key : "class", value : "info_details_results_div" }]);
-            childDiv = LWA.ui.createDomElement("div", containerDiv, [ { key : "class", value : "info_details_child_div" },
-                { key: "text", value: "<b>" + keys[i] + "</b>: " + result[keys[i]] }]);
+            containerDiv = LWA.ui.createDomElement("div", resultsTable,
+                [ { key : "class", value : "info_details_results_div" }], []);
+            childDiv = LWA.ui.createDomElement("div", containerDiv,
+                [ { key : "class", value : "info_details_child_div" },
+                  { key: "text", value: "<b>" + keys[i] + "</b>: " + result[keys[i]] }], []);
 
             if (i < keys.length) {
-                childDiv = LWA.ui.createDomElement("div", containerDiv, [ { key : "class", value : "info_details_child_div" },
-                    { key: "text", value: "<b>" + keys[++i] + "</b>: " + result[keys[i]] }]);
+                childDiv = LWA.ui.createDomElement("div", containerDiv,
+                    [ { key : "class", value : "info_details_child_div" },
+                      { key: "text", value: "<b>" + keys[++i] + "</b>: " + result[keys[i]] }], []);
             }
 
-            LWA.ui.createDomElement("div", containerDiv, [ { key: "style", value : "clear:both" } ]);
+            LWA.ui.createDomElement("div", containerDiv, [], [{ key: "clear", value: "both" } ]);
         }
     };
 

@@ -4,11 +4,6 @@
 
 <layout:main>
     <link rel="stylesheet" type="text/css" href="<c:url value="/static/css/search.css"/>" />
-    <!--<link rel="stylesheet" type="text/css" href="<c:url value="/static/css/jsdatepick/jsDatePick_ltr.min.css"/>" />
-
-    <script type="text/javascript" src="<c:url value="/static/js/jsdatepick/jsDatePick.min.1.3.js"/>"></script>-->
-
-
     <h1 id="search_header">Search Core</h1>
 
     <form id = "search_form">
@@ -63,11 +58,12 @@
         <div class="buttons" style="padding-bottom: 5px">
             <a href="#" class="button small" id="submit">Search</a>
             <a href="#" class="button small" id="reset">Reset query fields</a>
-            <a href="#" class="button small" id="export">Export results</a>
+            <!--<a href="#" class="button small" id="export">Export results</a>-->
         </div>
         <div class = "row"></div>
     </form>
 
+    <!--
     <div id="exportDialog" class="yui-pe-content">
         <div class="hd">Export File</div>
         <div class="bd">
@@ -75,7 +71,7 @@
             <input type="text" id="export_file_name" value="test" style="width: 100%"/>
         </div>
     </div>
-
+    -->
     <div>
         <div id="search_result_container" style="width: 58%">
             <div id = "show_query"></div>
@@ -135,7 +131,7 @@
         SEARCH.ui.initSortOrderButtonGroup("sort_ascdesc_buttongroup");
         SEARCH.ui.initSelectData(columnDefs);
         SEARCH.ui.initSortBySelect("sort_date_label", 0);
-        SEARCH.ui.initExportUrl('<c:url value="/export" />');
+        SEARCH.ui.initExportUrl('<c:url value="/core/document/export" />');
         SEARCH.ui.adjustContentContainerHeight();
 
         Connect.asyncRequest('GET', '<c:url value="/search/solrfacets" />' + "?core=" + SEARCH.ui.coreName, {
@@ -179,8 +175,8 @@
 
             var fq = SEARCH.util.getFilterQueryString();
             SEARCH.ui.updateSolrQueryDiv("show_query", fq);
-
-            Connect.asyncRequest('GET', '<c:url value="/search/solrquery" />' + SEARCH.util.constructSearchUrlParams(fq, newState.records[0]), {
+            SEARCH.ui.urlSearchParams = SEARCH.util.constructUrlSearchParams(fq, newState.reocrds[0]);
+            Connect.asyncRequest('GET', '<c:url value="/search/solrquery" />' + SEARCH.ui.urlSearchParams, {
                 success: function(o) {
                     LWA.ui.hideWait();
                     buildSearchResultHtml(Json.parse(o.responseText));
@@ -194,18 +190,21 @@
         var search = function() {
             LWA.ui.showWait();
             var fq = SEARCH.util.getFilterQueryString();
+            SEARCH.ui.urlSearchParams = SEARCH.util.constructUrlSearchParams(fq, 0);
             SEARCH.ui.updateSolrQueryDiv("show_query", fq);
 
-            Connect.asyncRequest('GET', '<c:url value="/search/solrquery" />' + SEARCH.util.constructSearchUrlParams(fq, 0), {
+            Connect.asyncRequest('GET', '<c:url value="/search/solrquery" />' + SEARCH.ui.urlSearchParams, {
                 success : function(o) {
                     LWA.ui.hideWait();
 
                     var result = Json.parse(o.responseText);
-                    var numFound = result.response.numFound, facets = result.response.facets;
+                    SEARCH.ui.numFound = result.response.numFound;
+                    var facets = result.response.facets;
 
-                    SEARCH.ui.updatePaginatorAfterSearch(numFound);
+                    SEARCH.ui.updatePaginatorAfterSearch(SEARCH.ui.numFound);
 
-                    Dom.get("num_found").innerHTML = "Found " + numFound + " document" + ((numFound > 1) ? "s" : "");
+                    Dom.get("num_found").innerHTML = "Found " + SEARCH.ui.numFound + " document"
+                            + ((SEARCH.ui.numFound > 1) ? "s" : "");
                     SEARCH.ui.changeShowOverlayButtonVisibility(true);
 
                     buildSearchResultHtml(result);

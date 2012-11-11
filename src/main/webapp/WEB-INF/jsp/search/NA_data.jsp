@@ -179,7 +179,7 @@
         SEARCH.ui.initSortOrderButtonGroup("sort_ascdesc_buttongroup");
         SEARCH.ui.initSelectData(columnDefs);
         SEARCH.ui.initSortBySelect("sort_date_label", 0);
-        SEARCH.ui.initExportUrl('<c:url value="/export" />');
+        SEARCH.ui.initExportUrl('<c:url value="/core/document/export" />');
         SEARCH.ui.initDatePickers("date_begin", "date_end", "date_constraint_text", "InvoiceDate");
         SEARCH.ui.initDateRangeText('<c:url value="/core/field/daterange" />', "date_constraint_range");
         SEARCH.ui.adjustContentContainerHeight();
@@ -210,11 +210,11 @@
 
         var acRequestName = ["account", "companysite", "supplier", "costcenter", "user"];
         var itemSelectHandler = function(s, args) {
-            var inputEl = Dom.get(args[0].getInputEl()), sel = args[2][0];
-            inputEl.value = sel.substring(0, sel.lastIndexOf("(") - 1);
-            if (inputEl.id.match(/user|supplier/) != null) {
-                search();
-            }
+            var inputEl = Dom.get(args[0].getInputEl());
+            var sel = args[2][0].match("<b>(.*)</b> <i>(.*)</i>.*");
+            inputEl.value = sel[2] + ":\"" + sel[1] + "\"";
+            console.log(inputEl.value);
+            search();
         };
 
         for(var i = 0; i < acRequestName.length; i++) {
@@ -222,7 +222,7 @@
             var ac = new AutoComplete(inputElNames[i], acContainer, ds);
             ac.generateRequest = (function(n) {
                 return function() {
-                    return '?core=' + SEARCH.ui.coreName + '&f=' + acRequestName[n] +
+                    return '?n=5&core=' + SEARCH.ui.coreName +
                             '&userinput=' + SEARCH.util.encodeForRequest(this.getInputEl().value);
                 };
             })(i);
@@ -248,7 +248,8 @@
 
             dataTable.subscribe("cellClickEvent", function (e) {
                 Event.stopEvent(e.event);
-                SEARCH.ui.dataTableCellClickEvent(this.getRecord(e.target).getData(), '<c:url value="/core/document/view" />');
+                SEARCH.ui.dataTableCellClickEvent(this.getRecord(e.target).getData(),
+                        '<c:url value="/core/document/viewtest" />');
             });
 
             dataTable.on('rowMouseoverEvent', function (e) {
@@ -311,18 +312,21 @@
         var search = function() {
             LWA.ui.showWait();
             var fq = getFilterQueryString();
+            SEARCH.ui.urlSearchParams = SEARCH.util.constructUrlSearchParams(fq, 0);
             SEARCH.ui.updateSolrQueryDiv("show_query", fq);
 
-            Connect.asyncRequest('GET', '<c:url value="/search/solrquery" />' + SEARCH.util.constructSearchUrlParams(fq, 0), {
+            Connect.asyncRequest('GET', '<c:url value="/search/solrquery" />' + SEARCH.ui.urlSearchParams, {
                 success : function(o) {
                     LWA.ui.hideWait();
 
                     var result = Json.parse(o.responseText);
-                    var numFound = result.response.numFound, facets = result.response.facets;
+                    SEARCH.ui.numFound = result.response.numFound;
+                    var facets = result.response.facets;
 
-                    SEARCH.ui.updatePaginatorAfterSearch(numFound);
+                    SEARCH.ui.updatePaginatorAfterSearch(SEARCH.ui.numFound);
 
-                    Dom.get("num_found").innerHTML = "Found " + numFound + " document" + ((numFound > 1) ? "s" : "");
+                    Dom.get("num_found").innerHTML = "Found " + SEARCH.ui.numFound + " document" +
+                            ((SEARCH.ui.numFound > 1) ? "s" : "");
                     SEARCH.ui.changeShowOverlayButtonVisibility(true);
 
                     buildSearchResultHtml(result);

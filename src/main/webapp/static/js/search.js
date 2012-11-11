@@ -16,8 +16,11 @@ SEARCH.util = {};
     SEARCH.ui.shortStringWidth = 80;
     SEARCH.ui.facetContainerEl = "facet_container";
     SEARCH.ui.facetTreeViewEl  = "tree_view";
+    SEARCH.ui.urlSearchParams  = "";
+    SEARCH.ui.numFound         = 0;
     SEARCH.ui.contentContainer = Dom.get("content_container");
     SEARCH.ui.contentContainerMinHeight = parseInt(Dom.getStyle("content_container", "height").replace("px", ""));
+
 
     /* Set core name and header for this search file */
     Dom.setStyle(SEARCH.ui.facetContainerEl, "visibility", "visible");
@@ -194,11 +197,15 @@ SEARCH.util = {};
             { text: "Cancel", handler: SEARCH.ui.hideDlg }
         ]
     });
-    SEARCH.ui.exportDlg.render(document.body);
+    //SEARCH.ui.exportDlg.render(document.body);
 
     Event.addListener("export", "click", function (e) {
         Event.stopEvent(e);
-        SEARCH.ui.exportDlg.show();
+        if (SEARCH.ui.urlSearchParams == "") {
+            alert("You need to search first!");
+        } else {
+            window.open(SEARCH.ui.exportUrl + SEARCH.ui.urlSearchParams + "&numfound=" + SEARCH.ui.numFound);
+        }
     });
 
     /* Field select code */
@@ -429,10 +436,9 @@ SEARCH.util = {};
                 + node.parent.label + " : " + node.label.substring(0, node.label.lastIndexOf("(") - 1);
 
             if (Dom.inDocument("treeNode" + node.index) == false) {
-                var anchor = LWA.ui.createDomElement("a", Dom.get("facet_options"), [
-                    { key : "class", value: "button delete" },
-                    { key : "id", value : "treeNode" + node.index },
-                    { key : "style", value: "margin: 2px" }]);
+                var anchor = LWA.ui.createDomElement("a", Dom.get("facet_options"),
+                    [{ key: "id", value: "treeNode" + node.index }],
+                    [{ key: "margin", value: "2px"}, {key : "class", value: "button delete" }]);
                 anchor.appendChild(document.createTextNode(anchorText));
 
                 Event.addListener("treeNode" + node.index, "click", function(e) {
@@ -463,7 +469,7 @@ SEARCH.util = {};
         return encodeURIComponent(s.replace(/&amp;/g, "&"));
     };
 
-    SEARCH.util.constructSearchUrlParams = function(fq, start) {
+    SEARCH.util.constructUrlSearchParams = function(fq, start) {
          var sortType = SEARCH.ui.sortBySelect.get("selectedMenuItem").value,
              coreName = SEARCH.ui.coreName,
             sortOrder = SEARCH.ui.sortOrder,

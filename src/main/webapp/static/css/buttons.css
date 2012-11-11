@@ -86,6 +86,13 @@ a.delete {
     padding-left: 30px;
     background-size: 10px;
 }
+a.save {
+    background: url(../images/save.png) 5px 5px no-repeat #F3F3F3;
+    padding-left: 13px;
+    padding-top: 17px;
+    background-size: 15px;
+}
+
 a.zoom_in {
     background: url(../images/zoom_in.png) 3px 3px no-repeat;
     padding-left: 1px;
@@ -107,6 +114,18 @@ a.expand {
     background-size: 12px;
 }
 
+a.show_overlay {
+    background: url(../images/showoverlay.png) 0 0 no-repeat #F3F3F3;
+    padding-bottom: 5px;
+    padding-right: 0;
+    background-size: 12px;
+}
+a.collapse {
+    background: url(../images/collapse.png) 0 0 no-repeat #F3F3F3;
+    padding-bottom: 5px;
+    padding-right: 0;
+    background-size: 12px;
+}
 a.flag {
     background: url(../images/sprite.png)  10px -96px no-repeat #f3f3f3;
     padding-left: 30px;
