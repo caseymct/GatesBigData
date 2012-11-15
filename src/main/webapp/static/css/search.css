@@ -144,6 +144,17 @@ li.yui-button-selectedmenuitem {
     background: #EFEFEF;
 }
 
+.search_legend {
+    font-weight: normal;
+    font-size: 12px;
+    margin-left: 0px;
+    padding: 2px;
+    background: #d3d3d3;
+    border: none;
+    border-bottom: 1px solid #B5B5B5;
+    margin-top: 10px;
+}
+
 .search-result-header {
     font-size : 16px;
     font-weight : bold;
@@ -195,16 +206,54 @@ form div.row {
     padding: 5px;
 }
 
+fieldset div.fieldset_row {
+    clear: both;
+    padding: 2px;
+    font-size: 12px;
+}
+
+form div.fieldset_row input {
+    float: right;
+    width: 320px;
+}
+
+#has_words, #does_not_have_words, #has_words_label, #does_not_have_words_label {
+    margin-top: 10px;
+}
+
+form div.fieldset_row a {
+    border: 1px solid gray;
+    border-radius: 3px;
+    padding: 2px;
+    margin: 2px;
+    color: black;
+    background: lightgray;
+}
+
+form div.fieldset_row_button_div {
+    width: 80px;
+    float: left;
+}
+
 #content {
     min-height: 600px;
 }
+
+#general_query_field_constraint {
+    float: right;
+    width: 316px;
+    padding: 2px;
+    margin-right: -5px;
+}
+
 #show_query {
     font-size: 10px;
     padding: 5px 0px 5px 0px;
+    word-wrap: break-word;
 }
 
 #search_tab {
-    width: 500px;
+    width: 610px;
 }
 
 #facet_options {
@@ -212,7 +261,7 @@ form div.row {
 }
 
 #general_query_search_input {
-    width: 450px;
+    width: 580px;
     margin: 5px 0px 0px 0px;
     height: 50px;
     padding: 2px;

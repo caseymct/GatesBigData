@@ -37,14 +37,17 @@ public class SuggestionList implements Iterable<Suggestion> {
         return "<b>" + s.getText() + "</b> <i>" + s.getField() + "</i> " + " (" + s.getNumFound() + ")";
     }
 
-    public List<String> getSortedSuggestions() {
-        sort();
-
-        List<String> sortedSuggestions = new ArrayList<String>();
+    public List<String> getFormattedSuggestionList() {
+        List<String> formattedSuggestions = new ArrayList<String>();
         for(Suggestion s : suggestions) {
-            sortedSuggestions.add(formatSuggestionText(s));
+            formattedSuggestions.add(formatSuggestionText(s));
         }
-        return sortedSuggestions;
+        return formattedSuggestions;
+    }
+
+    public List<String> getSortedFormattedSuggestionList() {
+        sort();
+        return getFormattedSuggestionList();
     }
 
     public int size() {

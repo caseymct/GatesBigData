@@ -36,7 +36,7 @@ public class JsonParsingUtils {
                     currObject = ((JSONArray) currObject).get(index);
                 }
             } else if (i < fields.size()) {
-                return null;
+                return defaultReturnValue;
             }
         }
 

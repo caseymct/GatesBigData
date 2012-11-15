@@ -167,6 +167,10 @@ public class SolrUtils {
         return JsonParsingUtils.convertJSONArrayToStringList(getLukeFieldsObject(coreName, false).names());
     }
 
+    public static JSONArray getLukeFieldNamesAsJSONArray(String coreName) {
+        return getLukeFieldsObject(coreName, false).names();
+    }
+
     public static List<String> getLukeFieldNames(String coreName, List<String> indices, boolean include) {
         List<String> fieldNames = getLukeFieldNames(coreName);
         List<String> subList = new ArrayList<String>();

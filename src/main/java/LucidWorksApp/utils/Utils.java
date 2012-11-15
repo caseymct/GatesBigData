@@ -42,6 +42,16 @@ public class Utils {
         return url;
     }
 
+    public static String getUTF8String(String s) {
+        byte[] bytes = s.getBytes();
+
+        try {
+            return new String(bytes, "UTF8");
+        } catch (UnsupportedEncodingException e) {
+            return new String(bytes);
+        }
+    }
+
     public static int getInteger(String s) {
         try {
             return Integer.parseInt(s);

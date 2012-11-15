@@ -126,7 +126,7 @@
 
                     },
                     failure: function(o) {
-                        LWA.ui.alertErrors(o);
+                        UI.alertErrors(o);
                     }
                 });
 

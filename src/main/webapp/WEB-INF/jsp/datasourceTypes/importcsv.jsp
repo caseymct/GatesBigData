@@ -95,7 +95,7 @@
 
                 Connect.asyncRequest('GET', '<c:url value="/solr/update/csv" />' + urlParams, {
                     success: function (o) {
-                        if (LWA.util.checkXmlReturnValue(o)) {
+                        if (UI.util.checkXmlReturnValue(o)) {
                             window.location = '<c:url value="/collection/" />' + collectionName;
                         }
                     },

@@ -55,7 +55,7 @@
         // edit core page? http://localhost:8080/LucidWorksApp/core/empty?core=collection1
         Connect.asyncRequest('GET', '<c:url value="/solr/info/all" />' , {
             success : function(o) {
-                LWA.ui.buildTreeViewFromJson(Json.parse(o.responseText), treeView);
+                UI.buildTreeViewFromJson(Json.parse(o.responseText), treeView);
             },
             failure : function (o) {
                 alert("Could not retrieve core information.");
@@ -71,7 +71,7 @@
             Connect.setDefaultPostHeader('application/json');
             Connect.asyncRequest('POST', '<c:url value="/core/create" />' , {
                 success: function (o) {
-                    if (!LWA.ui.alertErrors(o)) {
+                    if (!UI.alertErrors(o)) {
                         window.location.reload();
                     }
                 },

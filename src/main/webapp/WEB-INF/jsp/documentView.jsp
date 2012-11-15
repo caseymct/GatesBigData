@@ -48,16 +48,16 @@
             window.open('<c:url value="/core/document/view" />' + urlParams, "_self");
         });
 
-        LWA.ui.initWait();
-        LWA.ui.showWait();
+        UI.initWait();
+        UI.showWait();
 
         Connect.asyncRequest('GET', '<c:url value="/document/nutch/get" />' + urlParams, {
             success : function(o) {
                 var result = o.responseText;
-                LWA.ui.hideWait();
+                UI.hideWait();
 
-                if (LWA.util.isValidJSON(result)) {
-                    LWA.ui.buildTreeViewFromJson(Json.parse(result), new TreeView("doc_view"));
+                if (UI.util.isValidJSON(result)) {
+                    UI.buildTreeViewFromJson(Json.parse(result), new TreeView("doc_view"));
                 } else {
                     Dom.get("doc_view").innerHTML = o.responseText;
                 }

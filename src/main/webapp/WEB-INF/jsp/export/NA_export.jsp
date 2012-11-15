@@ -109,20 +109,20 @@
                             var overlayInnerEl = overlayEl + "_child";
 
                             if (Dom.get(overlayEl) == null) {
-                                var outerDiv = LWA.ui.createDomElement('div', checkboxParentNode,
+                                var outerDiv = UI.addDomElementChild('div', checkboxParentNode,
                                         [ { key: "id", value: overlayEl }],
                                         [ { key: "class", value: "overlay_el" }]);
 
-                                LWA.ui.createDomElement('a', outerDiv,
+                                UI.addDomElementChild('a', outerDiv,
                                         [ { key: "id", value: overlayLink } ],
                                         [ { key: "margin-right", value: "2px"}, { key: "float", value: "left"},
                                           { key: "class", value: "button show_overlay"}]);
-                                LWA.ui.createDomElement('div', outerDiv, [ { key: "innerHTML", value: parent }]);
+                                UI.addDomElementChild('div', outerDiv, [ { key: "innerHTML", value: parent }]);
 
-                                var div = LWA.ui.createDomElement('div', outerDiv, [{ key: "id", value: parent }],
+                                var div = UI.addDomElementChild('div', outerDiv, [{ key: "id", value: parent }],
                                         [{ key: "class", value: "overlay_div" }]);
 
-                                currCheckboxParent = LWA.ui.createDomElement('div', div,
+                                currCheckboxParent = UI.addDomElementChild('div', div,
                                                         [{ key: "id", value: overlayInnerEl }],
                                                         [{ key: "class", value: "overlay_inner_el" }]);
 
@@ -150,20 +150,20 @@
                             currCheckboxParent = checkboxParentNode;
                         }
 
-                        var d = LWA.ui.createDomElement('div', currCheckboxParent, [], [{ key: "class", value: "overlay_el" }]);
+                        var d = UI.addDomElementChild('div', currCheckboxParent, [], [{ key: "class", value: "overlay_el" }]);
 
-                        var c = LWA.ui.createDomElement('input', d,
+                        var c = UI.addDomElementChild('input', d,
                                 [ { key: "type", value: "checkbox" }, { key : "name", value: checkboxGrpName },
                                   { key: "value", value: i }, { key : "id", value: names[i] }]);
                         if (child.match(/^[A-Z]/) != null) c.checked = true;
 
-                        LWA.ui.createDomElement('label', d,
+                        UI.addDomElementChild('label', d,
                                 [ { key: "htmlFor", value: names[i] }, { key: "innerHTML", value: child }],
                                 [ { key: "padding", value: "5px" }]);
-                        LWA.ui.createDomElement('br', d, []);
+                        UI.addDomElementChild('br', d, []);
                     }
 
-                    LWA.ui.createDomElement('div', checkboxParentNode, [], [ { key: "clear", value: "both" }]);
+                    UI.addDomElementChild('div', checkboxParentNode, [], [ { key: "clear", value: "both" }]);
                 }
             });
 

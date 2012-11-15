@@ -2,6 +2,7 @@ package LucidWorksApp.api;
 
 import LucidWorksApp.utils.SolrUtils;
 import model.FacetFieldEntryList;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -18,6 +19,8 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.util.Collections.singletonList;
 import static org.springframework.http.HttpStatus.OK;
@@ -107,6 +110,23 @@ public class SearchAPIController extends APIController {
         return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
     }
 
+    @RequestMapping(value="/fields/all", method = RequestMethod.GET)
+    public ResponseEntity<String> allFields(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
+        JSONArray ret = new JSONArray();
+        Pattern p = Pattern.compile(".*(\\.facet|Suggest|Prefix)$");
+
+        for(String field : SolrUtils.getLukeFieldNames(coreName)) {
+            Matcher m = p.matcher(field);
+            if (!m.matches()) {
+                ret.add(field);
+            }
+        }
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        return new ResponseEntity<String>(ret.toString(), httpHeaders, OK);
+    }
+
     @RequestMapping(value="/suggest", method = RequestMethod.GET)
     public ResponseEntity<String> suggest(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
                                           @RequestParam(value = PARAM_USER_INPUT, required = true) String userInput,
@@ -121,20 +141,6 @@ public class SearchAPIController extends APIController {
         }
 
         JSONObject suggest = searchService.suggest(coreName, userInput, (prefixField != null) ? singleMap : fieldMap, n);
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>(suggest.toString(), httpHeaders, OK);
-    }
-
-    @RequestMapping(value="/suggest/all", method = RequestMethod.GET)
-    public ResponseEntity<String> suggest(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
-                                          @RequestParam(value = PARAM_USER_INPUT, required = true) String userInput,
-                                          @RequestParam(value = PARAM_NUM_SUGGESTIONS_PER_FIELD, required = true) int n,
-                                          HttpServletRequest request) throws IOException {
-
-        HashMap<String, String> fieldMap = getPrefixToFullFieldMap(coreName, request.getSession());
-        JSONObject suggest = searchService.suggest(coreName, userInput, fieldMap, n);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));

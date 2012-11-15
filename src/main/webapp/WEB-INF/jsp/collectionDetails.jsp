@@ -50,7 +50,7 @@
             Connect.asyncRequest('GET', '<c:url value="/collection/info" />' + urlParams, {
                 success: function (o) {
                     var result = Json.parse(o.responseText);
-                    LWA.ui.buildTable(result, "collection_info");
+                    UI.buildTable(result, "collection_info");
                 },
                 failure: function (e) {
                     alert("Could not delete");
@@ -109,7 +109,7 @@
                         if (o.responseText == "") {
                             window.location = '<c:url value="/" />';
                         } else {
-                            LWA.ui.alertErrors(o);
+                            UI.alertErrors(o);
                         }
                     },
                     failure: function (e) {
@@ -129,7 +129,7 @@
                         if (o.responseText == "") {
                             window.location.reload();
                         } else {
-                            LWA.ui.alertErrors(o);
+                            UI.alertErrors(o);
                         }
                     },
                     failure: function (e) {
@@ -146,25 +146,25 @@
             Event.addListener("delete_collection", "click", function (e) {
                 Event.stopEvent(e);
 
-                LWA.ui.confirmDelete.setBody("Are you sure you want to delete this collection?");
-                LWA.ui.confirmDelete.cfg.queueProperty("buttons", [
+                UI.confirmDelete.setBody("Are you sure you want to delete this collection?");
+                UI.confirmDelete.cfg.queueProperty("buttons", [
                     { text: "Yes", handler: handleDeleteCollectionYes },
-                    { text: "Cancel", handler: LWA.ui.confirmDeleteHandleNo, isDefault:true}
+                    { text: "Cancel", handler: UI.confirmDeleteHandleNo, isDefault:true}
                 ]);
-                LWA.ui.confirmDelete.render(Dom.get("content"));
-                LWA.ui.confirmDelete.show();
+                UI.confirmDelete.render(Dom.get("content"));
+                UI.confirmDelete.show();
             });
 
             Event.addListener("empty_collection", "click", function (e) {
                 Event.stopEvent(e);
 
-                LWA.ui.confirmDelete.setBody("Are you sure you want to empty this collection?");
-                LWA.ui.confirmDelete.cfg.queueProperty("buttons", [
+                UI.confirmDelete.setBody("Are you sure you want to empty this collection?");
+                UI.confirmDelete.cfg.queueProperty("buttons", [
                     { text: "Yes", handler: handleEmptyCollectionYes },
-                    { text: "Cancel", handler: LWA.ui.confirmDeleteHandleNo, isDefault:true}
+                    { text: "Cancel", handler: UI.confirmDeleteHandleNo, isDefault:true}
                 ]);
-                LWA.ui.confirmDelete.render(Dom.get("content"));
-                LWA.ui.confirmDelete.show();
+                UI.confirmDelete.render(Dom.get("content"));
+                UI.confirmDelete.show();
             });
 
         })();

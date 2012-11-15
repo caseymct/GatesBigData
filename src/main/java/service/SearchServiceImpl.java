@@ -153,7 +153,7 @@ public class SearchServiceImpl implements SearchService {
             double score = (Double) JsonParsingUtils.extractJSONProperty(g, Arrays.asList("doclist", "docs", "0", "score"), Double.class, Utils.INVALID_DOUBLE);
 
             if (text != null && numFound != Utils.INVALID_INTEGER && score != Utils.INVALID_DOUBLE) {
-                suggestionList.add(text, fullField, numFound, score);
+                suggestionList.add(Utils.getUTF8String(text), fullField, numFound, score);
             }
         }
 
@@ -183,7 +183,7 @@ public class SearchServiceImpl implements SearchService {
             }
         }
 
-        ret.put("suggestions", JsonParsingUtils.convertStringListToJSONArray(suggestions.getSortedSuggestions()));
+        ret.put("suggestions", JsonParsingUtils.convertStringListToJSONArray(suggestions.getSortedFormattedSuggestionList()));
         return ret;
     }
 

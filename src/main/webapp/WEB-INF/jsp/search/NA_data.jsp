@@ -1,6 +1,7 @@
 <%@ taglib prefix="layout" tagdir="/WEB-INF/tags/layout"%>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
+<%@ page pageEncoding="UTF-8" %>
 
 <layout:main>
     <link rel="stylesheet" type="text/css" href="<c:url value="/static/css/search.css"/>" />
@@ -10,62 +11,64 @@
     <form id = "search_form">
         <div id="search_tab" class="yui-navset">
             <ul class="yui-nav">
-                <li class="selected tab_selected"><a href="#tab1"><em>Supplier</em></a></li>
-                <li><a href="#tab2"><em>Company</em></a></li>
-                <li><a href="#tab3"><em>User</em></a></li>
-                <li><a href="#tab4"><em>General Query</em></a></li>
+                <li class="selected tab_selected"><a href="#tab1"><em>Search</em></a></li>
+                <li><a href="#tab2"><em>Construct General Query</em></a></li>
             </ul>
-            <div class="yui-content">
-                <div class="search_tab_style row" id="supplier_name_tab">
-                    <label for="supplier_name_input">Supplier Name:</label>
-                    <div id="supplier_name_autocomplete">
-                        <input type="text" id="supplier_name_input"/>
-                        <div id="supplier_name_autocomplete_container"></div>
+            <div id="search_tab_content" class="yui-content">
+                <div class="search_tab_style row" id="autocomplete_tab">
+                    <div id="autocomplete_div">
+                        <input type="text" id="autocomplete_input"/>
+                        <div id="autocomplete_container"></div>
                     </div>
                 </div>
-                <div class="search_tab_style row" id="search_company_tab">
-                    <div class="row">
-                        <label for="company_name_input">Company Site Name: </label>
-                        <div id="company_name_autocomplete">
-                            <input type="text" id="company_name_input" />
-                            <div id="company_name_autocomplete_container"></div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <label for="account_name_input">Account Name: </label>
-                        <div id="account_name_autocomplete">
-                            <textarea id="account_name_input"></textarea>
-                            <div id="account_name_autocomplete_container"></div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <label for="cost_center_name_input">Cost Center Name: </label>
-                        <div id="cost_center_name_autocomplete">
-                            <input type="text" id="cost_center_name_input" />
-                            <div id="cost_center_name_autocomplete_container"></div>
-                        </div>
-                    </div>
-                    <div class="row"></div>
-                </div>
-                <div class="search_tab_style row" id="user_name_tab">
-                    <label for="user_name_input">User Name:</label>
-                    <div id="user_name_autocomplete">
-                        <input type="text" id="user_name_input"/>
-                        <div id="user_name_autocomplete_container"></div>
-                    </div>
-                </div>
+                <!--
                 <div class = "search_tab_style row" id="search_generalquery_tab">
                     <div class="row" style="padding: 2px">
                         <textarea id="general_query_search_input">*:*</textarea>
                     </div>
-                    <div class="row" style="padding: 2px; font-size: 10px">
-                        Query terms take the form of '<i>Column name</i>:<i>Value</i>' e.g.<br>
-                        Supplier.SupplierName:citibank*<br>
-                        Supplier.SupplierName:citibank* AND CostCenter.CostCenterName:global*<br>
-                        Multiple terms can be concatenated with AND or OR
-                    </div>
+                    <fieldset style="padding-top:0px">
+                        <legend class="search_legend">Add a constraint: </legend>
+                        <div class="fieldset_row">
+                            <label for="general_query_field_constraint" style="margin-top:10px">Field name:</label>
+                            <div id="general_query_autocomplete">
+                                <input id="general_query_field_constraint" type="text">
+                                <div id="general_query_field_autocomplete_container"></div>
+                            </div>
+                        </div>
+                        <div class="fieldset_row">
+                            <label id="has_words_label" for="has_words">Has words: </label>
+                            <div class= "fieldset_row_button_div" id="has_words_div">
+                                <input id="has_words_some" type="radio" name="has_words_input" value="Some" >
+                                <input id="has_words_all" type="radio" name="has_words_input" value="All" >
+                            </div>
+                            <input id="has_words"/>
+                        </div>
+                        <div class="fieldset_row">
+                            <label id="does_not_have_words_label" for="does_not_have_words">Does not have words: </label>
+                            <div class= "fieldset_row_button_div" id="does_not_have_words_div">
+                                <input id="does_not_have_words_some" type="radio" name="does_not_have_words_input" value="Some" >
+                                <input id="does_not_have_words_all" type="radio" name="does_not_have_words_input" value="All" >
+                            </div>
+                            <input id="does_not_have_words"/>
+                        </div>
+                        <div class="fieldset_row" style="padding-top:10px">
+                            <label for="has_phrase">Has phrase: </label>
+                            <input id="has_phrase"/>
+                        </div>
+                        <div class="fieldset_row" style="padding-top:10px">
+                            <label for="is_exact">Is exactly: </label>
+                            <input id="is_exact"/>
+                        </div>
+
+                        <div class="fieldset_row">
+                            <a href="#" id="add_to_query">Add</a>
+                        </div>
+                        <div class="clearboth"></div>
+                    </fieldset>
+
                     <div class="clearboth"></div>
                 </div>
+                -->
             </div>
         </div>
 
@@ -82,20 +85,9 @@
             <div class="clearboth"></div>
         </div>
 
-        <div id="constrain_by_date">
-            <label for="date_begin">Constrain by <span id="date_constraint_text"></span>: </label>
-            <input type="text" size="10" id="date_begin" value="*"/>
-            <label for="date_end">to</label>
-            <input type="text" size="10" id="date_end" value="*"/>
-            <br>
-            <span style="font-size:12px; padding-top:3px">Range for field <span id = "date_constraint_range"></span></span>
-        </div>
+        <div id="constrain_by_date"></div>
 
-        <div class="clearboth"></div>
-
-        <div id="facet_options">
-            <div class="clearboth"></div>
-        </div>
+        <div id="insert_facets_after" class="clearboth"></div>
 
         <div class="buttons" style="padding-bottom: 5px">
             <a href="#" class="button small" id="submit">Search</a>
@@ -126,17 +118,16 @@
     <div id = "pag1"></div>
 
     <script type="text/javascript" src="<c:url value="/static/js/search.js" />"></script>
+    <script type="text/javascript" src="<c:url value="/static/js/querybuilder.js" />"></script>
+    <script type="text/javascript" src="<c:url value="/static/js/datepick.js" />"></script>
+    <script type="text/javascript" src="<c:url value="/static/js/facet.js" />"></script>
 
     <script type="text/javascript">
     (function() {
-        var     Event   = YAHOO.util.Event,   AutoComplete = YAHOO.widget.AutoComplete,
-                Dom  = YAHOO.util.Dom,        ScrollingDataTable = YAHOO.widget.ScrollingDataTable,
-                Connect = YAHOO.util.Connect, LocalDataSource = YAHOO.util.LocalDataSource,
-                Json = YAHOO.lang.JSON,       XHRDataSource = YAHOO.util.XHRDataSource;
-
-        var inputElNames = [
-            "account_name_input", "company_name_input", "supplier_name_input", "cost_center_name_input", "user_name_input"
-        ];
+        var     Event   = YAHOO.util.Event,            AutoComplete = YAHOO.widget.AutoComplete,
+                Dom     = YAHOO.util.Dom,        ScrollingDataTable = YAHOO.widget.ScrollingDataTable,
+                Connect = YAHOO.util.Connect,       LocalDataSource = YAHOO.util.LocalDataSource,
+                Json    = YAHOO.lang.JSON,            XHRDataSource = YAHOO.util.XHRDataSource;
 
         var columnDefs = [
             {key:'PaidDate', label:'Paid Date', sortable:true, formatter:SEARCH.ui.formatLink, width:SEARCH.ui.shortStringWidth },
@@ -170,65 +161,61 @@
             {key:'HDFSSegment', parser:'text'}
         ];
 
-        LWA.ui.initWait();
+        var generalQueryConstraintDomEls = [ { key: "input", value: "general_query_search_input"},
+            { key: "field", value: "general_query_field_constraint"}, { key: "phrase", value: "has_phrase" },
+            { key: "exact", value: "is_exact"}, { key: "haswords", value: "has_words"},
+            { key :"nowords", value: "does_not_have_words"}];
+
+        UI.initWait();
+        QUERYBUILDER.ui.buildQueryTabHTML("search_tab_content");
+        QUERYBUILDER.ui.initPopulateFieldAutoCompleteUrl('<c:url value="/search/fields/all?core=" />' + SEARCH.ui.coreName);
+
+        DATEPICK.ui.buildDatePickHTML("constrain_by_date");
+        DATEPICK.ui.initDatePickerVars("InvoiceDate",
+                '<c:url value="/core/field/daterange" />' + "?core=" + SEARCH.ui.coreName + "&field=InvoiceDate");
+
+        FACET.ui.buildFacetHTML("insert_facets_after");
+        FACET.ui.initFacetVars('<c:url value="/search/solrfacets" />' + "?core=" + SEARCH.ui.coreName);
+
         SEARCH.ui.setSearchHeader("search_header");
-        SEARCH.ui.initGeneralQuerySearchInput("general_query_search_input");
-        SEARCH.ui.initPreviewContainer("preview_container");
-        SEARCH.ui.initPaginator("pag1");
-        SEARCH.ui.initSearchTab("search_tab");
-        SEARCH.ui.initSortOrderButtonGroup("sort_ascdesc_buttongroup");
-        SEARCH.ui.initSelectData(columnDefs);
-        SEARCH.ui.initSortBySelect("sort_date_label", 0);
-        SEARCH.ui.initExportUrl('<c:url value="/core/document/export" />');
-        SEARCH.ui.initDatePickers("date_begin", "date_end", "date_constraint_text", "InvoiceDate");
-        SEARCH.ui.initDateRangeText('<c:url value="/core/field/daterange" />', "date_constraint_range");
-        SEARCH.ui.adjustContentContainerHeight();
 
-        Connect.asyncRequest('GET', '<c:url value="/search/solrfacets" />' + "?core=" + SEARCH.ui.coreName, {
-            success : SEARCH.ui.buildInitialFacetTree
-        });
+        SEARCH.ui.initUrls( { exportUrl : '<c:url value="/core/document/export" />' },
+                            { viewDocUrl : '<c:url value="/core/document/viewtest" />' },
+                            { loadingImgUrl : '<c:url value="/static/images/loading.png" />' },
+                            { thumbnailUrl : '<c:url value="/document/thumbnail/get" />' }
+                           );
 
-        /*var updateMenuOnTabChange = function(e) {
-            switch (this.get("activeTab").get("label")) {
-                case "User":
-                    SEARCH.ui.sortBySelect.set("selectedMenuItem", SEARCH.ui.sortBySelect.getMenu().getItem(2));
-                    break;
-                case "Supplier":
-                    SEARCH.ui.sortBySelect.set("selectedMenuItem", SEARCH.ui.sortBySelect.getMenu().getItem(4));
-                    break;
-                case "Company":
-                    SEARCH.ui.sortBySelect.set("selectedMenuItem", SEARCH.ui.sortBySelect.getMenu().getItem(0));
-                    break;
-            }
-        };
-        SEARCH.ui.searchTab.on("activeTabChange", updateMenuOnTabChange);   */
+        SEARCH.ui.initHTML({ searchTabElName: "search_tab" }, { sortOrderButtonGroupElName : "sort_ascdesc_buttongroup" },
+                { previewContainerElName : "preview_container" }, { sortBySelectElName : "sort_date_label" },
+                { selectDataColumnDefs : columnDefs }, { selectDataRegexIgnore: "thumbnail" },
+                { searchInputElNames : ["autocomplete_input", "general_query_search_input"] },
+                { exportFileName: "export_file_name"}, { paginatorElName : "pag1" });
+
+        FACET.ui.buildInitialFacetTree();
 
         /* Autocomplete code */
         var ds = new XHRDataSource('<c:url value="/search/suggest" />' );
         ds.responseType = XHRDataSource.TYPE_JSON;
         ds.responseSchema = { resultsList : "suggestions" };
 
-        var acRequestName = ["account", "companysite", "supplier", "costcenter", "user"];
         var itemSelectHandler = function(s, args) {
             var inputEl = Dom.get(args[0].getInputEl());
             var sel = args[2][0].match("<b>(.*)</b> <i>(.*)</i>.*");
             inputEl.value = sel[2] + ":\"" + sel[1] + "\"";
-            console.log(inputEl.value);
             search();
         };
 
-        for(var i = 0; i < acRequestName.length; i++) {
-            var acContainer = inputElNames[i].replace("_input", "_autocomplete_container");
-            var ac = new AutoComplete(inputElNames[i], acContainer, ds);
-            ac.generateRequest = (function(n) {
-                return function() {
-                    return '?n=5&core=' + SEARCH.ui.coreName +
-                            '&userinput=' + SEARCH.util.encodeForRequest(this.getInputEl().value);
-                };
-            })(i);
-            ac.itemSelectEvent.subscribe(itemSelectHandler);
-        }
+        var ac = new AutoComplete("autocomplete_input", "autocomplete_container", ds);
+        ac.generateRequest = function() {
+            return '?n=5&core=' + SEARCH.ui.coreName + '&userinput=' + this.getInputEl().value.encodeForRequest();
+        };
+        ac.itemSelectEvent.subscribe(itemSelectHandler);
 
+        Event.addListener("autocomplete_input", "keyup", function(e) {
+            if (this.value == "") {
+                FACET.ui.buildInitialFacetTree();
+            }
+        });
 
         var buildSearchResultHtml = function(result) {
             var dataSource = new LocalDataSource(result.response, {
@@ -259,78 +246,53 @@
         };
 
 
-        var getFilterQueryString = function() {
-               var company = Dom.get("company_name_input").value,
-                   account = Dom.get("account_name_input").value,
-                costCenter = Dom.get("cost_center_name_input").value,
-                  supplier = Dom.get("supplier_name_input").value,
-                  username = Dom.get("user_name_input").value,
-                     fqStr = SEARCH.util.getFilterQueryString();
-
-            switch (SEARCH.ui.getSearchTabActiveIndex()) {
-                case 0:
-                    fqStr += (supplier != "") ? "%2BSupplier.SupplierName:(\"" + SEARCH.util.encodeForRequest(supplier) + "\")" : "";
-                    break;
-                case 1:
-                    fqStr += (company != "") ? "%2BCompanySite.SiteName:(\"" + SEARCH.util.encodeForRequest(company) + "\")" : "";
-                    fqStr += (account != "") ? "%2BAccount.AccountName:(\"" + SEARCH.util.encodeForRequest(account) + "\")" : "";
-                    fqStr += (costCenter != "") ? "%2BCostCenter.CostCenterName:(\"" + SEARCH.util.encodeForRequest(costCenter) + "\")" : "";
-                    break;
-                case 2:
-                    fqStr += (username != "") ? "%2BUser.UserName:(\"" + SEARCH.util.encodeForRequest(username) + "\")" : "";
-                    break;
-                default:
-                    break;
-            }
-            return fqStr;
-        };
-
         Event.addListener("reset", "click", function (e) {
             Event.stopEvent(e);
-            SEARCH.ui.resetGeneralQuerySearchInput();
-            for (i = 0; i < inputElNames.length; i++) {
-                Dom.get(inputElNames[i]).value = "";
-            }
+            SEARCH.ui.resetQuerySearchInputs();
+            FACET.ui.buildInitialFacetTree();
         });
 
         var handlePagination = function (newState) {
-            LWA.ui.showWait();
+            UI.showWait();
             var fq = getFilterQueryString();
             SEARCH.ui.updateSolrQueryDiv("show_query", fq);
 
-            Connect.asyncRequest('GET', '<c:url value="/search/solrquery" />' + SEARCH.util.constructSearchUrlParams(fq, newState.records[0]), {
+            Connect.asyncRequest('GET', '<c:url value="/search/solrquery" />' + SEARCH.util.constructUrlSearchParams(fq, newState.records[0]), {
                 success: function(o) {
-                    LWA.ui.hideWait();
+                    UI.hideWait();
                     buildSearchResultHtml(Json.parse(o.responseText));
                 }
             });
 
-            SEARCH.ui.pag.setState(newState);
+            SEARCH.ui.updatePaginatorState(newState);
         };
-        SEARCH.ui.pag.subscribe('changeRequest', handlePagination);
+        //SEARCH.ui.pag.subscribe('changeRequest', handlePagination);
+
+
+        function getFilterQueryString() {
+            return FACET.util.getFacetFilterQueryString() + DATEPICK.util.getDateConstraintFilterQueryString();
+        }
 
         var search = function() {
-            LWA.ui.showWait();
+            UI.showWait();
             var fq = getFilterQueryString();
             SEARCH.ui.urlSearchParams = SEARCH.util.constructUrlSearchParams(fq, 0);
             SEARCH.ui.updateSolrQueryDiv("show_query", fq);
 
             Connect.asyncRequest('GET', '<c:url value="/search/solrquery" />' + SEARCH.ui.urlSearchParams, {
                 success : function(o) {
-                    LWA.ui.hideWait();
+                    UI.hideWait();
 
                     var result = Json.parse(o.responseText);
-                    SEARCH.ui.numFound = result.response.numFound;
                     var facets = result.response.facets;
 
+                    SEARCH.ui.updateNumFound(result.response.numFound);
                     SEARCH.ui.updatePaginatorAfterSearch(SEARCH.ui.numFound);
 
-                    Dom.get("num_found").innerHTML = "Found " + SEARCH.ui.numFound + " document" +
-                            ((SEARCH.ui.numFound > 1) ? "s" : "");
-                    SEARCH.ui.changeShowOverlayButtonVisibility(true);
-
                     buildSearchResultHtml(result);
-                    SEARCH.ui.buildFacetTree(facets);
+                    if (SEARCH.ui.numFound > 0) {
+                        FACET.ui.buildFacetTree(facets);
+                    }
                 },
                 failure : function(o) {
                     alert("Could not connect.");
