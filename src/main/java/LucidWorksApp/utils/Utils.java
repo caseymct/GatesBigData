@@ -18,9 +18,12 @@ public class Utils {
     public static int INVALID_INTEGER   = -99999;
     public static double INVALID_DOUBLE = -99999.99999;
 
+    public static boolean stringIsNullOrEmpty(String s) {
+        return s == null || s.equals("");
+    }
+
     public static String addToUrlIfNotEmpty(String url, String endpoint) {
-        if (endpoint == null || endpoint.equals("")) return url;
-        return url + "/" + endpoint;
+        return stringIsNullOrEmpty(endpoint) ? url : url + "/" + endpoint;
     }
 
     public static String constructUrlParams(HashMap<String,String> params) {
@@ -42,14 +45,16 @@ public class Utils {
         return url;
     }
 
-    public static String getUTF8String(String s) {
-        byte[] bytes = s.getBytes();
-
+    public static String getUTF8String(byte[] bytes) {
         try {
             return new String(bytes, "UTF8");
         } catch (UnsupportedEncodingException e) {
             return new String(bytes);
         }
+    }
+
+    public static String getUTF8String(String s) {
+        return getUTF8String(s.getBytes());
     }
 
     public static int getInteger(String s) {
@@ -130,7 +135,7 @@ public class Utils {
     public static String changeFileExtension(String filePath, String newExt, boolean fullPath) {
         File f = new File(filePath);
         String fileName = f.getName();
-        String newFileName = stripFileExtension(fileName)+ "." + newExt;
+        String newFileName = stripFileExtension(fileName) + "." + newExt;
 
         return fullPath ? new File(f.getParentFile(), newFileName).getPath() : newFileName;
     }

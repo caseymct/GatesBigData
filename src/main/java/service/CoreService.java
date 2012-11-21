@@ -23,10 +23,10 @@ public interface CoreService {
     public boolean addDocumentToSolrIndex(List<SolrInputDocument> docs, String coreName);
 
     public SolrInputDocument createSolrInputDocumentFromNutch(String urlString, ParseData parseData, String segment,
-                                                              String coreName, String contentType, Content content);
+                                                              String coreName, String contentType, String content);
 
     public boolean addNutchDocumentToSolr(String urlString, ParseData parseData, String segment,
-                                          String coreName, String contentType, Content content);
+                                          String coreName, String contentType, String content);
 
     public boolean deleteIndex(String coreName);
 

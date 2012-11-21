@@ -32,7 +32,7 @@ public class JsonParsingUtils {
                 currObject = ((JSONObject) currObject).get(field);
             } else if (currObject instanceof JSONArray) {
                 int index = Utils.getInteger(field);
-                if (index >= 0 && index <= ((JSONArray) currObject).size()) {
+                if (index >= 0 && index < ((JSONArray) currObject).size()) {
                     currObject = ((JSONArray) currObject).get(index);
                 }
             } else if (i < fields.size()) {
@@ -105,6 +105,9 @@ public class JsonParsingUtils {
 
         for(Object key : jsonObject.names()) {
             Object value = jsonObject.get(key);
+            if (key.equals("User")) {
+                int a = 10;
+            }
             String newFullPath = fullPath.equals("") ? (String) key : fullPath + "." + key;
 
             if (value instanceof JSONArray) {

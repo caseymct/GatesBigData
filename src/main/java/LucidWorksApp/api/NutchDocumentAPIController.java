@@ -1,5 +1,6 @@
 package LucidWorksApp.api;
 
+import LucidWorksApp.utils.Constants;
 import LucidWorksApp.utils.Utils;
 import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
@@ -27,8 +28,6 @@ public class NutchDocumentAPIController extends APIController {
 
     private static final int DEFAULT_BUFFER_SIZE = 10240;
 
-    private static final String FLASH_MIME_TYPE = "application/x-shockwave-flash";
-    private static final String IMG_MIME_TYPE = "image/png";
     private static final String PRAGMA_HEADER = "Pragma";
     private static final String PRAGMA_VALUE = "public";
     private static final String CACHE_CONTROL_HEADER = "Cache-Control";
@@ -37,7 +36,6 @@ public class NutchDocumentAPIController extends APIController {
     private static final String EXPIRES_VALUE = "Sat, 26 Jul 1997 05:00:00 GMT";
     private static final String CONNECTION_HEADER = "Connection";
     private static final String CONNECTION_VALUE = "close\r\n\r\n";
-
 
     private HDFSService hdfsService;
     private DocumentConversionService documentConversionService;
@@ -58,8 +56,15 @@ public class NutchDocumentAPIController extends APIController {
 
         Content content = hdfsService.getFileContents(coreName, segment, key);
         if (content != null) {
+
             String fileName = new File(key).getName();
-            response.setContentType(content.getContentType());
+            String contentType = content.getContentType();
+            if (fileName.endsWith(Constants.JSON_CONTENT_TYPE)) {
+                fileName = Utils.changeFileExtension(fileName, Constants.TEXT_FILE_EXT, false);
+                contentType = Constants.TEXT_CONTENT_TYPE;
+            }
+
+            response.setContentType(contentType);
             response.setHeader("Content-Disposition", "attachment; fileName=" + fileName);
 
             OutputStream outputStream = response.getOutputStream();
@@ -76,7 +81,7 @@ public class NutchDocumentAPIController extends APIController {
 
         response.reset();
         response.setBufferSize(DEFAULT_BUFFER_SIZE);
-        response.setContentType(FLASH_MIME_TYPE);
+        response.setContentType(Constants.FLASH_CONTENT_TYPE);
         response.setHeader(PRAGMA_HEADER, PRAGMA_VALUE);
         response.setHeader(CACHE_CONTROL_HEADER, CACHE_CONTROL_VALUE);
         response.setHeader(EXPIRES_HEADER, EXPIRES_VALUE);
@@ -90,12 +95,12 @@ public class NutchDocumentAPIController extends APIController {
             output = new BufferedOutputStream(response.getOutputStream(), DEFAULT_BUFFER_SIZE);
 
             if (Utils.hasFileErrorMessage(convertResponse)) {
-                response.setHeader(CONTENT_LENGTH_HEADER, Long.toString(convertResponse.length()));
+                response.setHeader(Constants.CONTENT_LENGTH_HEADER, Long.toString(convertResponse.length()));
                 output.write(convertResponse.getBytes());
 
             } else {
                 File swfFile = new File(convertResponse);
-                response.setHeader(CONTENT_LENGTH_HEADER, Long.toString(swfFile.length()));
+                response.setHeader(Constants.CONTENT_LENGTH_HEADER, Long.toString(swfFile.length()));
                 input = new BufferedInputStream(new FileInputStream(swfFile), DEFAULT_BUFFER_SIZE);
 
                 byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
@@ -123,7 +128,7 @@ public class NutchDocumentAPIController extends APIController {
         hdfsService.printFileContents(coreName, segment, key, writer, preview);
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
     }
 
@@ -138,18 +143,7 @@ public class NutchDocumentAPIController extends APIController {
         }
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
-    }
-
-    @RequestMapping(value = "/nutch/listincrawl", method = RequestMethod.GET)
-    public ResponseEntity<String> readNutchFileFromHDFS(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
-        StringWriter writer = new StringWriter();
-
-        hdfsService.listFilesInCrawlDirectory(coreName, writer);
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
     }
 
@@ -162,7 +156,7 @@ public class NutchDocumentAPIController extends APIController {
         hdfsService.printFileContents(coreName, segment, key, writer, true);
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
     }
 }

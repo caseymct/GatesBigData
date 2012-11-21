@@ -35,35 +35,24 @@ import java.util.regex.Pattern;
 
 public class SearchServiceImpl implements SearchService {
 
-   // private Pattern fieldNamesToIgnore;
-    private String SOLR_DEFAULT_SORT_FIELD = "score";
-    private String SOLR_DEFAULT_QUERY = "*:*";
-    private int SOLR_DEFAULT_START = 0;
-    private int SOLR_DEFAULT_ROWS = 10;
+    private String SOLR_DEFAULT_SORT_FIELD          = "score";
+    private String SOLR_DEFAULT_QUERY               = "*:*";
+    private int SOLR_DEFAULT_START                  = 0;
+    private int SOLR_DEFAULT_ROWS                   = 10;
     private SolrQuery.ORDER SOLR_DEFAULT_SORT_ORDER = SolrQuery.ORDER.asc;
 
     private static final Logger logger = Logger.getLogger(SearchServiceImpl.class);
 
-    private SolrService solrService;
     private CoreService coreService;
 
     @Autowired
-    public void setServices(SolrService solrService, CoreService coreService) {
-        this.solrService = solrService;
+    public void setServices(CoreService coreService) {
         this.coreService = coreService;
-     /*   fieldNamesToIgnore = Pattern.compile("^(attr|_).*|.*(version|batch|body|text_all|" +
-                solrService.getSolrSchemaHDFSKey() +
-                "|boost|digest|host|segment|tstamp).*|.*id");*/
     }
 
     public SolrQuery.ORDER getSortOrder(String sortOrder) {
         return sortOrder.equals("asc") ? SolrQuery.ORDER.asc : SolrQuery.ORDER.desc;
     }
-
-    /*private boolean validFieldName(String fieldName, boolean isFacetField) {
-        Matcher m = fieldNamesToIgnore.matcher(fieldName);
-        return (!isFacetField && fieldName.equals(solrService.getSolrSchemaHDFSKey())) || !m.matches();
-    } */
 
     private List<String> getFieldNameSubset(Collection<String> fieldNames, boolean isFacetField) {
         List<String> fieldNamesSubset = new ArrayList<String>();
@@ -77,29 +66,6 @@ public class SearchServiceImpl implements SearchService {
         return fieldNamesSubset;
     }
 
-    /*public FacetFieldEntryList getFacetFieldsFromLuke(String coreName, boolean facetFields) {
-        FacetFieldEntryList facetFieldEntryList = new FacetFieldEntryList();
-
-        try {
-            JSONObject fields = coreService.getLukeFieldsObject(coreName);
-            Iterator<?> keys = fields.keys();
-
-            while(keys.hasNext()){
-                String key = (String)keys.next();
-                if (validFieldName(key, facetFields)) {
-                    JSONObject fieldInfo = fields.getJSONObject(key);
-                    if (fieldInfo.containsKey("type") && !(fieldInfo.get("type") instanceof JSONNull) &&
-                            fieldInfo.containsKey("schema") && !(fieldInfo.get("schema") instanceof JSONNull)) {
-                        facetFieldEntryList.add(key, fieldInfo.getString("type"), fieldInfo.getString("schema"));
-                    }
-                }
-            }
-
-        } catch (JSONException e) {
-            System.out.println(e.getMessage());
-        }
-        return facetFieldEntryList;
-    }  */
 
     private String editFilterQueryDateRange(String fq, String fieldName) {
         if (fq == null || !fq.contains(fieldName)) return fq;

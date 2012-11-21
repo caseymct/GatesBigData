@@ -1,5 +1,6 @@
 package LucidWorksApp.api;
 
+import LucidWorksApp.utils.Constants;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
@@ -51,7 +52,7 @@ public class HDFSAPIController extends APIController {
         success.put("Success", added);
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(success.toString(), httpHeaders, OK);
     }
 
@@ -64,7 +65,7 @@ public class HDFSAPIController extends APIController {
         success.put("Number of files added", added);
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(success.toString(), httpHeaders, OK);
     }
 
@@ -74,8 +75,19 @@ public class HDFSAPIController extends APIController {
         List<String> files = hdfsService.listFiles(new Path(hdfsDir), true);
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(StringUtils.join(files, "\n"), httpHeaders, OK);
+    }
+
+    @RequestMapping(value = "/nutch/listincrawl", method = RequestMethod.GET)
+    public ResponseEntity<String> listInCrawl(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
+        StringWriter writer = new StringWriter();
+
+        hdfsService.listFilesInCrawlDirectory(coreName, writer);
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
+        return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
     }
 
     @RequestMapping(value = "/remove", method = RequestMethod.GET)
@@ -86,7 +98,7 @@ public class HDFSAPIController extends APIController {
         success.put("Removed file " + remoteFile, removed);
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(success.toString(), httpHeaders, OK);
     }
 
@@ -95,7 +107,7 @@ public class HDFSAPIController extends APIController {
         hdfsService.testCrawlData(coreName, "");
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>("", httpHeaders, OK);
     }
 
@@ -104,7 +116,7 @@ public class HDFSAPIController extends APIController {
         hdfsService.generateThumbnails(coreName);
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>("", httpHeaders, OK);
     }
 }

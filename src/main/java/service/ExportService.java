@@ -7,15 +7,23 @@ import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 
 
 public abstract class ExportService {
 
-    static final String DEFAULT_DELIMETER = ",";
-    static final String DEFAULT_NEWLINE = "\n";
+    static final String DEFAULT_DELIMETER   = ",";
+    static final String DEFAULT_NEWLINE     = "\n";
+    public String exportFileName            = "";
     public static List<String> FIELDS_TO_EXPORT = new ArrayList<String>(Arrays.asList("title", "id", "content_type", "preview"));
+
+    public void setExportFileName(String exportFileName) {
+        this.exportFileName = exportFileName;
+    }
+
+    public String getExportFileName() {
+        return this.exportFileName;
+    }
 
     public void writeDefaultNewline(final Writer writer) throws IOException {
         writer.append(DEFAULT_NEWLINE);
@@ -42,5 +50,4 @@ public abstract class ExportService {
     public abstract void writeEmptyResultSet(final Writer writer);
 
     public abstract void closeWriters(final Writer writer);
-
 }

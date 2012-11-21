@@ -72,8 +72,8 @@ DATEPICK.util = {};
                 Dom.get(dateConstraintRangeTextElName).innerHTML = dateField + " range is: " +
                     "<i>" + dateStr[0] + "</i> to <i>" + dateStr[1] + "</i>";
 
-                beginDatePick.setSelectedDay({ day:start[2], month:start[1], year:start[3] });
-                endDatePick.setSelectedDay({ day:end[2], month:end[1], year:end[3] });
+                if (start != null) beginDatePick.setSelectedDay({ day:start[2], month:start[1], year:start[3] });
+                if (end != null) endDatePick.setSelectedDay({ day:end[2], month:end[1], year:end[3] });
             }
         });
 

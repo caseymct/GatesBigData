@@ -1,5 +1,6 @@
 package service;
 
+import LucidWorksApp.utils.Constants;
 import LucidWorksApp.utils.SolrUtils;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringEscapeUtils;
@@ -84,7 +85,7 @@ public class ExportJSONServiceImpl extends ExportService {
 
         for (Map.Entry<String, List<String>> entry : segToFileMap.entrySet()) {
             for (Content content : hdfsService.getFileContents(coreName, entry.getKey(), entry.getValue())) {
-                if (content == null || !(content.getContentType().equals("application/json"))) {
+                if (content == null || !(content.getContentType().equals(Constants.JSON_CONTENT_TYPE))) {
                     continue;
                 }
 

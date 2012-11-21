@@ -1,5 +1,6 @@
 package LucidWorksApp.api;
 
+import LucidWorksApp.utils.Constants;
 import LucidWorksApp.utils.SolrUtils;
 import model.FacetFieldEntryList;
 import net.sf.json.JSONArray;
@@ -93,7 +94,7 @@ public class SearchAPIController extends APIController {
                 (rows == null) ? 10 : rows, fq, facetFields, writer);
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
     }
 
@@ -106,7 +107,7 @@ public class SearchAPIController extends APIController {
         searchService.writeFacets(coreName, facetFields, writer);
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
     }
 
@@ -123,7 +124,7 @@ public class SearchAPIController extends APIController {
         }
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(ret.toString(), httpHeaders, OK);
     }
 
@@ -143,7 +144,7 @@ public class SearchAPIController extends APIController {
         JSONObject suggest = searchService.suggest(coreName, userInput, (prefixField != null) ? singleMap : fieldMap, n);
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(suggest.toString(), httpHeaders, OK);
     }
 }

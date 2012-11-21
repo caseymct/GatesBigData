@@ -21,9 +21,6 @@ import java.util.Map;
 
 public class HttpClientUtils {
 
-    public static final String jsonContentType = "application/json";
-    public static final String textContentType = "text/plain; charset=utf-8";
-
     private static String getResponse(HttpEntity entity) throws IOException {
         StringBuilder sb = new StringBuilder();
         String line;
@@ -47,7 +44,7 @@ public class HttpClientUtils {
         try {
             HttpPost postRequest = new HttpPost(url);
             StringEntity input = new StringEntity(json);
-            input.setContentType(jsonContentType);
+            input.setContentType(Constants.JSON_CONTENT_TYPE);
             postRequest.setEntity(input);
 
             HttpResponse response = httpClient.execute(postRequest);
@@ -180,7 +177,7 @@ public class HttpClientUtils {
             HttpPut httpPut = new HttpPut(url);
 
             StringEntity input = new StringEntity(json);
-            input.setContentType(jsonContentType);
+            input.setContentType(Constants.JSON_CONTENT_TYPE);
             httpPut.setEntity(input);
 
             HttpResponse response = httpclient.execute(httpPut);

@@ -1,5 +1,6 @@
 package service;
 
+import LucidWorksApp.utils.Constants;
 import LucidWorksApp.utils.HttpClientUtils;
 import LucidWorksApp.utils.Utils;
 
@@ -23,8 +24,7 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
     //private static final String PRISM_CONVERT_URL = "http://denlx006.dn.gates.com:18880/convert2swf";
     //private static final String LOCAL_TMP_DIRECTORY = "/tmp/prizm/";
     private static final String THUMBNAIL_SIZE = "5000x5000";
-    private static final String SWF_EXTENSION = "swf";
-    private static final String IMG_EXTENSION = "png";
+
 
     public String getLocalTmpDirectory() {
         return LOCAL_TMP_DIRECTORY;
@@ -33,9 +33,10 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
     public void writeLocalCopy(Content content, String hdfsFilePath, StringWriter writer) throws IOException {
 
         String fileName = new File(hdfsFilePath).getName();
-        if (fileName.endsWith(".json")) {
-            fileName = fileName.replace(".json", ".txt");
+        if (fileName.endsWith(Constants.JSON_CONTENT_TYPE)) {
+            fileName = Utils.changeFileExtension(fileName, Constants.TEXT_FILE_EXT, false);
         }
+
         File tmpFile = new File(LOCAL_TMP_DIRECTORY, fileName);
         if (tmpFile.exists() && !tmpFile.delete()) {
             Utils.printFileErrorMessage(writer, "Can not delete old file " + tmpFile.getPath());
@@ -58,7 +59,7 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
     }
 
     public String getSwfFileNameFromLocalFileName(File localFile) {
-        return Utils.changeFileExtension(localFile.getName(), SWF_EXTENSION, false);
+        return Utils.changeFileExtension(localFile.getName(), Constants.SWF_FILE_EXT, false);
     }
 
     public File getSwfFile(String localFilePath) {
@@ -94,11 +95,11 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
     }
 
     public String getThumbnailNameFromHDFSPath(String hdfsPath) {
-        return Utils.changeFileExtension(getTempDocNameFromHDFSId(hdfsPath), IMG_EXTENSION, false);
+        return Utils.changeFileExtension(getTempDocNameFromHDFSId(hdfsPath), Constants.IMG_FILE_EXT, false);
     }
 
-    public String convertContentToThumbnail(Content content, Text url) {
-        String uri = Utils.decodeUrl(url.toString());
+    public String convertContentToThumbnail(Content content, String url) {
+        String uri = Utils.decodeUrl(url);
         if (uri.endsWith("/")) {
             return "";
         }

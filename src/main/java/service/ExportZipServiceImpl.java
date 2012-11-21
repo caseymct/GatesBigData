@@ -1,30 +1,34 @@
 package service;
 
 
+import LucidWorksApp.utils.Constants;
+import LucidWorksApp.utils.SolrUtils;
+import LucidWorksApp.utils.Utils;
 import org.apache.log4j.Logger;
+import org.apache.nutch.protocol.Content;
+import org.apache.solr.common.SolrDocumentList;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.Writer;
+import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-public class ExportZipServiceImpl implements ExportZipService {
+public class ExportZipServiceImpl extends ExportService {
 
     private FileOutputStream fileOutputStream;
     private ZipOutputStream zipOutputStream;
+    private static String HEADER_FILENAME = "HeaderData.txt";
 
     private static final Logger logger = Logger.getLogger(ExportZipServiceImpl.class);
     private HDFSService hdfsService;
-    private SolrService solrService;
-    private CoreService coreService;
 
     @Autowired
-    public void setServices(HDFSService hdfsService, SolrService solrService, CoreService coreService) {
+    public void setServices(HDFSService hdfsService) {
         this.hdfsService = hdfsService;
-        this.solrService = solrService;
-        this.coreService = coreService;
     }
 
     public void initializeZipfile(String zipfileName) {
@@ -36,23 +40,81 @@ public class ExportZipServiceImpl implements ExportZipService {
         }
     }
 
+    public void exportJSONDocs(SolrDocumentList docs, List<String> fields, String coreName, final Writer writer) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
+        export(docs, fields, coreName, writer, DEFAULT_DELIMETER, DEFAULT_NEWLINE);
+    }
+
+    public void exportJSONDocs(SolrDocumentList docs, List<String> fields, String coreName, final Writer writer, String delimiter, String newLine) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
+        export(docs, fields, coreName, writer, delimiter, newLine);
+    }
+
+    public void export(SolrDocumentList docs, List<String> fields, String coreName, final Writer writer, String delimiter, String newLine) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
+        export(docs, fields, coreName, writer, delimiter, newLine);
+    }
+
+    public void export(SolrDocumentList docs, List<String> fields, String coreName, final Writer writer) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
+        HashMap<String, List<String>> segToFileMap = SolrUtils.getSegmentToFilesMap(docs);
+
+        for (Map.Entry<String, List<String>> entry : segToFileMap.entrySet()) {
+            for (Content content : hdfsService.getFileContents(coreName, entry.getKey(), entry.getValue())) {
+
+                if (content == null || !content.getContentType().equals(Constants.JSON_CONTENT_TYPE)) {
+                    continue;
+                }
+                ByteArrayInputStream inputStream = new ByteArrayInputStream(content.getContent());
+                DataInputStream in = new DataInputStream(inputStream);
+                writeToZipOutputStream(in, content.getUrl());
+
+                Utils.closeResource(in);
+                Utils.closeResource(inputStream);
+            }
+        }
+    }
 
     public void exportHeaderData(long numDocs, String query, String fq, String coreName, final Writer writer, String delimiter, String newLine) {
-
+        initializeZipfile(this.exportFileName);
+        StringBuilder inputStringBuilder = new StringBuilder();
 
         try {
-            writer.append("# Found").append(delimiter).append("Solr Query").append(delimiter);
-            writer.append("Core name").append(delimiter).append("Filter Query").append(delimiter);
-            writer.append(newLine);
+            inputStringBuilder.append("# Found: ").append(Long.toString(numDocs));
+            inputStringBuilder.append("Solr Query: ").append(query);
+            inputStringBuilder.append("Core name: ").append(coreName);
+            inputStringBuilder.append("Filter Query: ").append(fq);
 
-            writer.append(Long.toString(numDocs)).append(delimiter).append(query).append(delimiter);
-            writer.append(coreName).append(delimiter).append(fq).append(delimiter);
-            writer.append(newLine).append(newLine);
+            String inputString = inputStringBuilder.toString();
+            ByteArrayInputStream stream = new ByteArrayInputStream(inputString.getBytes("UTF-8"));
+            writeToZipOutputStream(stream, HEADER_FILENAME);
+
+            Utils.closeResource(stream);
 
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
     }
+
+    private void writeToZipOutputStream(InputStream inputStream, String fileName) throws IOException {
+        ZipEntry zipEntry = new ZipEntry(fileName);
+        this.zipOutputStream.putNextEntry(zipEntry);
+
+        byte[] bytes = new byte[1024];
+        int length;
+        while ((length = inputStream.read(bytes)) >= 0) {
+            this.zipOutputStream.write(bytes, 0, length);
+        }
+
+        this.zipOutputStream.closeEntry();
+    }
+
+    public void addToZipFile(String fileName) throws IOException {
+
+        System.out.println("Writing '" + fileName + "' to zip file");
+
+        File file = new File(fileName);
+        FileInputStream fis = new FileInputStream(file);
+        writeToZipOutputStream(fis, fileName);
+        fis.close();
+    }
+
 
     public void closeWriters(final Writer writer) {
         try {

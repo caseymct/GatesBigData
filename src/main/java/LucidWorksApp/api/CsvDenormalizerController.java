@@ -1,5 +1,6 @@
 package LucidWorksApp.api;
 
+import LucidWorksApp.utils.Constants;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpHeaders;
@@ -161,7 +162,7 @@ public class CsvDenormalizerController extends APIController {
         }
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>("", httpHeaders, OK);
     }
 }

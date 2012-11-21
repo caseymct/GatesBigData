@@ -109,22 +109,15 @@
                             var overlayInnerEl = overlayEl + "_child";
 
                             if (Dom.get(overlayEl) == null) {
-                                var outerDiv = UI.addDomElementChild('div', checkboxParentNode,
-                                        [ { key: "id", value: overlayEl }],
-                                        [ { key: "class", value: "overlay_el" }]);
+                                var outerDiv = UI.addDomElementChild('div', checkboxParentNode, { id : overlayEl }, { class : "overlay_el" });
 
-                                UI.addDomElementChild('a', outerDiv,
-                                        [ { key: "id", value: overlayLink } ],
-                                        [ { key: "margin-right", value: "2px"}, { key: "float", value: "left"},
-                                          { key: "class", value: "button show_overlay"}]);
-                                UI.addDomElementChild('div', outerDiv, [ { key: "innerHTML", value: parent }]);
+                                UI.addDomElementChild('a', outerDiv, { id: overlayLink},
+                                        { "margin-right" : "2px", float : "left", class: "button show_overlay"});
+                                UI.addDomElementChild('div', outerDiv, { innerHTML: parent });
 
-                                var div = UI.addDomElementChild('div', outerDiv, [{ key: "id", value: parent }],
-                                        [{ key: "class", value: "overlay_div" }]);
+                                var div = UI.addDomElementChild('div', outerDiv, { id: parent }, {class: "overlay_div" });
 
-                                currCheckboxParent = UI.addDomElementChild('div', div,
-                                                        [{ key: "id", value: overlayInnerEl }],
-                                                        [{ key: "class", value: "overlay_inner_el" }]);
+                                currCheckboxParent = UI.addDomElementChild('div', div, {id: overlayInnerEl }, {class: "overlay_inner_el" });
 
                                 currOverlay = new Overlay(parent, {
                                     context: [overlayEl, "tl","bl", ["beforeShow", "windowResize"]],
@@ -150,20 +143,16 @@
                             currCheckboxParent = checkboxParentNode;
                         }
 
-                        var d = UI.addDomElementChild('div', currCheckboxParent, [], [{ key: "class", value: "overlay_el" }]);
+                        var d = UI.addDomElementChild('div', currCheckboxParent, null, { class: "overlay_el" });
 
-                        var c = UI.addDomElementChild('input', d,
-                                [ { key: "type", value: "checkbox" }, { key : "name", value: checkboxGrpName },
-                                  { key: "value", value: i }, { key : "id", value: names[i] }]);
+                        var c = UI.addDomElementChild('input', d, {type: "checkbox", name: checkboxGrpName, value: i, id: names[i]});
                         if (child.match(/^[A-Z]/) != null) c.checked = true;
 
-                        UI.addDomElementChild('label', d,
-                                [ { key: "htmlFor", value: names[i] }, { key: "innerHTML", value: child }],
-                                [ { key: "padding", value: "5px" }]);
-                        UI.addDomElementChild('br', d, []);
+                        UI.addDomElementChild('label', d, { htmlFor: names[i], innerHTML : child }, {padding: "5px"});
+                        UI.addDomElementChild('br', d);
                     }
 
-                    UI.addDomElementChild('div', checkboxParentNode, [], [ { key: "clear", value: "both" }]);
+                    UI.addDomElementChild('div', checkboxParentNode, null, { clear: "both" });
                 }
             });
 

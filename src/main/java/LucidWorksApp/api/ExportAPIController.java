@@ -1,43 +1,33 @@
 package LucidWorksApp.api;
 
+import LucidWorksApp.utils.Constants;
 import LucidWorksApp.utils.SolrUtils;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.propertyeditors.StringTrimmerEditor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Controller;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.support.SessionStatus;
-import service.CoreService;
 import service.ExportService;
 import service.SearchService;
-import service.SolrService;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static java.util.Collections.singletonList;
-import static org.springframework.http.HttpStatus.OK;
 
 @Controller
 @SessionAttributes(value = {ExportAPIController.ATTRIBUTE_COMMAND})
 public class ExportAPIController extends APIController {
 
-    public static final String EXPORT_FILENAME = "file";
-    public static final String EXPORT_FILETYPE = "type";
-    public static final String EXPORT_FIELDS = "fields";
+    public static final String EXPORT_FILENAME   = "file";
+    public static final String EXPORT_FILETYPE   = "type";
+    public static final String EXPORT_FIELDS     = "fields";
     public static final String ATTRIBUTE_COMMAND = "command";
 
     public static final int PAGE_SIZE = 200;
@@ -45,22 +35,21 @@ public class ExportAPIController extends APIController {
     private SearchService searchService;
     private ExportService exportCSVService;
     private ExportService exportJSONService;
-    private SolrService solrService;
-    private CoreService coreService;
+    private ExportService exportZipService;
 
     @Autowired
-    public ExportAPIController(SearchService searchService, SolrService solrService, CoreService coreService,
-                               @Qualifier("exportCSVService") ExportService exportCSVService,
-                               @Qualifier("exportJSONService") ExportService exportJSONService) {
+    public ExportAPIController(SearchService searchService,
+                               @Qualifier("exportCSVService")  ExportService exportCSVService,
+                               @Qualifier("exportJSONService") ExportService exportJSONService,
+                               @Qualifier("exportZipService")  ExportService exportZipService) {
         this.searchService = searchService;
-        this.solrService = solrService;
-        this.coreService = coreService;
         this.exportCSVService = exportCSVService;
         this.exportJSONService = exportJSONService;
+        this.exportZipService = exportZipService;
     }
 
-    private void exportHeaderData(String query, String fq, String coreName,
-                                  String sortType, SolrQuery.ORDER sortOrder, ExportService exportService, PrintWriter writer) throws IOException {
+    private void exportHeaderData(String query, String fq, String coreName, String sortType,
+                                  SolrQuery.ORDER sortOrder, ExportService exportService, PrintWriter writer) throws IOException {
 
         QueryResponse rsp = searchService.execQuery(query, coreName, SolrUtils.SOLR_SCHEMA_HDFSKEY,
                                                     sortOrder, 0, 0, fq, null);
@@ -71,7 +60,7 @@ public class ExportAPIController extends APIController {
                         String sortType, SolrQuery.ORDER sortOrder, List<String> fields,
                         ExportService exportService, PrintWriter writer) throws IOException, IllegalAccessException, InvocationTargetException, NoSuchMethodException{
 
-        fq = (fq == null ? "" : fq) + (onlyJsonContentType ? "+" : "-") + "content_type:\"application/json\"";
+        fq = (fq == null ? "" : fq) + (onlyJsonContentType ? "+" : "-") + "content_type:\"" + Constants.JSON_CONTENT_TYPE + "\"";
         int start = 0;
         long numDocs = -1;
 
@@ -97,6 +86,20 @@ public class ExportAPIController extends APIController {
         binder.registerCustomEditor(String.class, new StringTrimmerEditor(true));
     }
 
+    private ExportService getExportServiceByFileType(String fileType) {
+        if (fileType.equals("csv")) return exportCSVService;
+        if (fileType.equals("zip")) return exportZipService;
+        if (fileType.equals("json")) return exportJSONService;
+        return null;
+    }
+
+    private String getContentTypeByFileType(String fileType) {
+        if (fileType.equals("csv"))  return Constants.CSV_CONTENT_TYPE;
+        if (fileType.equals("zip"))  return Constants.ZIP_CONTENT_TYPE;
+        if (fileType.equals("json")) return Constants.JSON_CONTENT_TYPE;
+        return "";
+    }
+
     @RequestMapping(value = "/export")
     public void exportSearchResults(@RequestParam(value = EXPORT_FILENAME, required = true) String fileName,
                                     @RequestParam(value = EXPORT_FILETYPE, required = true) String fileType,
@@ -116,8 +119,8 @@ public class ExportAPIController extends APIController {
         }
         long time = System.currentTimeMillis();
 
-        ExportService exportService = fileType.equals("csv") ? exportCSVService : exportJSONService;
-        String contentType = fileType.equals("csv") ? "text/csv" : "application/json";
+        ExportService exportService = getExportServiceByFileType(fileType);
+        String contentType = getContentTypeByFileType(fileType);
 
         response.reset();
         response.setContentType(contentType);

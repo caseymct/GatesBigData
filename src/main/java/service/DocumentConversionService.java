@@ -18,7 +18,7 @@ public interface DocumentConversionService {
 
     public String convertDocumentToSwf(String localFilePath);
 
-    public String convertContentToThumbnail(Content content, Text url);
+    public String convertContentToThumbnail(Content content, String url);
 
     public String getThumbnailNameFromHDFSPath(String hdfsPath);
 

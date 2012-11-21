@@ -1,14 +1,12 @@
 package service;
 
 
-import LucidWorksApp.utils.DateUtils;
-import LucidWorksApp.utils.HttpClientUtils;
-import LucidWorksApp.utils.JsonParsingUtils;
-import LucidWorksApp.utils.SolrUtils;
+import LucidWorksApp.utils.*;
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 import model.FacetFieldEntryList;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import org.apache.log4j.Logger;
@@ -50,6 +48,7 @@ public class CoreServiceImpl implements CoreService {
         put("Last-Author", "last_author");
         put("Application-Name", "application_name");
         put("Author", "author");
+        put("Company", "company");
         put("Company", "company");
         put("title", "title");
     }};
@@ -183,7 +182,7 @@ public class CoreServiceImpl implements CoreService {
 
 
     public SolrInputDocument createSolrInputDocumentFromNutch(String urlString, ParseData parseData, String segment, String coreName,
-                                                              String contentType, Content content) {
+                                                              String contentType, String content) {
         if (parseData == null || !parseData.getStatus().isSuccess()) {
             return null;
         }
@@ -208,20 +207,22 @@ public class CoreServiceImpl implements CoreService {
             doc.addField("title", urlItems[urlItems.length - 1]);
         }
 
-        if (contentType.equals("application/json")) {
+        if (contentType.equals(Constants.JSON_CONTENT_TYPE)) {
             try {
                 JSONObject jsonObject = JSONObject.fromObject(content);
                 addFieldsFromJsonObject(doc, jsonObject, "");
             } catch (JSONException e) {
                 logger.error("Invalid json for file: " + urlString);
             }
+        } else if (!Utils.stringIsNullOrEmpty(content)) {
+            doc.addField("content", content);
         }
 
         return doc;
     }
 
     public boolean addNutchDocumentToSolr(String urlString, ParseData parseData, String segment,
-                                          String coreName, String contentType, Content content) {
+                                          String coreName, String contentType, String content) {
         SolrInputDocument doc = createSolrInputDocumentFromNutch(urlString, parseData, segment, coreName, contentType, content);
         return (doc != null) && addDocumentToSolrIndex(doc, coreName);
     }
@@ -263,8 +264,8 @@ public class CoreServiceImpl implements CoreService {
 
     private String parseDateFromSolrResponse(String url, String field) {
         String response = HttpClientUtils.httpGetRequest(url);
-        JSONObject jsonObject = JSONObject.fromObject(response);
-        String date = jsonObject.getJSONObject("response").getJSONArray("docs").getJSONObject(0).getString(field);
+        String date = (String) JsonParsingUtils.extractJSONProperty(JSONObject.fromObject(response),
+                                    Arrays.asList("response", "docs", "0", field), String.class, "");
         return DateUtils.getSolrDate(date);
     }
 
@@ -285,10 +286,6 @@ public class CoreServiceImpl implements CoreService {
         urlParams.put("sort", field + "+desc");
         date = parseDateFromSolrResponse(SolrUtils.getSolrSelectURI(coreName, urlParams), field);
         dateRange.add(DateUtils.getFormattedDateStringFromSolrDate(date, format));
-        /*url = solrService.getSolrSelectURI(coreName, urlParams);
-        jsonObject = JSONObject.fromObject(HttpClientUtils.httpGetRequest(url));
-        date = jsonObject.getJSONObject("response").getJSONArray("docs").getJSONObject(0).getString(field);
-        dateRange.add(DateUtils.getFormattedDateStringFromSolrDate(DateUtils.getSolrDate(date), format));   */
 
         if (format.equals(DateUtils.SOLR_DATE)) {
             try {

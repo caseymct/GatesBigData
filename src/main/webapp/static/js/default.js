@@ -21,19 +21,21 @@ UI.util = {};
     };
 
     function createDomElement(type, attributes, styles) {
-        var i, el = document.createElement(type);
+        var i, keys, el = document.createElement(type);
 
         if (attributes != undefined && attributes != null) {
-            for(i = 0; i < attributes.length; i++) {
-                el[attributes[i].key] = attributes[i].value;
+            keys = Object.keys(attributes);
+            for(i = 0; i < keys.length; i++) {
+                el[keys[i]] = attributes[keys[i]];
             }
         }
         if (styles != undefined && styles != null) {
-            for(i = 0; i < styles.length; i++) {
-                if (styles[i].key == "class") {
-                    Dom.addClass(el, styles[i].value);
+            keys = Object.keys(styles);
+            for(i = 0; i < keys.length; i++) {
+                if (keys[i] == "class") {
+                    Dom.addClass(el, styles[keys[i]]);
                 } else {
-                    Dom.setStyle(el, styles[i].key, styles[i].value);
+                    Dom.setStyle(el, keys[i], styles[keys[i]]);
                 }
             }
         }
@@ -69,38 +71,44 @@ UI.util = {};
         return false;
     };
 
-    UI.confirmDelete = new YAHOO.widget.Dialog("dlg", {
-        width: "20em",
-        fixedcenter: true,
-        modal: true,
-        visible: false,
-        draggable: false
-    });
+    function hideDlg() { this.hide(); }
 
-    UI.confirmDelete.setHeader("Warning!");
-    UI.confirmDelete.setBody("Are you sure you want to delete this item?");
-    UI.confirmDelete.cfg.setProperty("icon", YAHOO.widget.SimpleDialog.ICON_WARN);
-    UI.confirmDeleteHandleNo = function() { this.hide(); };
-    UI.confirmDelete.render(YAHOO.util.Dom.get("content"));
+    UI.createSimpleDlg = function(containerElName, header, body, handleYesFn) {
+        if (header == undefined) header = "Warning!";
+        if (body == undefined) body = "Are you sure?";
+
+        var dlg = new YAHOO.widget.SimpleDialog(containerElName, {
+            width: "20em",
+            fixedcenter: true,
+            modal: true,
+            visible: false,
+            buttons: [
+                { text: "Yes", handler: handleYesFn, isDefault:true},
+                { text: "Cancel", handler: hideDlg }]
+        });
+
+        dlg.render(document.body);
+        dlg.setHeader(header);
+        dlg.setBody(body);
+        return dlg;
+    };
+
 
     UI.buildTable = function(result, tableName) {
         var keys = Object.keys(result);
         var containerDiv, childDiv, resultsTable = Dom.get(tableName);
 
         for(var i = 0; i < keys.length; i++) {
-            containerDiv = UI.addDomElementChild("div", resultsTable,
-                [ { key : "class", value : "info_details_results_div" }], []);
-            childDiv = UI.addDomElementChild("div", containerDiv,
-                [ { key : "class", value : "info_details_child_div" },
-                  { key: "text", value: "<b>" + keys[i] + "</b>: " + result[keys[i]] }], []);
+            containerDiv = UI.addDomElementChild("div", resultsTable, null, { class : "info_details_results_div" });
+            childDiv = UI.addDomElementChild("div", containerDiv, { innerHTML : "<b>" + keys[i] + "</b>: " + result[keys[i]] },
+                                             { class: "info_details_child_div" });
 
             if (i < keys.length) {
-                childDiv = UI.addDomElementChild("div", containerDiv,
-                    [ { key : "class", value : "info_details_child_div" },
-                      { key: "text", value: "<b>" + keys[++i] + "</b>: " + result[keys[i]] }], []);
+                childDiv = UI.addDomElementChild("div", containerDiv, { innerHTML : "<b>" + keys[++i] + "</b>: " + result[keys[i]] },
+                    { class: "info_details_child_div" });
             }
 
-            UI.addDomElementChild("div", containerDiv, [], [{ key: "clear", value: "both" } ]);
+            UI.addDomElementChild("div", containerDiv, null, { class: "clearboth"});
         }
     };
 
@@ -160,6 +168,18 @@ UI.util = {};
 
     UI.getButtonGroupCheckedButtonValue = function(bg) {
         return bg.get('checkedButton').get('value');
+    };
+
+    UI.showOverlayWithButton = function(overlay, showOverlayButtonElName, buttonDownOverlayCSSClass, buttonUpOverlayCSSClass) {
+        overlay.show();
+        Dom.removeClass(showOverlayButtonElName, buttonDownOverlayCSSClass);
+        Dom.addClass(showOverlayButtonElName, buttonUpOverlayCSSClass);
+    };
+
+    UI.hideOverlayWithButton = function(overlay, showOverlayButtonElName, buttonDownOverlayCSSClass, buttonUpOverlayCSSClass) {
+        overlay.hide();
+        Dom.addClass(showOverlayButtonElName, buttonDownOverlayCSSClass);
+        Dom.removeClass(showOverlayButtonElName, buttonUpOverlayCSSClass);
     };
 
     /* Utility functions */
@@ -245,6 +265,14 @@ UI.util = {};
         return sortedkeys.concat(unsortedkeys.sort());
     };
 
+    UI.util.getDomElementsFromDomNames = function(names) {
+        var els = [];
+        for(var i = 0; i < names.length; i++) {
+            els.push(Dom.get(names[i]));
+        }
+        return els;
+    };
+
     String.prototype.endsWith = function(suffixList) {
         if (!(suffixList instanceof Array)) {
             suffixList = [suffixList];
@@ -267,8 +295,12 @@ UI.util = {};
         return encodeURIComponent(this.replace(/&amp;/g, "&"));
     };
 
+    UI.util.getNPixels = function(pxStr) {
+        return parseInt(pxStr.replace("px", ""));
+    };
+
     UI.util.jsonSyntaxHighlight = function (json) {
-        var json = YAHOO.lang.JSON.stringify(json, undefined, 3);
+        json = YAHOO.lang.JSON.stringify(json, undefined, 3);
 
         json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         json = json.replace(/\n/g, "<br>").replace(/\s/g, "&nbsp;");
@@ -315,5 +347,7 @@ UI.util = {};
         }
         return l;
     };
+
+
 
 })();

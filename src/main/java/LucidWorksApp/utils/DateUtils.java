@@ -95,28 +95,31 @@ public class DateUtils {
         return 0;
     }
     public static String getSolrDate(String dateString) {
-        dateString = addDateMillisecondsIfMissing(dateString);
+        if (!Utils.stringIsNullOrEmpty(dateString)) {
+            dateString = addDateMillisecondsIfMissing(dateString);
 
-        // If it's already a solr date string, just return
-        Matcher m = solrDateString.matcher(dateString);
-        if (m.matches()) {
-            return dateString;
-        }
+            // If it's already a solr date string, just return
+            Matcher m = solrDateString.matcher(dateString);
+            if (m.matches()) {
+                return dateString;
+            }
 
-        // If it's in the format yyyy-mm-dd
-        m = shortDateString.matcher(dateString);
-        if (m.matches()) {
-            Calendar calendar = Calendar.getInstance();
-            calendar.set(Integer.parseInt(m.group(1)), getCalendarMonth(Integer.parseInt(m.group(2))),
-                    Integer.parseInt(m.group(3)), 0, 0, 0);
-            return DateField.formatExternal(calendar.getTime());
-        }
+            // If it's in the format yyyy-mm-dd
+            m = shortDateString.matcher(dateString);
+            if (m.matches()) {
+                Calendar calendar = Calendar.getInstance();
+                calendar.set(Integer.parseInt(m.group(1)), getCalendarMonth(Integer.parseInt(m.group(2))),
+                        Integer.parseInt(m.group(3)), 0, 0, 0);
+                return DateField.formatExternal(calendar.getTime());
+            }
 
-        try {
-            return DateField.formatExternal(new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy").parse(dateString));
-        } catch (ParseException e) {
-            return dateString;
+            try {
+                return DateField.formatExternal(new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy").parse(dateString));
+            } catch (ParseException e) {
+                return dateString;
+            }
         }
+        return dateString;
     }
 
     public static String getFormattedDateStringFromSolrDate(String solrDate, String format) {

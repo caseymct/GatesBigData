@@ -41,8 +41,7 @@ FACET.util = {};
 
     function adjustContentContainerHeight() {
         var oh = parseInt(Dom.getStyle(overlayDivElName, "height").replace("px", "")) + 300;
-        var h = (oh > contentContainerMinHeight) ? oh : contentContainerMinHeight;
-        Dom.setStyle(contentContainer, "height", h + "px");
+        Dom.setStyle(contentContainer, "height", Math.max(oh, contentContainerMinHeight) + "px");
     }
 
     function showOverlay() {
@@ -127,8 +126,7 @@ FACET.util = {};
 
             if (Dom.inDocument("treeNode" + node.index) == false) {
                 var anchor = UI.addDomElementChild("a", Dom.get(facetOptionsDivElName),
-                    [{ key: "id", value: "treeNode" + node.index }],
-                    [{ key: "margin", value: "2px"}, {key : "class", value: "button delete" }]);
+                    { id: ("treeNode" + node.index) }, { margin: "2px", class: "button delete" });
                 anchor.appendChild(document.createTextNode(anchorText));
 
                 Event.addListener("treeNode" + node.index, "click", function(e) {
@@ -160,8 +158,8 @@ FACET.util = {};
 
     FACET.ui.buildFacetHTML = function(insertAfterElName) {
         var insertAfterNode = Dom.get(insertAfterElName);
-        var el = UI.insertDomElementAfter('div', insertAfterNode, [{ key: 'id', value: facetOptionsDivElName}], []);
-        UI.addDomElementChild('div', el, [], [{ key: 'class', value: 'clearboth'}]);
+        var el = UI.insertDomElementAfter('div', insertAfterNode, { id: facetOptionsDivElName}, null);
+        UI.addDomElementChild('div', el, null, { class: "clearboth" });
     }
 
 })();

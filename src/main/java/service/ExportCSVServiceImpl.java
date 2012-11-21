@@ -1,5 +1,6 @@
 package service;
 
+import LucidWorksApp.utils.Constants;
 import LucidWorksApp.utils.SolrUtils;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringEscapeUtils;
@@ -73,7 +74,7 @@ public class ExportCSVServiceImpl extends ExportService {
     public void exportJSONDocs(SolrDocumentList docs, List<String> fields, String coreName, final Writer writer, String delimeter, String newLine) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         logger.debug("Exporting JSON docs to CSV");
 
-        writer.append("Documents with Content-type : application/json").append(newLine);
+        writer.append("Documents with Content-type : ").append(Constants.JSON_CONTENT_TYPE).append(newLine);
 
         // build the csv header row
         if (fields.size() == 0) {
@@ -86,7 +87,7 @@ public class ExportCSVServiceImpl extends ExportService {
         for (Map.Entry<String, List<String>> entry : segToFileMap.entrySet()) {
             for (Content content : hdfsService.getFileContents(coreName, entry.getKey(), entry.getValue())) {
 
-                if (content == null || !content.getContentType().equals("application/json")) {
+                if (content == null || !content.getContentType().equals(Constants.JSON_CONTENT_TYPE)) {
                     continue;
                 }
 

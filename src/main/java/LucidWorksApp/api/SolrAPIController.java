@@ -1,5 +1,6 @@
 package LucidWorksApp.api;
 
+import LucidWorksApp.utils.Constants;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +49,7 @@ public class SolrAPIController extends APIController {
         g.close();
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
     }
 
@@ -56,7 +57,7 @@ public class SolrAPIController extends APIController {
     public ResponseEntity<String> coreInfoAll() throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(solrService.getAllCoreData().toString(), httpHeaders, OK);
     }
 
@@ -69,7 +70,7 @@ public class SolrAPIController extends APIController {
                                     solrService.importCsvFileOnLocalSystemToSolr(collectionName, fileName);
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(response, httpHeaders, OK);
     }
 

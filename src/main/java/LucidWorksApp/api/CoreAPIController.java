@@ -1,5 +1,6 @@
 package LucidWorksApp.api;
 
+import LucidWorksApp.utils.Constants;
 import LucidWorksApp.utils.DateUtils;
 import LucidWorksApp.utils.SolrUtils;
 import LucidWorksApp.utils.Utils;
@@ -62,7 +63,7 @@ public class CoreAPIController extends APIController {
         g.close();
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
     }
 
@@ -70,7 +71,7 @@ public class CoreAPIController extends APIController {
     public ResponseEntity<String> coreInfo(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(coreService.getCoreData(coreName).toString(), httpHeaders, OK);
     }
 
@@ -84,7 +85,7 @@ public class CoreAPIController extends APIController {
         response.put("Deleted", deleted);
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(response.toString(), httpHeaders, OK);
     }
 
@@ -111,7 +112,7 @@ public class CoreAPIController extends APIController {
         response.put("Added", added);
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(response.toString(), httpHeaders, OK);
     }
 
@@ -122,7 +123,7 @@ public class CoreAPIController extends APIController {
 
         //response = solrService.addJsonDocumentToSolr(jsonDocument, "")
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>("", httpHeaders, OK);
     }
 
@@ -139,26 +140,28 @@ public class CoreAPIController extends APIController {
         //http://localhost:8983/solr/admin/cores?action=CREATE&name=coreX&instanceDir=path_to_instance_directory&config=config_file_name.xml&schema=schem_file_name.xml&dataDir=data
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(result, httpHeaders, OK);
     }
 
 
 
     @RequestMapping(value="/reindex", method = RequestMethod.GET)
-    public ResponseEntity<String> repopulateCoreFromHDFS(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) {
+    public ResponseEntity<String> repopulateCoreFromHDFS(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
+                                                         @RequestParam(value = PARAM_N_THREADS, required = false) Integer nThreads,
+                                                         @RequestParam(value = PARAM_N_FILES, required = false) Integer nFiles) {
         JSONObject response = new JSONObject();
 
         boolean deleted = coreService.deleteIndex(coreName);
         if (!deleted) {
             response.put("Error", "Could not delete index for core " + coreName);
         } else {
-            solrReindexService.reindexSolrCoreFromHDFS(coreName);
+            solrReindexService.reindexSolrCoreFromHDFS(coreName, (nThreads == null) ? -1 : nThreads, (nFiles == null) ? -1 : nFiles);
             response.put("Success", "Successfully reindexed " + coreName);
         }
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(response.toString(), httpHeaders, OK);
     }
 
@@ -170,7 +173,7 @@ public class CoreAPIController extends APIController {
         String dateString = dateRange.get(0) + " to " + dateRange.get(1);
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(dateString, httpHeaders, OK);
     }
 }
