@@ -17,6 +17,15 @@ pre {
     padding: 5px;
 }
 
+.search_result_div {
+    width: 100%;
+    padding: 8px;
+    border: 2px solid gray;
+    border-radius: 10px;
+    background: lightgray;
+    margin-bottom: 5px;
+}
+
 .yui-menu-button em.yui-button-label {
     font-style: normal;
     display: block;
@@ -108,6 +117,7 @@ li.yui-button-selectedmenuitem {
 .yui-skin-sam .yui-navset .yui-nav .selected a,
 .yui-skin-sam .yui-navset .yui-nav .selected a em {
     border-color: #243356; /*selected tab border color */
+    color: whitesmoke;
 }
 
 .yui-skin-sam .yui-navset .yui-content {
@@ -134,6 +144,17 @@ li.yui-button-selectedmenuitem {
 
 .yui-menu-button em.yui-button-label {
     width: 15em;
+}
+
+.collections_tab_selected {
+    border : 1px solid #777;
+    border-radius: 4px 4px 0 0;
+    background: #777;
+}
+
+.collections_tab_unselected {
+    border : 1px solid #AAA;
+    border-radius : 4px 4px 0 0;
 }
 
 .search-result-div {
@@ -215,6 +236,24 @@ fieldset div.fieldset_row {
 form div.fieldset_row input {
     float: right;
     width: 320px;
+}
+
+.highlight_text {
+    color: black;
+    font-weight: bold;
+}
+
+.search_subheading {
+    font-size: 12px;
+    color: black;
+    padding: 2px 0 1px 10px;
+}
+
+.search_result {
+    font-size: 12px;
+    color: black;
+    padding: 2px 0 1px 10px;
+    margin-left: 10px;
 }
 
 #has_words, #does_not_have_words, #has_words_label, #does_not_have_words_label {

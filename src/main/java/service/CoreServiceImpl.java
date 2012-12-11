@@ -15,17 +15,20 @@ import org.apache.nutch.parse.ParseData;
 import org.apache.nutch.protocol.Content;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.request.LukeRequest;
 import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.client.solrj.response.LukeResponse;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.util.NamedList;
+import org.apache.solr.core.CoreContainer;
 import org.apache.solr.schema.DateField;
 
+import org.codehaus.jackson.JsonGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.text.ParseException;
 import java.util.*;
@@ -66,13 +69,7 @@ public class CoreServiceImpl implements CoreService {
     }
 
     public SolrServer getSolrServer(String coreName) {
-        try {
-            return new CommonsHttpSolrServer(SolrUtils.getSolrServerURI(coreName));
-
-        } catch (MalformedURLException e) {
-            System.out.println(e.getMessage());
-        }
-        return null;
+        return new HttpSolrServer(SolrUtils.getSolrServerURI(coreName));
     }
 
     private LukeResponse.FieldInfo getLukeFieldInfo(SolrServer server, String fieldName) {
@@ -102,27 +99,23 @@ public class CoreServiceImpl implements CoreService {
             SolrServer server = getSolrServer(coreName);
             server.deleteByQuery("*:*");
             solrService.solrServerCommit(server);
+            return true;
 
         } catch (SolrServerException e) {
             logger.error(e.getMessage());
-            return false;
-
         } catch (IOException e) {
             logger.error(e.getMessage());
-            return false;
         }
 
-        return true;
+        return false;
     }
 
     public boolean addDocumentToSolrIndex(SolrInputDocument doc, String coreName) {
-        SolrServer solrServer = getSolrServer(coreName);
-        return solrService.solrServerCommit(solrServer, Arrays.asList(doc));
+        return solrService.solrServerCommit(getSolrServer(coreName), Arrays.asList(doc));
     }
 
     public boolean addDocumentToSolrIndex(List<SolrInputDocument> docs, String coreName) {
-        SolrServer solrServer = getSolrServer(coreName);
-        return solrService.solrServerCommit(solrServer, docs);
+        return solrService.solrServerCommit(getSolrServer(coreName), docs);
     }
 
     public boolean createAndAddDocumentToSolr(Object content, String hdfsKey, String coreName) {
@@ -158,7 +151,7 @@ public class CoreServiceImpl implements CoreService {
         return doc;
     }
 
-    private SolrInputDocument addFieldIfNotNull(SolrInputDocument doc, String field, Object value) {
+    private SolrInputDocument addFieldIfNull(SolrInputDocument doc, String field, Object value) {
         if (doc.getField(field) == null) {
             doc.addField(field, value);
         }
@@ -169,8 +162,8 @@ public class CoreServiceImpl implements CoreService {
         try {
             SmbFile file = new SmbFile(url, getAuth());
             if (file.exists()) {
-                doc = addFieldIfNotNull(doc, "last_modified", DateUtils.formatToSolr(new Date(file.getLastModified())));
-                doc = addFieldIfNotNull(doc, "creation_date", DateUtils.formatToSolr(new Date(file.createTime())));
+                doc = addFieldIfNull(doc, "last_modified", DateUtils.formatToSolr(new Date(file.getLastModified())));
+                doc = addFieldIfNull(doc, "creation_date", DateUtils.formatToSolr(new Date(file.createTime())));
             }
         } catch (SmbException e) {
             logger.error(e.getMessage());
@@ -179,7 +172,6 @@ public class CoreServiceImpl implements CoreService {
         }
         return doc;
     }
-
 
     public SolrInputDocument createSolrInputDocumentFromNutch(String urlString, ParseData parseData, String segment, String coreName,
                                                               String contentType, String content) {
@@ -278,12 +270,12 @@ public class CoreServiceImpl implements CoreService {
         urlParams.put("rows", "1");
         urlParams.put("wt", "json");
         urlParams.put("fl", field);
-        urlParams.put("sort", field + "+asc");
+        urlParams.put("sort", field + " asc");
 
         String date = parseDateFromSolrResponse(SolrUtils.getSolrSelectURI(coreName, urlParams), field);
         dateRange.add(DateUtils.getFormattedDateStringFromSolrDate(date, format));
 
-        urlParams.put("sort", field + "+desc");
+        urlParams.put("sort", field + " desc");
         date = parseDateFromSolrResponse(SolrUtils.getSolrSelectURI(coreName, urlParams), field);
         dateRange.add(DateUtils.getFormattedDateStringFromSolrDate(date, format));
 

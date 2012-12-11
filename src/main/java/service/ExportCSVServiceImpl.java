@@ -2,6 +2,7 @@ package service;
 
 import LucidWorksApp.utils.Constants;
 import LucidWorksApp.utils.SolrUtils;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
@@ -21,14 +22,10 @@ public class ExportCSVServiceImpl extends ExportService {
 
     private static final Logger logger = Logger.getLogger(ExportCSVServiceImpl.class);
     private HDFSService hdfsService;
-    private SolrService solrService;
-    private CoreService coreService;
 
     @Autowired
-    public void setServices(HDFSService hdfsService, SolrService solrService, CoreService coreService) {
+    public void setServices(HDFSService hdfsService) {
         this.hdfsService = hdfsService;
-        this.solrService = solrService;
-        this.coreService = coreService;
     }
 
     public void exportHeaderData(long numDocs, String query, String fq, String coreName, final Writer writer, String delimiter, String newLine) {
@@ -71,7 +68,7 @@ public class ExportCSVServiceImpl extends ExportService {
     }
 
 
-    public void exportJSONDocs(SolrDocumentList docs, List<String> fields, String coreName, final Writer writer, String delimeter, String newLine) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+    public void exportJSONDocs(JSONArray docs, List<String> fields, String coreName, final Writer writer, String delimeter, String newLine) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         logger.debug("Exporting JSON docs to CSV");
 
         writer.append("Documents with Content-type : ").append(Constants.JSON_CONTENT_TYPE).append(newLine);
@@ -114,20 +111,21 @@ public class ExportCSVServiceImpl extends ExportService {
         writer.flush();
     }
 
-    public void export(SolrDocumentList docs, List<String> fields, String coreName, final Writer writer, String delimeter, String newLine) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+    public void export(JSONArray docs, List<String> fields, String coreName, final Writer writer, String delimeter, String newLine) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
         logger.debug("Exporting to CSV");
 
         // build the csv header row
         fields = FIELDS_TO_EXPORT;
         buildCSVHeaderRow(fields, newLine, delimeter, writer);
 
-        for(SolrDocument doc: docs) {
+        for(int i = 0; i < docs.size(); i++) {
+            JSONObject doc = docs.getJSONObject(i);
 
             Iterator<String> fieldIterator = fields.iterator();
             while(fieldIterator.hasNext()) {
                 String field = fieldIterator.next();
-                Object val = doc.getFieldValue(field);
-                writer.append(StringEscapeUtils.escapeCsv(val != null ? new String(val.toString().getBytes(), Charset.forName("UTF-8")) : ""));
+                Object val = doc.getString(field);
+                writer.append(StringEscapeUtils.escapeCsv(val != null ? new String(val.toString().getBytes(), Charset.forName(Constants.UTF8)) : ""));
                 if (fieldIterator.hasNext()) {
                     writer.append(delimeter);
                 }

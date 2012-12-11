@@ -4,6 +4,7 @@ package service;
 import LucidWorksApp.utils.Constants;
 import LucidWorksApp.utils.SolrUtils;
 import LucidWorksApp.utils.Utils;
+import net.sf.json.JSONArray;
 import org.apache.log4j.Logger;
 import org.apache.nutch.protocol.Content;
 import org.apache.solr.common.SolrDocumentList;
@@ -40,19 +41,19 @@ public class ExportZipServiceImpl extends ExportService {
         }
     }
 
-    public void exportJSONDocs(SolrDocumentList docs, List<String> fields, String coreName, final Writer writer) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
-        export(docs, fields, coreName, writer, DEFAULT_DELIMETER, DEFAULT_NEWLINE);
+    public void exportJSONDocs(JSONArray docs, List<String> fields, String coreName, final Writer writer) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
+        export(docs, fields, coreName, writer, Constants.DEFAULT_DELIMETER, Constants.DEFAULT_NEWLINE);
     }
 
-    public void exportJSONDocs(SolrDocumentList docs, List<String> fields, String coreName, final Writer writer, String delimiter, String newLine) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
+    public void exportJSONDocs(JSONArray docs, List<String> fields, String coreName, final Writer writer, String delimiter, String newLine) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
         export(docs, fields, coreName, writer, delimiter, newLine);
     }
 
-    public void export(SolrDocumentList docs, List<String> fields, String coreName, final Writer writer, String delimiter, String newLine) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
+    public void export(JSONArray docs, List<String> fields, String coreName, final Writer writer, String delimiter, String newLine) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
         export(docs, fields, coreName, writer, delimiter, newLine);
     }
 
-    public void export(SolrDocumentList docs, List<String> fields, String coreName, final Writer writer) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
+    public void export(JSONArray docs, List<String> fields, String coreName, final Writer writer) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
         HashMap<String, List<String>> segToFileMap = SolrUtils.getSegmentToFilesMap(docs);
 
         for (Map.Entry<String, List<String>> entry : segToFileMap.entrySet()) {

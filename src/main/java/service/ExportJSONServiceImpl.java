@@ -2,6 +2,7 @@ package service;
 
 import LucidWorksApp.utils.Constants;
 import LucidWorksApp.utils.SolrUtils;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.nutch.protocol.Content;
@@ -75,7 +76,7 @@ public class ExportJSONServiceImpl extends ExportService {
         }
     }
 
-    public void exportJSONDocs(SolrDocumentList docs, List<String> fields, String coreName, final Writer writer, String delimeter, String newLine) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
+    public void exportJSONDocs(JSONArray docs, List<String> fields, String coreName, final Writer writer, String delimeter, String newLine) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
 
         g.writeArrayFieldStart("JSON document results");
         g.flush();
@@ -98,16 +99,17 @@ public class ExportJSONServiceImpl extends ExportService {
         writer.flush();
     }
 
-    public void export(SolrDocumentList docs, List<String> fields, String coreName, final Writer writer, String delimeter, String newLine) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
+    public void export(JSONArray docs, List<String> fields, String coreName, final Writer writer, String delimeter, String newLine) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
         g.writeArrayFieldStart("Non-JSON document results");
 
         //fields = FIELDS_TO_EXPORT;
 
-        for (SolrDocument doc : docs) {
+        for (int i = 0; i < docs.size(); i++) {
+            JSONObject doc = docs.getJSONObject(i);
             g.writeStartObject();
 
             for(String field : fields) {
-                Object val = doc.getFieldValue(field);
+                Object val = doc.getString(field);
                 g.writeStringField(field, StringEscapeUtils.escapeCsv(val != null ? new String(val.toString().getBytes(), Charset.forName("UTF-8")) : ""));
             }
 

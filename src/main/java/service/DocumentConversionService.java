@@ -14,7 +14,7 @@ public interface DocumentConversionService {
 
     public String getLocalTmpDirectory();
 
-    public void writeLocalCopy(Content content, String hdfsFilePath, StringWriter writer) throws IOException;
+    public void writeLocalCopy(byte[] content, String hdfsFilePath, StringWriter writer) throws IOException;
 
     public String convertDocumentToSwf(String localFilePath);
 

@@ -6,10 +6,19 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONException;
 import net.sf.json.JSONNull;
 import net.sf.json.JSONObject;
+import org.apache.http.client.HttpClient;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.nutch.indexer.solr.SolrConstants;
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.impl.CloudSolrServer;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.schema.SchemaField;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -29,7 +38,7 @@ public class SolrUtils {
     public static final String SOLR_SELECT_ENDPOINT  = "select";
     public static final String UPDATECSV_ENDPOINT    = "update/csv";
     public static final String LUKE_ENDPOINT         = "admin/luke";
-    public static final String SOLR_SERVER           = "http://denlx006.dn.gates.com:8984";
+
 
     public static final String SOLR_SCHEMA_HDFSKEY              = "HDFSKey";
     public static final String SOLR_SCHEMA_HDFSSEGMENT          = "HDFSSegment";
@@ -37,17 +46,19 @@ public class SolrUtils {
 
     static Pattern COPYSOURCE_PATTERN = Pattern.compile("^" + SchemaField.class.getName() + ":(.*)\\{.*");
 
-    static Pattern fieldNamesToIgnore = Pattern.compile("^(attr|_).*|.*(version|batch|body|text_all|" +
+    static Pattern VIEW_FIELD_NAMES_PATTERN = Pattern.compile(".*(\\.facet|Suggest|Prefix)$");
+
+    static Pattern FIELDNAMES_TOIGNORE = Pattern.compile("^(attr|_).*|.*(version|batch|body|text_all|" +
             "HDFSKey|boost|digest|host|segment|tstamp).*|.*id");
 
 
     public static boolean validFieldName(String fieldName, boolean isFacetField) {
-        Matcher m = fieldNamesToIgnore.matcher(fieldName);
+        Matcher m = FIELDNAMES_TOIGNORE.matcher(fieldName);
         return (!isFacetField && fieldName.equals(SOLR_SCHEMA_HDFSKEY)) || !m.matches();
     }
 
     public static String getSolrServerURI(String coreName) {
-        return Utils.addToUrlIfNotEmpty(SOLR_SERVER + "/" + SOLR_ENDPOINT, coreName);
+        return Utils.addToUrlIfNotEmpty(Constants.SOLR_SERVER + "/" + SOLR_ENDPOINT, coreName);
     }
 
     public static String getSolrSuggestURI(String fieldSpecificEndpoint, String coreName, HashMap<String,String> urlParams) {
@@ -55,8 +66,16 @@ public class SolrUtils {
         return Utils.addToUrlIfNotEmpty(uri, fieldSpecificEndpoint) + Utils.constructUrlParams(urlParams);
     }
 
+    public static String getSolrSelectURI(String coreName) {
+        return new Path(getSolrServerURI(coreName), SOLR_SELECT_ENDPOINT).toString();
+    }
+
     public static String getSolrSelectURI(String coreName, HashMap<String,String> urlParams) {
-        return getSolrServerURI(coreName) + "/" + SOLR_SELECT_ENDPOINT + Utils.constructUrlParams(urlParams);
+        return getSolrSelectURI(coreName) + Utils.constructUrlParams(urlParams);
+    }
+
+    public static String getSolrSelectURI(String coreName, HashMap<String,String> urlParams, HashMap<String, List<String>> repeatKeyUrlParams) {
+        return getSolrSelectURI(coreName) + Utils.constructUrlParams(urlParams, repeatKeyUrlParams);
     }
 
     public static String getUpdateCsvEndpoint(String coreName, HashMap<String,String> urlParams) {
@@ -66,7 +85,22 @@ public class SolrUtils {
     public static String getLukeEndpoint(String coreName, HashMap<String, String> urlParams) {
         return getSolrServerURI(coreName) + "/" + LUKE_ENDPOINT + Utils.constructUrlParams(urlParams);
     }
-    
+
+    public static SolrQuery.ORDER getSortOrder(String sortOrder) {
+        return sortOrder.equals("asc") ? SolrQuery.ORDER.asc : SolrQuery.ORDER.desc;
+    }
+
+    public static String getDocumentContentType(SolrDocument doc) {
+        return getFieldValue(doc, Constants.SOLR_CONTENT_TYPE_FIELD_NAME, Constants.TEXT_CONTENT_TYPE);
+    }
+
+    public static String getFieldValue(SolrDocument doc, String fieldName, String defaultValue) {
+        if (doc.containsKey(fieldName)) {
+            return (String) doc.get(fieldName);
+        }
+        return defaultValue;
+    }
+
     public static FacetFieldEntryList getFacetFieldsFromLukeFieldsObject(JSONObject fields) {
         FacetFieldEntryList facetFieldEntryList = new FacetFieldEntryList();
 
@@ -130,11 +164,11 @@ public class SolrUtils {
 
     public static JSONObject getLukeFieldsObject(String coreName, boolean showSchema) {
         HashMap<String,String> urlParams = new HashMap<String, String>();
-        urlParams.put("numTerms", "0");
-        urlParams.put("wt", "json");
+        urlParams.put(Constants.SOLR_NUMTERMS_PARAM, "0");
+        urlParams.put(Constants.SOLR_WT_PARAM, Constants.SOLR_WT_DEFAULT);
 
         if (showSchema) {
-            urlParams.put("show", "schema");
+            urlParams.put(Constants.SOLR_SHOWSCHEMA_PARAM, Constants.SOLR_SHOWSCHEMA_DEFAULT);
         }
 
         String url = getLukeEndpoint(coreName, urlParams);
@@ -171,6 +205,31 @@ public class SolrUtils {
         return getLukeFieldsObject(coreName, false).names();
     }
 
+    public static List<String> getLukeFieldNamesByType(String coreName, String type) {
+        List<String> fieldsByType = new ArrayList<String>();
+
+        JSONObject fields = getLukeFieldsObject(coreName, false);
+        for(Object fieldObj : fields.keySet()) {
+            String field = (String) fieldObj;
+            if (fields.getJSONObject(field).getString("type").equals(type)) {
+                fieldsByType.add(field);
+            }
+        }
+        return fieldsByType;
+    }
+
+    public static List<String> getViewFieldNames(String coreName) {
+        List<String> ret = new ArrayList<String>();
+
+        for(String field : getLukeFieldNames(coreName)) {
+            Matcher m = VIEW_FIELD_NAMES_PATTERN.matcher(field);
+            if (!m.matches()) {
+                ret.add(field);
+            }
+        }
+        return ret;
+    }
+
     public static List<String> getLukeFieldNames(String coreName, List<String> indices, boolean include) {
         List<String> fieldNames = getLukeFieldNames(coreName);
         List<String> subList = new ArrayList<String>();
@@ -194,5 +253,47 @@ public class SolrUtils {
             segToFileMap.put(hdfsSeg, fileNames);
         }
         return segToFileMap;
+    }
+
+    public static HashMap<String, List<String>> getSegmentToFilesMap(JSONArray docs) {
+        HashMap<String, List<String>> segToFileMap = new HashMap<String, List<String>>();
+
+        for(int i = 0; i < docs.size(); i++) {
+            JSONObject doc = docs.getJSONObject(i);
+            String hdfsSeg = doc.getString(SOLR_SCHEMA_HDFSSEGMENT);
+            List<String> fileNames = segToFileMap.containsKey(hdfsSeg) ? segToFileMap.get(hdfsSeg) : new ArrayList<String>();
+            fileNames.add(doc.getString(SOLR_SCHEMA_HDFSKEY));
+            segToFileMap.put(hdfsSeg, fileNames);
+        }
+        return segToFileMap;
+    }
+
+    public static HttpSolrServer getHttpSolrServer(JobConf job) throws MalformedURLException {
+        HttpClient client = new DefaultHttpClient();
+
+        /* Check for username/password
+        if (job.getBoolean(SolrConstants.USE_AUTH, false)) {
+            String username = job.get(SolrConstants.USERNAME);
+            AuthScope scope = new AuthScope(AuthScope.ANY_HOST, AuthScope.ANY_PORT, AuthScope.ANY_REALM, AuthScope.ANY_SCHEME);
+
+            client.getState().setCredentials(scope, new UsernamePasswordCredentials(username, job.get(SolrConstants.PASSWORD)));
+
+            HttpClientParams params = client.getParams();
+            params.setAuthenticationPreemptive(true);
+
+            client.setParams(params);
+        }
+        */
+        return new HttpSolrServer(job.get(SolrConstants.SERVER_URL), client);
+    }
+
+    public static CloudSolrServer getCloudSolrServer() {
+        try {
+            CloudSolrServer cloudSolrServer = new CloudSolrServer(Constants.ZOOKEEPER_SERVER);
+            return cloudSolrServer;
+        } catch (MalformedURLException e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
     }
 }

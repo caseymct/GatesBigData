@@ -11,6 +11,7 @@ public abstract class APIController {
     public static final String PARAM_USER_INPUT     = "userinput";
     public static final String PARAM_PREFIX_FIELD   = "prefixfield";
     public static final String PARAM_HDFSSEGMENT    = "segment";
+    public static final String PARAM_ID             = "id";
 
     public static final String PARAM_QUERY          = "query";
     public static final String PARAM_START          = "start";

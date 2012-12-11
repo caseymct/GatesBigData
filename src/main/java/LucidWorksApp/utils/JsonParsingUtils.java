@@ -6,12 +6,29 @@ import net.sf.json.JSONObject;
 import org.apache.commons.collections.map.ListOrderedMap;
 import org.apache.solr.common.util.NamedList;
 import org.codehaus.jackson.JsonGenerator;
+import org.codehaus.jackson.JsonParseException;
 
 import java.io.IOException;
 import java.util.*;
 
 
 public class JsonParsingUtils {
+
+    public static final String JSON_PARSE_ERROR_KEY = "JSON_PARSE_ERROR";
+
+    public static boolean isJsonErrorObject(JSONObject jsonObject) {
+        return jsonObject.has(JSON_PARSE_ERROR_KEY);
+    }
+
+    public static JSONObject getJSONObject(String object) {
+        try {
+            return JSONObject.fromObject(object);
+        } catch (JSONException e) {
+            JSONObject error = new JSONObject();
+            error.put(JSON_PARSE_ERROR_KEY, true);
+            return error;
+        }
+    }
 
     public static List<String> convertJSONArrayToStringList(JSONArray jsonArray) {
         List<String> s = new ArrayList<String>();
@@ -105,9 +122,6 @@ public class JsonParsingUtils {
 
         for(Object key : jsonObject.names()) {
             Object value = jsonObject.get(key);
-            if (key.equals("User")) {
-                int a = 10;
-            }
             String newFullPath = fullPath.equals("") ? (String) key : fullPath + "." + key;
 
             if (value instanceof JSONArray) {

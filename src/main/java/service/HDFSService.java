@@ -6,10 +6,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.MapFile;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.nutch.parse.ParseData;
 import org.apache.nutch.parse.ParseText;
 import org.apache.nutch.protocol.Content;
+import org.codehaus.jackson.JsonGenerator;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -21,47 +23,15 @@ public interface HDFSService {
 
     public void testCrawlData(String coreName, String segment);
 
-    public Path getHDFSCoreDirectory(Boolean includeURI, String coreName);
-
-    public Path getHDFSCrawlDBCurrentDataFile(Boolean includeURI, String coreName);
-
-    public Path getHDFSCrawlDBCurrentIndexFile(Boolean includeURI, String coreName);
-
-    public Path getHDFSCrawlDirectory(Boolean includeURI, String coreName);
-
-    public Path getHDFSSegmentsDirectory(Boolean includeURI, String coreName);
-
-    public Path getHDFSSegmentDirectory(Boolean includeURI, String coreName, String segment);
-
-    public Path getHDFSCrawlFetchDataFile(Boolean includeURI, String coreName, String segment);
-
-    public Path getHDFSCrawlGenerateFile(Boolean includeURI, String coreName, String segment);
-
-    public Path getHDFSParseDataDir(Boolean includeURI, String coreName, String segment);
-
-    public Path getHDFSCrawlParseDataFile(Boolean includeURI, String coreName, String segment);
-
-    public Path getHDFSContentDirectory(Boolean includeURI, String coreName, String segment);
-
-    public Path getHDFSContentDataFile(Boolean includeURI, String coreName, String segment);
-
-    public Path getHDFSParseDataFile(Boolean includeURI, String coreName, String segment);
-
-    public Path getHDFSParseTextDir(Boolean includeURI, String coreName, String segment);
-
-    public Path getHDFSParseTextDataFile(Boolean includeURI, String coreName, String segment);
-
-    public Path getHDFSFacetFieldsCustomFile(String coreName);
+    public FileSystem getHDFSFileSystem();
 
     public Configuration getHDFSConfiguration();
 
     public Configuration getNutchConfiguration();
 
-    public FileSystem getHDFSFileSystem();
-
     public FacetFieldEntryList getHDFSFacetFields(String hdfsDir);
 
-    public Path getHDFSPreviewFieldsCustomFile(String coreName);
+    public String getHDFSViewFields(String coreName);
 
     public List<String> getHDFSPreviewFields(String coreName);
 
@@ -71,23 +41,19 @@ public interface HDFSService {
 
     public HashMap<String, MapFile.Reader[]> getSegmentToMapFileReaderMap(String coreName, String methodName);
 
+    public SequenceFile.Reader getSequenceFileReader(Path dir);
+
     public long getFetched(String coreName);
 
     public boolean removeFile(String remoteFilePath);
 
     public String getFileContents(Path remoteFilePath);
 
-    public Content getFileContents(String coreName, String segment, String fileName) throws IOException;
-
-    public Content getFileContents(String segment, String fileName, HashMap<String, MapFile.Reader[]> map) throws IOException;
+    public Content getFileContents(String coreName, String segment, String fileName);
 
     public ParseData getParseData(String coreName, String segment, String fileName) throws IOException;
 
-    public ParseData getParseData(String segment, String fileName, HashMap<String, MapFile.Reader[]> map) throws IOException;
-
     public String getParsedText(String coreName, String segment, String fileName) throws IOException;
-
-    public String getParsedText(String segment, String fileName, HashMap<String, MapFile.Reader[]> map) throws IOException;
 
     public byte[] getFileContentsAsBytes(Path remoteFilePath);
 
@@ -109,5 +75,5 @@ public interface HDFSService {
 
     public void printFileContents(String coreName, String hdfsDate, String fileName, StringWriter writer, boolean preview);
 
-    public String getContentTypeFromParseData(ParseData parseData);
+    public void printImageFileContents(String coreName, String segment, String fileName, StringWriter writer) throws IOException;
 }

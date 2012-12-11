@@ -2,9 +2,8 @@ package LucidWorksApp.api;
 
 import LucidWorksApp.utils.Constants;
 import LucidWorksApp.utils.Utils;
-import org.apache.hadoop.fs.Path;
+import service.solrReindexer.SolrRecord;
 import org.apache.log4j.Logger;
-import org.apache.nutch.protocol.Content;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -14,8 +13,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import service.DocumentConversionService;
 import service.HDFSService;
+import service.SearchService;
 
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 
@@ -24,53 +23,59 @@ import static org.springframework.http.HttpStatus.OK;
 
 @Controller
 @RequestMapping("/document")
-public class NutchDocumentAPIController extends APIController {
+public class DocumentAPIController extends APIController {
 
     private static final int DEFAULT_BUFFER_SIZE = 10240;
 
-    private static final String PRAGMA_HEADER = "Pragma";
-    private static final String PRAGMA_VALUE = "public";
-    private static final String CACHE_CONTROL_HEADER = "Cache-Control";
-    private static final String CACHE_CONTROL_VALUE = "no-cache, must-revalidate";
-    private static final String EXPIRES_HEADER = "Expires";
-    private static final String EXPIRES_VALUE = "Sat, 26 Jul 1997 05:00:00 GMT";
-    private static final String CONNECTION_HEADER = "Connection";
-    private static final String CONNECTION_VALUE = "close\r\n\r\n";
+    private static final String PRAGMA_HEADER           = "Pragma";
+    private static final String PRAGMA_VALUE            = "public";
+    private static final String CACHE_CONTROL_HEADER    = "Cache-Control";
+    private static final String CACHE_CONTROL_VALUE     = "no-cache, must-revalidate";
+    private static final String EXPIRES_HEADER          = "Expires";
+    private static final String EXPIRES_VALUE           = "Sat, 26 Jul 1997 05:00:00 GMT";
+    private static final String CONNECTION_HEADER       = "Connection";
+    private static final String CONNECTION_VALUE        = "close\r\n\r\n";
 
     private HDFSService hdfsService;
+    private SearchService searchService;
     private DocumentConversionService documentConversionService;
 
-    private static final Logger logger = Logger.getLogger(NutchDocumentAPIController.class);
+    private static final Logger logger = Logger.getLogger(DocumentAPIController.class);
 
     @Autowired
-    public NutchDocumentAPIController(HDFSService hdfsService, DocumentConversionService documentConversionService) {
+    public DocumentAPIController(HDFSService hdfsService, DocumentConversionService documentConversionService, SearchService searchService) {
         this.hdfsService = hdfsService;
         this.documentConversionService = documentConversionService;
+        this.searchService = searchService;
+    }
+
+    public SolrRecord getSolrRecord(String coreName, String id, String segment) {
+        SolrRecord record;
+        if (Utils.stringIsNullOrEmpty(segment)) {
+            // then this is a Solr record. Get contents.
+            record = new SolrRecord(searchService.getRecord(coreName, id));
+        } else {
+            record = new SolrRecord(hdfsService.getFileContents(coreName, segment, id), new File(id).getName());
+        }
+
+        record.ifRecordIsJSONChangeToText();
+        return record;
     }
 
     @RequestMapping(value = "/save", method = RequestMethod.GET)
-    public HttpServletResponse saveFile(@RequestParam(value = PARAM_HDFSSEGMENT, required = true) String segment,
-                                        @RequestParam(value = PARAM_FILE_NAME, required = true) String key,
+    public HttpServletResponse saveFile(@RequestParam(value = PARAM_HDFSSEGMENT, required = false) String segment,
+                                        @RequestParam(value = PARAM_ID, required = true) String id,
                                         @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
                                         HttpServletResponse response) throws IOException {
 
-        Content content = hdfsService.getFileContents(coreName, segment, key);
-        if (content != null) {
+        SolrRecord record = getSolrRecord(coreName, id, segment);
 
-            String fileName = new File(key).getName();
-            String contentType = content.getContentType();
-            if (fileName.endsWith(Constants.JSON_CONTENT_TYPE)) {
-                fileName = Utils.changeFileExtension(fileName, Constants.TEXT_FILE_EXT, false);
-                contentType = Constants.TEXT_CONTENT_TYPE;
-            }
+        response.setContentType(record.getContentType());
+        response.setHeader("Content-Disposition", "attachment; fileName=" + record.getFileName());
 
-            response.setContentType(contentType);
-            response.setHeader("Content-Disposition", "attachment; fileName=" + fileName);
-
-            OutputStream outputStream = response.getOutputStream();
-            outputStream.write(content.getContent());
-            outputStream.close();
-        }
+        OutputStream outputStream = response.getOutputStream();
+        outputStream.write(record.getContent());
+        outputStream.close();
 
         return response;
     }
@@ -134,13 +139,11 @@ public class NutchDocumentAPIController extends APIController {
 
     @RequestMapping(value = "/writelocal", method = RequestMethod.GET)
     public ResponseEntity<String> writeNutchFileFromHDFS(@RequestParam(value = PARAM_HDFSSEGMENT, required = true) String segment,
-                                                         @RequestParam(value = PARAM_FILE_NAME, required = true) String key,
+                                                         @RequestParam(value = PARAM_ID, required = true) String id,
                                                          @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
         StringWriter writer = new StringWriter();
-        Content content = hdfsService.getContent(coreName, segment, key, writer);
-        if (content != null) {
-            documentConversionService.writeLocalCopy(content, key, writer);
-        }
+        SolrRecord record = getSolrRecord(coreName, id, segment);
+        documentConversionService.writeLocalCopy(record.getContent(), record.getFileName(), writer);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
@@ -148,13 +151,18 @@ public class NutchDocumentAPIController extends APIController {
     }
 
     @RequestMapping(value = "/thumbnail/get", method = RequestMethod.GET)
-    public ResponseEntity<String> getThumbnail(@RequestParam(value = PARAM_HDFSSEGMENT, required = true) String segment,
-                                            @RequestParam(value = PARAM_FILE_NAME, required = true) String key,
-                                            @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
+    public ResponseEntity<String> getThumbnail( @RequestParam(value = PARAM_HDFSSEGMENT, required = false) String segment,
+                                                @RequestParam(value = PARAM_ID, required = true) String id,
+                                                @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
 
         StringWriter writer = new StringWriter();
-        hdfsService.printFileContents(coreName, segment, key, writer, true);
-
+        if (!Utils.stringIsNullOrEmpty(id)) {
+            if (!Utils.stringIsNullOrEmpty(segment) && !Utils.fileHasExtension(id, Constants.JSON_FILE_EXT)) {
+                hdfsService.printImageFileContents(coreName, segment, id, writer);
+            } else {
+                searchService.printRecord(coreName, id, writer, hdfsService.getHDFSPreviewFields(coreName));
+            }
+        }
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);

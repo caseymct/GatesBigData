@@ -12,6 +12,7 @@ QUERYBUILDER.util = {};
 
     var genQuerySearchInputElName       = "general_query_search_input",
         fieldConstraintElName           = "general_query_field_constraint",
+        fieldAutoCompleteName           = "general_query_field_autocomplete",
         fieldAutoCompleteContainerName  = "general_query_field_autocomplete_container",
         hasPhraseFieldElName            = "has_phrase",
         isExactFieldElName              = "is_exact",
@@ -24,10 +25,15 @@ QUERYBUILDER.util = {};
         fieldsetRowCSSClass             = "fieldset_row",
         fieldsetRowButtonDivCSSClass    = "fieldset_row_button_div",
         fieldNonEmptyCheckBox           = "field_non_empty",
-        fieldMustExistCheckBox          = "field_must_exist";
+        fieldMustExistCheckBox          = "field_must_exist",
+        clearBothCSSClass               = "clearboth";
 
     var populateFieldAutoCompleteUrl = "";
     var constraintFieldNames = [fieldConstraintElName, hasPhraseFieldElName, isExactFieldElName, hasWordsFieldElName, doesNotHaveWordsFieldElName];
+
+    QUERYBUILDER.ui.getGeneralQuerySearchInputElName = function() {
+        return genQuerySearchInputElName;
+    };
 
     function getButtonGroupValue(bg) {
         return buttonTextToDelimiterMap[UI.getButtonGroupCheckedButtonValue(bg)];
@@ -39,8 +45,9 @@ QUERYBUILDER.util = {};
         }
     }
 
-    QUERYBUILDER.ui.initPopulateFieldAutoCompleteUrl = function(url) {
-        populateFieldAutoCompleteUrl = url;
+    QUERYBUILDER.ui.init = function(names) {
+        populateFieldAutoCompleteUrl = names.url;
+        buildHTML(names.tabListElName, names.tabContentElName);
     };
 
     function adjustGeneralQueryByConstraint(hasWordsButtonGroup, doesNotHaveWordsButtonGroup) {
@@ -123,7 +130,10 @@ QUERYBUILDER.util = {};
         });
     });
 
-    QUERYBUILDER.ui.buildQueryTabHTML = function(tabContentEl) {
+    function buildHTML(tabListEl, tabContentEl) {
+        var li = UI.addDomElementChild('li', Dom.get(tabListEl));
+        UI.addDomElementChild('a', li, { href : "#", innerHTML: "<em>Construct General Query</em>"});
+
         var tabNode = Dom.get(tabContentEl);
         var p = UI.addDomElementChild('div', tabNode, {id : generalQueryTabElName }, {class : "search_tab_style row"});
 
@@ -137,7 +147,7 @@ QUERYBUILDER.util = {};
 
         var d = UI.addDomElementChild('div', fieldset, null, { class : fieldsetRowCSSClass });
         UI.addDomElementChild('label', d, {for : fieldConstraintElName, innerHTML: "Field name:" }, {"margin-top" : "10px"});
-        var d1 = UI.addDomElementChild('div', d, { id : 'general_query_autocomplete' }, null);
+        var d1 = UI.addDomElementChild('div', d, { id : fieldAutoCompleteName }, null);
         UI.addDomElementChild('input', d1, { id : fieldConstraintElName },  null);
         UI.addDomElementChild('div', d1, { id : fieldAutoCompleteContainerName }, null);
 
@@ -146,9 +156,9 @@ QUERYBUILDER.util = {};
         UI.addDomElementChild('label', d, { id : hasWordsFieldElName + "_label", for : hasWordsFieldElName, innerHTML : "Has words:"}, null);
         
         d1 = UI.addDomElementChild('div', d, { id : hasWordsButtonGroupDiv }, { class: fieldsetRowButtonDivCSSClass });
-        UI.addDomElementChild('input', d1, { id : hasWordsFieldElName + "_some", type : "radio", name : hasWordsFieldElName + "_input", text : "Some"}, null);
-        UI.addDomElementChild('input', d1, { id : hasWordsFieldElName + "_all", type:"radio", name : hasWordsFieldElName + "_input", text : "All"}, null);
-        UI.addDomElementChild('input', d, { id : hasWordsFieldElName }, null);
+        UI.addDomElementChild('input', d1, { id : hasWordsFieldElName + "_some", type : "radio", name : hasWordsFieldElName + "_input", value : "Some"});
+        UI.addDomElementChild('input', d1, { id : hasWordsFieldElName + "_all",  type : "radio", name : hasWordsFieldElName + "_input", value : "All"});
+        UI.addDomElementChild('input', d, { id : hasWordsFieldElName });
 
         // does not have words
         d = UI.addDomElementChild('div', fieldset, null, { class : fieldsetRowCSSClass });
@@ -156,9 +166,9 @@ QUERYBUILDER.util = {};
             innerHTML : "Does not have words:" }, null);
         d1 = UI.addDomElementChild('div', d, { id : doesNotHaveWordsButtonGroupDiv}, { class : fieldsetRowButtonDivCSSClass });
         UI.addDomElementChild('input', d1, { id : doesNotHaveWordsFieldElName + "_some", type : "radio",
-                name : doesNotHaveWordsFieldElName + "_input", text : "Some"}, null);
+                name : doesNotHaveWordsFieldElName + "_input", value : "Some"});
         UI.addDomElementChild('input', d1, { id : doesNotHaveWordsFieldElName + "_all", type : "radio",
-                name : doesNotHaveWordsFieldElName + "_input", text : "All"}, null);
+                name : doesNotHaveWordsFieldElName + "_input", value : "All"});
         UI.addDomElementChild('input', d, { id : doesNotHaveWordsFieldElName }, null);
 
         // has phrase
@@ -180,59 +190,7 @@ QUERYBUILDER.util = {};
         UI.addDomElementChild('label', d, { for : fieldNonEmptyCheckBox,  innerHTML : "Field is not empty:" }, { float : "left", width : "130px" });
         UI.addDomElementChild('input', d, { id : fieldNonEmptyCheckBox,  type : "checkbox"}, { width : "20px", float : "left"});
 
-        UI.addDomElementChild('div', fieldset, null, { class : "clearboth" } );
-        UI.addDomElementChild('div', p, null, { class : "clearboth" } );
-
-
-        var oldHTML =
-            "<div class='row' style='padding: 2px'>" + 
-            "   <textarea id='" + genQuerySearchInputElName + "'>*:*</textarea>" +
-            "</div>" +
-            "<fieldset style='padding-top:0'>" +
-            "   <legend class='search_legend'><a href='#' id='" + addToQueryElName + "'>Add a constraint: </a></legend>" +
-            "   <div class='" + fieldsetRowCSSClass + "'>" +
-            "       <label for='" + fieldConstraintElName + "' style='margin-top:10px'>Field name:</label>" +
-            "       <div id='general_query_autocomplete'>" +
-            "           <input id='" + fieldConstraintElName + "' type='text'>" +
-            "           <div id='" + fieldAutoCompleteContainerName + "'></div>" +
-            "       </div>"+
-            "   </div>" +
-            "   <div class='" + fieldsetRowCSSClass + "'>" +
-            "       <label id='" + hasWordsFieldElName + "_label' for='" + hasWordsFieldElName + "'>Has words: </label>" +
-            "       <div class= 'fieldset_row_button_div' id='" + hasWordsButtonGroupDiv + "'>" +
-            "            <input id='" + hasWordsFieldElName + "_some' type='radio' name='" + hasWordsFieldElName + "_input' value='Some' >" +
-            "            <input id='" + hasWordsFieldElName + "_all' type='radio' name='" + hasWordsFieldElName + "_input' value='All' >" +
-            "       </div>" +
-            "       <input id='" + hasWordsFieldElName + "'/>" +
-            "   </div>" +
-            "   <div class='" + fieldsetRowCSSClass + "'>" +
-            "       <label id='" + doesNotHaveWordsFieldElName + "_label' for='" + doesNotHaveWordsFieldElName + "'>Does not have words: </label>" +
-            "       <div class= 'fieldset_row_button_div' id='" + doesNotHaveWordsButtonGroupDiv + "'>" +
-            "           <input id='" + doesNotHaveWordsFieldElName + "_some' type='radio' name='" + doesNotHaveWordsFieldElName + "_input' value='Some' >" +
-            "           <input id='" + doesNotHaveWordsFieldElName + "_all' type='radio' name='" + doesNotHaveWordsFieldElName + "_input' value='All' >" +
-            "       </div>" +
-            "       <input id='" + doesNotHaveWordsFieldElName + "'/>" +
-            "   </div>" +
-            "   <div class='" + fieldsetRowCSSClass + "' style='padding-top:10px'>" +
-            "       <label for='" + hasPhraseFieldElName + "'>Has phrase: </label>" +
-            "       <input id='" + hasPhraseFieldElName + "'/>" +
-            "   </div>" +
-            "   <div class='" + fieldsetRowCSSClass + "' style='padding-top:10px'>" +
-            "       <label for='" + isExactFieldElName + "'>Is exactly: </label>" +
-            "       <input id='" + isExactFieldElName + "'/>" +
-            "   </div>" +
-            "   <div class='" + fieldsetRowCSSClass + "' style='padding-top:10px'>" +
-            "       <label for='" + fieldMustExistCheckBox + "'>Field must exist: </label>" +
-            "       <input type='checkbox' id='" + fieldMustExistCheckBox + "'/>" +
-            "       <label for='" + fieldNonEmptyCheckBox + "'>Field is not empty: </label>" +
-                "       <input type='checkbox' id='" + fieldNonEmptyCheckBox + "'/>" +
-                "   </div>" +
-            //"   <div class='" + fieldsetRowCSSClass + "'>" +
-            //"       <a href='#' id='" + addToQueryElName + "'>Add</a>" +
-            //"   </div>" +
-            "   <div class='clearboth'></div>" +
-            "   </fieldset>" +
-            "   <div class='clearboth'></div>" +
-            "</div> ";
+        UI.addDomElementChild('div', fieldset, null, { class : clearBothCSSClass } );
+        UI.addDomElementChild('div', p, null, { class : clearBothCSSClass } );
         }
 })();

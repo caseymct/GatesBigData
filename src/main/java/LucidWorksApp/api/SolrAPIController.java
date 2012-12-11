@@ -69,6 +69,8 @@ public class SolrAPIController extends APIController {
         String response = fileOnServer ? solrService.importCsvFileOnServerToSolr(collectionName, fileName) :
                                     solrService.importCsvFileOnLocalSystemToSolr(collectionName, fileName);
 
+        //curl 'http://localhost:8080/wikipedia/update/csv?commit=false&overwrite=false&separator=%09&encapsulator=%1f&header=false&fieldnames=id,title,updated,xml,text&skip=updated,xml&stream.file=/wex/rawd/freebase-wex-2009-01-12-articles.tsv&stream.contentType=text/plain;charset=utf-8'
+
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(response, httpHeaders, OK);

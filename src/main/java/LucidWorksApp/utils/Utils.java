@@ -1,53 +1,100 @@
 package LucidWorksApp.utils;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.fs.*;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonGenerator;
 
 import java.io.*;
+import java.net.InetAddress;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.net.UnknownHostException;
 import java.nio.charset.Charset;
+import java.text.DateFormat;
 import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 
 public class Utils {
-    private static final String FILE_ERROR_MESSAGE = "<h1>ERROR</h1>";
-    private static final Logger logger = Logger.getLogger(Utils.class);
-    public static int INVALID_INTEGER   = -99999;
-    public static double INVALID_DOUBLE = -99999.99999;
+    private static final String FILE_ERROR_MESSAGE  = "<h1>ERROR</h1>";
+    private static final Logger logger              = Logger.getLogger(Utils.class);
+
+    public static boolean runningOnProduction() {
+        String localhost = "";
+        try {
+            localhost = InetAddress.getLocalHost().getHostName();
+        } catch (UnknownHostException e) {
+            logger.error(e.getMessage());
+        }
+
+        return localhost.equals(Constants.PRODUCTION_HOSTNAME);
+    }
 
     public static boolean stringIsNullOrEmpty(String s) {
         return s == null || s.equals("");
+    }
+
+    public static boolean fileHasExtension(String file, String ext) {
+        if (!ext.startsWith(".")) {
+            ext = "." + ext;
+        }
+        return file.endsWith(ext);
     }
 
     public static String addToUrlIfNotEmpty(String url, String endpoint) {
         return stringIsNullOrEmpty(endpoint) ? url : url + "/" + endpoint;
     }
 
-    public static String constructUrlParams(HashMap<String,String> params) {
-        if (params == null) return "";
-
+    private static List<String> getParamListFromHashMap(HashMap<String, String> params) {
         List<String> paramList = new ArrayList<String>();
         for(Map.Entry<String,String> entry : params.entrySet()) {
-            paramList.add(entry.getKey() + "=" + entry.getValue());
+            paramList.add(encodeUrlComponent(entry.getKey()) + "=" + encodeUrlComponent(entry.getValue()));
+        }
+        return paramList;
+    }
+
+    public static String constructUrlParams(HashMap<String, String> params) {
+        if (params == null) return "";
+        return "?" + StringUtils.join(getParamListFromHashMap(params), "&");
+    }
+
+    public static String constructUrlParams(HashMap<String, String> params, HashMap<String, List<String>> repeatKeyParams) {
+        if (params == null && repeatKeyParams == null) return "";
+
+        List<String> paramList = getParamListFromHashMap(params);
+
+        for(Map.Entry<String, List<String>> entry: repeatKeyParams.entrySet()) {
+            String key = encodeUrlComponent(entry.getKey());
+            for(String val : entry.getValue()) {
+                paramList.add(key + "=" + encodeUrlComponent(val));
+            }
         }
         return "?" + StringUtils.join(paramList, "&");
     }
 
     public static String decodeUrl(String url) {
         try {
-            url = URLDecoder.decode(url, "UTF-8");
+            url = URLDecoder.decode(url, Constants.UTF8);
         } catch (UnsupportedEncodingException e) {
             logger.error("Could not decode URL: " + e.getMessage());
         }
         return url;
     }
 
+    public static String encodeUrlComponent(String s) {
+        try {
+            return URLEncoder.encode(s, Constants.UTF8);
+        } catch (UnsupportedEncodingException e) {
+            logger.error("Could not encode string: " + e.getMessage());
+        }
+        return s;
+    }
+
     public static String getUTF8String(byte[] bytes) {
         try {
-            return new String(bytes, "UTF8");
+            return new String(bytes, Constants.UTF8);
         } catch (UnsupportedEncodingException e) {
             return new String(bytes);
         }
@@ -61,7 +108,7 @@ public class Utils {
         try {
             return Integer.parseInt(s);
         } catch (NumberFormatException e) {
-            return INVALID_INTEGER;
+            return Constants.INVALID_INTEGER;
         }
     }
 
@@ -140,6 +187,14 @@ public class Utils {
         return fullPath ? new File(f.getParentFile(), newFileName).getPath() : newFileName;
     }
 
+
+    public static String changeFileExtensionIfFileIsOfType(String filePath, String oldExt, String newExt, boolean fullPath) {
+        if (fileHasExtension(filePath, oldExt)) {
+            return changeFileExtension(filePath, newExt, fullPath);
+        }
+        return fullPath ? filePath : new File(filePath).getName();
+    }
+
     public static boolean removeLocalFile(String filePath) {
         return removeLocalFile(new File(filePath));
     }
@@ -163,6 +218,7 @@ public class Utils {
         fos.close();
         return f.exists();
     }
+
 
     public static void printFileErrorMessage(StringWriter writer, String message) {
         printFileError(writer);

@@ -1,7 +1,11 @@
 package LucidWorksApp.api;
 
 import LucidWorksApp.utils.Constants;
+import LucidWorksApp.utils.JsonParsingUtils;
 import LucidWorksApp.utils.SolrUtils;
+import LucidWorksApp.utils.Utils;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,12 +52,21 @@ public class ExportAPIController extends APIController {
         this.exportZipService = exportZipService;
     }
 
+    private int getNumFound(JSONObject response) {
+        return (Integer) JsonParsingUtils.extractJSONProperty(response, Arrays.asList("response", "numFound"), Integer.class, Constants.INVALID_INTEGER);
+    }
+
+    private JSONArray getDocs(JSONObject response) {
+        return (JSONArray) JsonParsingUtils.extractJSONProperty(response, Arrays.asList("response", "docs"), JSONArray.class, new JSONArray());
+    }
+
     private void exportHeaderData(String query, String fq, String coreName, String sortType,
                                   SolrQuery.ORDER sortOrder, ExportService exportService, PrintWriter writer) throws IOException {
 
-        QueryResponse rsp = searchService.execQuery(query, coreName, SolrUtils.SOLR_SCHEMA_HDFSKEY,
-                                                    sortOrder, 0, 0, fq, null);
-        exportService.exportHeaderData(rsp.getResults().getNumFound(), query, fq, coreName, writer);
+        JSONObject response = searchService.execQuery(query, coreName, SolrUtils.SOLR_SCHEMA_HDFSKEY, sortOrder, 0, 0, fq, null, "");
+        int numFound = getNumFound(response);
+
+        exportService.exportHeaderData(numFound, query, fq, coreName, writer);
     }
 
     private void export(boolean onlyJsonContentType, String query, String fq, String coreName,
@@ -65,16 +78,20 @@ public class ExportAPIController extends APIController {
         long numDocs = -1;
 
         do {
-            QueryResponse rsp = searchService.execQuery(query, coreName, SolrUtils.SOLR_SCHEMA_HDFSKEY,
-                                                        sortOrder, start, PAGE_SIZE, fq, null);
-
-            if (numDocs == -1) numDocs = rsp.getResults().getNumFound();
+            JSONObject response = searchService.execQuery(query, coreName, SolrUtils.SOLR_SCHEMA_HDFSKEY,
+                                                          sortOrder, start, PAGE_SIZE, fq, null, null);
+            JSONArray results = getDocs(response);
+            if (numDocs == -1) {
+                numDocs = getNumFound(response);
+            }
 
             if (numDocs > 0) {
                 if (onlyJsonContentType) {
-                    exportService.exportJSONDocs(rsp.getResults(), fields, coreName, writer);
+                    //exportService.exportJSONDocs(rsp.getResults(), fields, coreName, writer);
+                    exportService.exportJSONDocs(results, fields, coreName, writer);
                 } else {
-                    exportService.export(rsp.getResults(), fields, coreName, writer);
+                    //exportService.export(rsp.getResults(), fields, coreName, writer);
+                    exportService.export(results, fields, coreName, writer);
                 }
             }
             start += PAGE_SIZE;
@@ -87,16 +104,16 @@ public class ExportAPIController extends APIController {
     }
 
     private ExportService getExportServiceByFileType(String fileType) {
-        if (fileType.equals("csv")) return exportCSVService;
-        if (fileType.equals("zip")) return exportZipService;
-        if (fileType.equals("json")) return exportJSONService;
+        if (fileType.contains("csv")) return exportCSVService;
+        if (fileType.contains("zip")) return exportZipService;
+        if (fileType.contains("json")) return exportJSONService;
         return null;
     }
 
     private String getContentTypeByFileType(String fileType) {
-        if (fileType.equals("csv"))  return Constants.CSV_CONTENT_TYPE;
-        if (fileType.equals("zip"))  return Constants.ZIP_CONTENT_TYPE;
-        if (fileType.equals("json")) return Constants.JSON_CONTENT_TYPE;
+        if (fileType.contains("csv"))  return Constants.CSV_CONTENT_TYPE;
+        if (fileType.contains("zip"))  return Constants.ZIP_CONTENT_TYPE;
+        if (fileType.contains("json")) return Constants.JSON_CONTENT_TYPE;
         return "";
     }
 
@@ -108,7 +125,7 @@ public class ExportAPIController extends APIController {
                                     @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
                                     @RequestParam(value = PARAM_SORT_TYPE, required = true) String sortType,
                                     @RequestParam(value = PARAM_SORT_ORDER, required = true) String sortOrder,
-                                    @RequestParam(value = PARAM_FQ, required = true) String fq,
+                                    @RequestParam(value = PARAM_FQ, required = false) String fq,
                                     HttpServletResponse response) throws IOException {
 
         List<String> indices = Arrays.asList(fieldString.substring(1).split(","));
@@ -127,7 +144,7 @@ public class ExportAPIController extends APIController {
         response.setHeader("Content-Disposition", "attachment; fileName=" + fileName);
         PrintWriter writer = response.getWriter();
 
-        SolrQuery.ORDER order = searchService.getSortOrder(sortOrder);
+        SolrQuery.ORDER order = SolrUtils.getSortOrder(sortOrder);
 
         if (query != null) {
             try {

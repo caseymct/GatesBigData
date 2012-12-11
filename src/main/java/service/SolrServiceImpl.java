@@ -1,13 +1,14 @@
 package service;
 
+import LucidWorksApp.utils.Constants;
 import LucidWorksApp.utils.HttpClientUtils;
 import LucidWorksApp.utils.JsonParsingUtils;
 import LucidWorksApp.utils.SolrUtils;
 import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.request.AbstractUpdateRequest;
 import org.apache.solr.client.solrj.request.CoreAdminRequest;
 import org.apache.solr.client.solrj.request.UpdateRequest;
@@ -18,21 +19,15 @@ import org.apache.solr.common.params.CoreAdminParams;
 import org.apache.solr.common.util.NamedList;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.*;
 
 
 public class SolrServiceImpl implements SolrService {
 
-
     public SolrServer getSolrServer() {
-        try {
-            return new CommonsHttpSolrServer(SolrUtils.getSolrServerURI(null));
-
-        } catch (MalformedURLException e) {
-            System.out.println(e.getMessage());
-        }
-        return null;
+        //DefaultHttpClient client = new DefaultHttpClient();
+        String solrUrl = SolrUtils.getSolrServerURI(null);
+        return new HttpSolrServer(solrUrl);
     }
 
     public boolean solrServerCommit(SolrServer server, SolrInputDocument doc) {
@@ -68,11 +63,19 @@ public class SolrServiceImpl implements SolrService {
     }
 
     public String importCsvFileOnServerToSolr(String coreName, String fileName) {
+
         HashMap<String,String> urlParams = new HashMap<String, String>();
         urlParams.put("commit", "true");
-        urlParams.put("f.categories.split", "true");
+        urlParams.put("overwrite", "false");
+        urlParams.put("stream.contentType", Constants.TEXT_CONTENT_TYPE + ";" + Constants.UTF8_CHARSET_ENC);
         urlParams.put("stream.file", fileName);
-        urlParams.put("stream.contentType", "text/csv");
+        if (fileName.endsWith("tsv")) {
+            urlParams.put("separator", "%09");
+            urlParams.put("encapsulator", "%1f");
+        } else {
+            urlParams.put("f.categories.split", "true");
+            urlParams.put("stream.contentType", Constants.CSV_CONTENT_TYPE);
+        }
 
         String url = SolrUtils.getUpdateCsvEndpoint(coreName, urlParams);
 

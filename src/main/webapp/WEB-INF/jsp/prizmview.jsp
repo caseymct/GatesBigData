@@ -23,16 +23,16 @@
                 Connect = YAHOO.util.Connect,  Json = YAHOO.lang.JSON;
 
             var remoteSeg  = YAHOO.deconcept.util.getRequestParameter("segment");
-            var remoteFile = YAHOO.deconcept.util.getRequestParameter("file");
+            var id         = YAHOO.deconcept.util.getRequestParameter("id");
             var coreName   = YAHOO.deconcept.util.getRequestParameter("core");
-            var urlParams  = "?segment=" + remoteSeg + "&core=" + coreName + "&file=" + remoteFile;
-            var saveDoc = '<c:url value="/document/save?"/>' + "file=" + remoteFile + "&segment=" + remoteSeg + "&core=" + coreName;
+            var urlParams  = "?segment=" + remoteSeg + "&core=" + coreName + "&id=" + id;
+            var saveDoc = '<c:url value="/document/save?"/>' + "id=" + id + "&segment=" + remoteSeg + "&core=" + coreName;
 
             Event.addListener("save", "click", function(e) {
                 window.open(saveDoc);
             });
 
-            Dom.get("viewerheader").innerHTML = remoteFile;
+            Dom.get("viewerheader").innerHTML = id;
 
             var swfParams = {
                 wmode: 'opaque',

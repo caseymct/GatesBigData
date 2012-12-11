@@ -18,10 +18,12 @@
     <mvc:view-controller path="/" view-name="index" />
     <mvc:view-controller path="/index.html" view-name="index" />
     <mvc:view-controller path="/search/NA_data" view-name="search/cores/NA_data" />
+    <mvc:view-controller path="/search/AR_data" view-name="search/cores/AR_data" />
     <mvc:view-controller path="/search/test_data" view-name="search/cores/test_data" />
     <mvc:view-controller path="/search/test2_data" view-name="search/cores/test2_data" />
     <mvc:view-controller path="/core/document/view" view-name="documentView" />
-    <mvc:view-controller path="/core/document/viewtest" view-name="documentViewerTest" />
-    <mvc:view-controller path="/core/document/export" view-name="export/NA_export" />
+    <mvc:view-controller path="/core/document/prizmview" view-name="prizmview" />
+    <mvc:view-controller path="/core/export/NA_data" view-name="export/NA_data_export" />
+    <mvc:view-controller path="/core/export/AR_data" view-name="export/AR_data_export" />
 
 </beans>

@@ -4,40 +4,38 @@ import LucidWorksApp.utils.Constants;
 import LucidWorksApp.utils.HttpClientUtils;
 import LucidWorksApp.utils.Utils;
 
-import java.io.UnsupportedEncodingException;
-
-import org.apache.hadoop.io.Text;
+import org.apache.log4j.Logger;
 import org.apache.nutch.protocol.Content;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.HashMap;
-import java.util.Map;
 
 @Service
 public class DocumentConversionServiceImpl implements DocumentConversionService {
 
-    private static final String PRISM_CONVERT_URL = "http://localhost:18680/convert2swf";
-    private static final String LOCAL_TMP_DIRECTORY = "C:/tmp/";
-    //private static final String PRISM_CONVERT_URL = "http://denlx006.dn.gates.com:18880/convert2swf";
-    //private static final String LOCAL_TMP_DIRECTORY = "/tmp/prizm/";
+    private static final String TEST_PRIZM_CONVERT_URL     = "http://localhost:18680/convert2swf";
+    private static final String TEST_TMP_DIRECTORY         = "C:/tmp/";
+    private static final String PROD_PRIZM_CONVERT_URL     = "http://denlx006.dn.gates.com:18880/convert2swf";
+    private static final String PROD_TMP_DIRECTORY         = "/tmp/prizm/";
+    private static String TMP_DIRECTORY = Utils.runningOnProduction() ? PROD_TMP_DIRECTORY : TEST_TMP_DIRECTORY;
+    private static String CONVERT_URL = Utils.runningOnProduction() ? PROD_PRIZM_CONVERT_URL : TEST_PRIZM_CONVERT_URL;
+
     private static final String THUMBNAIL_SIZE = "5000x5000";
 
+    private static final Logger logger = Logger.getLogger(DocumentConversionServiceImpl.class);
 
     public String getLocalTmpDirectory() {
-        return LOCAL_TMP_DIRECTORY;
+        return TMP_DIRECTORY;
     }
 
-    public void writeLocalCopy(Content content, String hdfsFilePath, StringWriter writer) throws IOException {
+    public void writeLocalCopy(byte[] content, String fileName, StringWriter writer) throws IOException {
 
-        String fileName = new File(hdfsFilePath).getName();
-        if (fileName.endsWith(Constants.JSON_CONTENT_TYPE)) {
-            fileName = Utils.changeFileExtension(fileName, Constants.TEXT_FILE_EXT, false);
-        }
-
-        File tmpFile = new File(LOCAL_TMP_DIRECTORY, fileName);
+        File tmpFile = new File(TMP_DIRECTORY, fileName);
         if (tmpFile.exists() && !tmpFile.delete()) {
             Utils.printFileErrorMessage(writer, "Can not delete old file " + tmpFile.getPath());
             return;
@@ -49,7 +47,7 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
             return;
         }
 
-        if (Utils.writeLocalFile(tmpFile, content.getContent())) {
+        if (Utils.writeLocalFile(tmpFile, content)) {
             writer.append(tmpFile.getPath());
         }
     }
@@ -64,12 +62,12 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
 
     public File getSwfFile(String localFilePath) {
         String swfFileName = getSwfFileNameFromLocalFileName(new File(localFilePath));
-        return new File(LOCAL_TMP_DIRECTORY, swfFileName);
+        return new File(TMP_DIRECTORY, swfFileName);
     }
 
     public File getSwfFile(File localFile) {
         String swfFileName = getSwfFileNameFromLocalFileName(localFile);
-        return new File(LOCAL_TMP_DIRECTORY, swfFileName);
+        return new File(TMP_DIRECTORY, swfFileName);
     }
 
     public String convertDocumentToSwf(String localFilePath) {
@@ -78,11 +76,10 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
         String swfFileName = getSwfFileNameFromLocalFileName(localFile);
 
         HashMap<String, String> params = new HashMap<String, String>();
-        params.put("source", LOCAL_TMP_DIRECTORY + localFile.getName());
-        params.put("target", LOCAL_TMP_DIRECTORY + swfFileName);
+        params.put("source", TMP_DIRECTORY + localFile.getName());
+        params.put("target", TMP_DIRECTORY + swfFileName);
 
-        HttpClientUtils.httpGetRequest(PRISM_CONVERT_URL + Utils.constructUrlParams(params));
-        //System.out.println(PRISM_CONVERT_URL + Utils.constructUrlParams(params));
+        HttpClientUtils.httpGetRequest(CONVERT_URL + Utils.constructUrlParams(params));
         cleanupTempDir(localFile);
 
         File localSwfFile = getSwfFile(localFile);
@@ -107,22 +104,22 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
         String fileName = getTempDocNameFromHDFSId(uri);
         String imgFileName = getThumbnailNameFromHDFSPath(uri);
 
-        File localFile = new File(LOCAL_TMP_DIRECTORY, fileName);
+        File localFile = new File(TMP_DIRECTORY, fileName);
 
         try {
             if (Utils.writeLocalFile(localFile, content.getContent())) {
 
                 HashMap<String, String> params = new HashMap<String, String>();
-                params.put("source", LOCAL_TMP_DIRECTORY + fileName);
-                params.put("target", LOCAL_TMP_DIRECTORY + imgFileName);
+                params.put("source", TMP_DIRECTORY + fileName);
+                params.put("target", TMP_DIRECTORY + imgFileName);
                 //params.put("thumbnail", THUMBNAIL_SIZE);
                 params.put("pages", "1");
 
-                HttpClientUtils.httpGetRequest(PRISM_CONVERT_URL + Utils.constructUrlParams(params));
+                HttpClientUtils.httpGetRequest(CONVERT_URL + Utils.constructUrlParams(params));
 
                 cleanupTempDir(localFile);
 
-                File localThumbnail = new File(LOCAL_TMP_DIRECTORY, imgFileName);
+                File localThumbnail = new File(TMP_DIRECTORY, imgFileName);
                 if (localThumbnail.exists()) {
                     return localThumbnail.getPath();
                 }
@@ -135,9 +132,9 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
     }
 
     private void cleanupTempDir(File localFile) {
-        String pdfFileName = Utils.changeFileExtension(localFile.getName(), "pdf", false);
+        String pdfFileName = Utils.changeFileExtension(localFile.getName(), Constants.PDF_FILE_EXT, false);
         Utils.removeLocalFile(localFile);
-        Utils.removeLocalFile(new File(LOCAL_TMP_DIRECTORY, pdfFileName));
+        Utils.removeLocalFile(new File(TMP_DIRECTORY, pdfFileName));
     }
 
 }

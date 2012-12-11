@@ -19,9 +19,10 @@ DATEPICK.util = {};
     var dateField = "",
         dateRangeUrl = "";
 
-    DATEPICK.ui.initDatePickerVars = function(field, url) {
-        dateField = field;
-        dateRangeUrl = url;
+    DATEPICK.ui.init = function(names) {
+        dateField = names['dateField'];
+        dateRangeUrl = names['dateRangeUrl'];
+        buildHTML(names['datePickElName']);
     };
 
     function formatDateString(day, month, year) {
@@ -48,6 +49,21 @@ DATEPICK.util = {};
         return datePickerRep;
     }
 
+    function buildHTML(datePickElName) {
+        var datePickDiv = Dom.get(datePickElName);
+
+        var l = UI.addDomElementChild('label', datePickDiv, { for: dateBeginInputElName, innerHTML : "Constrain by "});
+        UI.addDomElementChild('span', l, { id : dateConstraintTextElName });
+        UI.addDomElementChild('input', datePickDiv, { type : 'text', size: dateTextInputSize, id : dateBeginInputElName, value: '*'});
+        UI.addDomElementChild('label', datePickDiv, { for : dateEndInputElName, innerHTML: " to "});
+        UI.addDomElementChild('input', datePickDiv, { type : 'text', size: dateTextInputSize, id : dateEndInputElName, value: '*'});
+        UI.addDomElementChild('br', datePickDiv);
+        var s = UI.addDomElementChild('span', datePickDiv, { innerHTML: "In this index, field " }, { "font-size" : "12px", "padding-top" : "3px" });
+        UI.addDomElementChild('span', s, { id : dateConstraintRangeTextElName });
+
+        createDatePickers();
+    }
+
     function createJsDatePick(targetElName) {
         return new JsDatePick({
             useMode     : 2,
@@ -57,11 +73,11 @@ DATEPICK.util = {};
         });
     }
 
-    Event.onContentReady(dateConstraintRangeTextElName, function() {
+    function createDatePickers() {
         var beginDatePick = createJsDatePick(dateBeginInputElName),
               endDatePick = createJsDatePick(dateEndInputElName);
 
-        Dom.get(dateConstraintTextElName).innerHTML = dateField;
+        Dom.get(dateConstraintTextElName).innerHTML = dateField + ": ";
 
         Connect.asyncRequest('GET', dateRangeUrl, {
             success : function(o) {
@@ -69,7 +85,7 @@ DATEPICK.util = {};
                       start = dateStr[0].match(/([0-9]+)-([0-9]+)-([0-9]+)/),
                         end = dateStr[1].match(/([0-9]+)-([0-9]+)-([0-9]+)/);
 
-                Dom.get(dateConstraintRangeTextElName).innerHTML = dateField + " range is: " +
+                Dom.get(dateConstraintRangeTextElName).innerHTML = dateField + " has range: " +
                     "<i>" + dateStr[0] + "</i> to <i>" + dateStr[1] + "</i>";
 
                 if (start != null) beginDatePick.setSelectedDay({ day:start[2], month:start[1], year:start[3] });
@@ -84,16 +100,7 @@ DATEPICK.util = {};
             return (startDate == "*" && endDate == "*") ? "" :
                 "%2B" + dateField + ":[" + startDate + " TO " + endDate + "] ";
         };
-    });
+    }
 
-    DATEPICK.ui.buildDatePickHTML = function(datePickEl) {
-        var datePickDiv = Dom.get(datePickEl);
-        datePickDiv.innerHTML = 
-            "<label for='" + dateBeginInputElName + "'>Constrain by <span id='" + dateConstraintTextElName + "'></span>: </label>" +
-            "<input type='text' size='" + dateTextInputSize + "' id='" + dateBeginInputElName + "' value='*'/>" +
-            "<label for='" + dateEndInputElName + "'> to </label>" +
-            "<input type='text' size='" + dateTextInputSize + "' id='" + dateEndInputElName + "' value='*'/>" +
-            "<br>" +
-            "<span style='" + dateRangeTextStyle + "'>In this index, field <span id = '" + dateConstraintRangeTextElName + "'></span></span>";
-    };
+
 })();

@@ -15,10 +15,12 @@ FACET.util = {};
         treeViewDivElName           = "tree_view",          // from main.tag
         facetOptionsDivElName       = "facet_options",
         buttonDownOverlayCSSClass   = "button down-big-overlay",
-        buttonUpOverlayCSSClass     = "button up-big-overlay";
+        buttonUpOverlayCSSClass     = "button up-big-overlay",
 
-    var contentContainer            = Dom.get(contentContainerDivElName),
-        contentContainerMinHeight   = parseInt(Dom.getStyle("content_container", "height").replace("px", ""));
+        contentContainer            = Dom.get(contentContainerDivElName),
+        contentContainerMinHeight   = parseInt(Dom.getStyle("content_container", "height").replace("px", "")),
+
+        facetTreeUrl                = "";
 
     function makeVisible(el) {
         Dom.setStyle(el, "visibility", "visible");
@@ -34,10 +36,17 @@ FACET.util = {};
     });
     overlay.render(contentContainer);
 
-    var facetTreeUrl = "";
-    FACET.ui.initFacetVars = function(url) {
-        facetTreeUrl = url;
+    FACET.ui.init = function(names) {
+        facetTreeUrl = names.facetTreeUrl;
+        buildHTML(names.insertFacetHtmlAfterElName);
+        FACET.ui.buildInitialFacetTree();
     };
+
+    function buildHTML(insertAfterElName) {
+        var insertAfterNode = Dom.get(insertAfterElName);
+        var el = UI.insertDomElementAfter('div', insertAfterNode, { id: facetOptionsDivElName}, null);
+        UI.addDomElementChild('div', el, null, { class: "clearboth" });
+    }
 
     function adjustContentContainerHeight() {
         var oh = parseInt(Dom.getStyle(overlayDivElName, "height").replace("px", "")) + 300;
@@ -71,7 +80,7 @@ FACET.util = {};
                 var result = Json.parse(o.responseText);
                 makeVisible(showOverlayButtonElName);
                 showOverlay();
-                FACET.ui.buildFacetTree(result.response.facets);
+                FACET.ui.buildFacetTree(result.facets);
             },
             failure: function(o) {
                 alert("Could not build facets. " + o);
@@ -81,28 +90,32 @@ FACET.util = {};
 
     FACET.ui.buildFacetTree = function(facets) {
         var i, j, nameNode, valueNode, root = facetTreeView.getRoot();
+        var facetFieldNames = Object.keys(facets);
 
         facetTreeView.removeChildren(root);
 
-        for(i = 0; i < facets.length; i++) {
+        for(i = 0; i < facetFieldNames.length; i++) {
+            var key = facetFieldNames[i], facetChildName = key;
             var parent = root;
-            if (facets[i].name.indexOf(".") > 0) {
-                var facetNameArray = facets[i].name.split(".");
-                var facetParentName = facetNameArray[0], facetChildName = facetNameArray[1];
+
+            if (key.indexOf(".") > 0) {
+                var facetNameArray = key.split(".");
+                var facetParentName = facetNameArray[0];
+                facetChildName = facetNameArray[1];
                 var parentNode = facetTreeView.getNodeByProperty("label", facetParentName);
                 if (parentNode == null) {
                     parentNode = new TextNode(facetParentName, root, false);
                 }
                 parent = parentNode;
-                facets[i].name = facetChildName;
             }
 
-            if (facets[i].values.length > 0 &&
-                !(facets[i].values.length == 1 && facets[i].values[0].match(/^null\s\([0-9]+\)$/))) {
-                nameNode = new TextNode(facets[i].name, parent, false);
+            var vals = (facets[key] instanceof Array) ? facets[key] : [facets[key]];
+            if (vals.length > 0 &&
+                !(vals.length == 1 && vals[0].match(/^null\s\([0-9]+\)$/))) {
+                nameNode = new TextNode(facetChildName, parent, false);
 
-                for(j = 0; j < facets[i].values.length; j++) {
-                    valueNode = new TextNode(facets[i].values[j], nameNode, false);
+                for(j = 0; j < vals.length; j++) {
+                    valueNode = new TextNode(vals[j], nameNode, false);
                     valueNode.isLeaf = true;
                 }
             }
@@ -156,10 +169,6 @@ FACET.util = {};
         return fqStr;
     };
 
-    FACET.ui.buildFacetHTML = function(insertAfterElName) {
-        var insertAfterNode = Dom.get(insertAfterElName);
-        var el = UI.insertDomElementAfter('div', insertAfterNode, { id: facetOptionsDivElName}, null);
-        UI.addDomElementChild('div', el, null, { class: "clearboth" });
-    }
+
 
 })();

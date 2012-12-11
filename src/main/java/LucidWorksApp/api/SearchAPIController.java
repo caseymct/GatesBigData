@@ -2,9 +2,11 @@ package LucidWorksApp.api;
 
 import LucidWorksApp.utils.Constants;
 import LucidWorksApp.utils.SolrUtils;
+import LucidWorksApp.utils.Utils;
 import model.FacetFieldEntryList;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +34,9 @@ import static org.springframework.http.HttpStatus.OK;
 public class SearchAPIController extends APIController {
 
     public static final String SESSION_HDFSDIR_TOKEN               = "currentHDFSDir";
+    public static final String SESSION_VIEWFIELDS_TOKEN            = "viewFields";
+    public static final String SESSION_FACETFIELDS_TOKEN           = "facetFields";
+    public static final String SESSION_DATEFIELDS_TOKEN            = "dateFields";
     public static final String SESSION_PREFIXTOFULLFIELD_MAP_TOKEN = "prefixToFullFieldMap";
 
     private SearchService searchService;
@@ -44,9 +49,9 @@ public class SearchAPIController extends APIController {
     }
 
     private FacetFieldEntryList getFacetFields(String coreName, HttpSession session) {
-        String hdfsDir = hdfsService.getHDFSCoreDirectory(false, coreName).toString();
+        String sessionKey = SESSION_HDFSDIR_TOKEN + SESSION_FACETFIELDS_TOKEN + coreName;
 
-        FacetFieldEntryList hdfsFacetFields = (FacetFieldEntryList) session.getAttribute(SESSION_HDFSDIR_TOKEN + hdfsDir);
+        FacetFieldEntryList hdfsFacetFields = (FacetFieldEntryList) session.getAttribute(sessionKey);
         if (hdfsFacetFields == null || hdfsFacetFields.size() == 0) {
             hdfsFacetFields = hdfsService.getHDFSFacetFields(coreName);
 
@@ -57,20 +62,43 @@ public class SearchAPIController extends APIController {
                     newFacetFields.add(hdfsFacetFields.get(name));
                 }
             }
-            session.setAttribute(SESSION_HDFSDIR_TOKEN + hdfsDir, newFacetFields);
+            session.setAttribute(sessionKey, newFacetFields);
             return newFacetFields;
         }
         return hdfsFacetFields;
     }
 
+    private String getViewFields(String coreName, HttpSession session) {
+        String sessionKey = SESSION_HDFSDIR_TOKEN + SESSION_VIEWFIELDS_TOKEN + coreName;
+
+        String viewFields = (String) session.getAttribute(sessionKey);
+        if (viewFields == null || viewFields.equals("")) {
+            viewFields = hdfsService.getHDFSViewFields(coreName);
+            session.setAttribute(sessionKey, viewFields);
+        }
+
+        return viewFields;
+    }
+
+    private List<String> getDateFields(String coreName, HttpSession session) {
+        String sessionKey = SESSION_HDFSDIR_TOKEN + SESSION_DATEFIELDS_TOKEN + coreName;
+
+        List<String> dateFields = (List<String>) session.getAttribute(sessionKey);
+        if (dateFields == null) {
+            dateFields = SolrUtils.getLukeFieldNamesByType(coreName, "date");
+            session.setAttribute(sessionKey, dateFields);
+        }
+
+        return dateFields;
+    }
 
     private HashMap<String, String> getPrefixToFullFieldMap(String coreName, HttpSession session) {
-        String fullToken = coreName + "_" + SESSION_PREFIXTOFULLFIELD_MAP_TOKEN;
-        HashMap<String, String> map = (HashMap<String, String>) session.getAttribute(fullToken);
+        String sessionKey = SESSION_HDFSDIR_TOKEN + SESSION_PREFIXTOFULLFIELD_MAP_TOKEN + coreName;
+        HashMap<String, String> map = (HashMap<String, String>) session.getAttribute(sessionKey);
 
         if (map == null || map.size() == 0) {
             map = SolrUtils.getPrefixFieldMap(coreName);
-            session.setAttribute(fullToken, map);
+            session.setAttribute(sessionKey, map);
         }
         return map;
     }
@@ -89,9 +117,13 @@ public class SearchAPIController extends APIController {
         StringWriter writer = new StringWriter();
         HttpSession session = request.getSession();
         FacetFieldEntryList facetFields = getFacetFields(coreName, session);
+        String viewFields               = getViewFields(coreName, session);
+        List<String> dateViewFields     = getDateFields(coreName, session);
 
-        searchService.solrSearch(query, coreName, sortType, sortOrder, (start == null) ? 0 : start,
-                (rows == null) ? 10 : rows, fq, facetFields, writer);
+        searchService.solrSearch(query, coreName, sortType, sortOrder,
+                (start == null) ? Constants.SOLR_START_DEFAULT : start,
+                (rows == null) ? Constants.SOLR_ROWS_DEFAULT : rows,
+                fq, facetFields, viewFields, dateViewFields, writer);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
@@ -114,14 +146,7 @@ public class SearchAPIController extends APIController {
     @RequestMapping(value="/fields/all", method = RequestMethod.GET)
     public ResponseEntity<String> allFields(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
         JSONArray ret = new JSONArray();
-        Pattern p = Pattern.compile(".*(\\.facet|Suggest|Prefix)$");
-
-        for(String field : SolrUtils.getLukeFieldNames(coreName)) {
-            Matcher m = p.matcher(field);
-            if (!m.matches()) {
-                ret.add(field);
-            }
-        }
+        ret.addAll(SolrUtils.getViewFieldNames(coreName));
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));

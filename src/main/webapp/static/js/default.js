@@ -54,6 +54,14 @@ UI.util = {};
         return el;
     };
 
+    UI.addClearBothDiv = function(parent) {
+        return UI.addDivWithClass(parent, "clearboth");
+    };
+
+    UI.addDivWithClass = function(parent, classname) {
+        return UI.addDomElementChild('div', parent, {}, { class : classname });
+    };
+
     UI.alertErrors = function(o) {
         try {
             var result = YAHOO.lang.JSON.parse(o.responseText);
@@ -71,11 +79,12 @@ UI.util = {};
         return false;
     };
 
-    function hideDlg() { this.hide(); }
+    UI.hideDlg = function() { this.hide(); };
 
-    UI.createSimpleDlg = function(containerElName, header, body, handleYesFn) {
+    UI.createSimpleDlg = function(containerElName, header, body, handleYesFn, handleYesButtonText) {
         if (header == undefined) header = "Warning!";
         if (body == undefined) body = "Are you sure?";
+        if (handleYesButtonText == undefined) handleYesButtonText = "Yes";
 
         var dlg = new YAHOO.widget.SimpleDialog(containerElName, {
             width: "20em",
@@ -84,12 +93,12 @@ UI.util = {};
             visible: false,
             buttons: [
                 { text: "Yes", handler: handleYesFn, isDefault:true},
-                { text: "Cancel", handler: hideDlg }]
+                { text: "Cancel", handler: UI.hideDlg }]
         });
 
         dlg.render(document.body);
         dlg.setHeader(header);
-        dlg.setBody(body);
+        if (body != "none") dlg.setBody(body);
         return dlg;
     };
 
@@ -293,6 +302,18 @@ UI.util = {};
 
     String.prototype.encodeForRequest = function() {
         return encodeURIComponent(this.replace(/&amp;/g, "&"));
+    };
+
+    UI.util.returnIfDefined = function(origval, newval) {
+        return (newval != undefined) ? newval : origval;
+    };
+
+    UI.util.specifyReturnValueIfUndefined = function(s, retval) {
+        return (s == undefined) ? retval : s;
+    };
+
+    UI.util.returnEmptyIfUndefined = function(s) {
+        return (s == undefined) ? "" : s;
     };
 
     UI.util.getNPixels = function(pxStr) {

@@ -152,13 +152,13 @@ public class CoreAPIController extends APIController {
                                                          @RequestParam(value = PARAM_N_FILES, required = false) Integer nFiles) {
         JSONObject response = new JSONObject();
 
-        boolean deleted = coreService.deleteIndex(coreName);
-        if (!deleted) {
-            response.put("Error", "Could not delete index for core " + coreName);
-        } else {
+        //boolean deleted = coreService.deleteIndex(coreName);
+        //if (!deleted) {
+        //    response.put("Error", "Could not delete index for core " + coreName);
+        //} else {
             solrReindexService.reindexSolrCoreFromHDFS(coreName, (nThreads == null) ? -1 : nThreads, (nFiles == null) ? -1 : nFiles);
             response.put("Success", "Successfully reindexed " + coreName);
-        }
+        //}
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));

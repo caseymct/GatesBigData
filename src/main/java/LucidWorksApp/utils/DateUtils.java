@@ -1,32 +1,39 @@
 package LucidWorksApp.utils;
 
+import org.apache.log4j.Logger;
 import org.apache.solr.schema.DateField;
 import org.apache.solr.util.DateMathParser;
 
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DateUtils {
 
     private static TimeZone UTC = TimeZone.getTimeZone("UTC");
-    private static DateFormat parser = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US);
-    private static SimpleDateFormat solrDateFormat = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'Z'");
+
     private static DateMathParser p = new DateMathParser(UTC, Locale.US);
     private static Pattern dateStringNoMilliseconds = Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z");
+    private static Pattern shortDatePattern = Pattern.compile("\\d{2}-\\d{2}-\\d{4} \\d{2}:\\d{2} [A-Z]{3}");
+    private static Pattern shortDate2Pattern = Pattern.compile("\\d{2}-[A-Z]{3}-\\d{2} \\d{2}:\\d{2}:\\d{2}");
     private static Pattern solrDateString = Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z");
-    private static Pattern shortDateString = Pattern.compile("^(\\d{4})-(\\d{2})-(\\d{2})$");
-    private static DateFormat shortParser = new SimpleDateFormat("MM-dd-yyyy HH:mm z", Locale.US);
+    private static Pattern onlyDatePattern = Pattern.compile("^(\\d{4})-(\\d{2})-(\\d{2})$");
 
-    public static String SOLR_DATE = "solrdate";
+    private static SimpleDateFormat shortDateFormat          = new SimpleDateFormat("MM-dd-yyyy HH:mm z", Locale.US);
+    private static SimpleDateFormat shortDateFormat2         = new SimpleDateFormat("dd-MMM-yy HH:mm:ss", Locale.US);
+    private static SimpleDateFormat solrDateFormatNoTimeZone = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US);
+    private static SimpleDateFormat solrDateFormat           = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'Z'");
+    private static SimpleDateFormat longDateFormat           = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
+    private static List<SimpleDateFormat> formatOptions      = Arrays.asList(shortDateFormat, shortDateFormat2, longDateFormat,
+                                                                             solrDateFormat, solrDateFormatNoTimeZone);
+
+    public static String SOLR_DATE  = "solrdate";
     public static String SHORT_DATE = "shortdate";
-    public static String LONG_DATE = "longdate";
+    public static String LONG_DATE  = "longdate";
+
+    private static final Logger logger = Logger.getLogger(DateUtils.class);
 
     public static String getDateGapString(Long ms) {
         Long sec = ms/1000;
@@ -65,11 +72,11 @@ public class DateUtils {
     }
 
     public static Date solrDateMath(String solrDate, String gap) {
-        parser.setTimeZone(UTC);
+        solrDateFormatNoTimeZone.setTimeZone(UTC);
 
         try {
             solrDate = addDateMillisecondsIfMissing(solrDate);
-            p.setNow(parser.parse(solrDate));
+            p.setNow(solrDateFormatNoTimeZone.parse(solrDate));
             return p.parseMath(gap);
         } catch (ParseException e) {
             System.err.println(e.getMessage());
@@ -105,7 +112,7 @@ public class DateUtils {
             }
 
             // If it's in the format yyyy-mm-dd
-            m = shortDateString.matcher(dateString);
+            m = onlyDatePattern.matcher(dateString);
             if (m.matches()) {
                 Calendar calendar = Calendar.getInstance();
                 calendar.set(Integer.parseInt(m.group(1)), getCalendarMonth(Integer.parseInt(m.group(2))),
@@ -113,10 +120,13 @@ public class DateUtils {
                 return DateField.formatExternal(calendar.getTime());
             }
 
-            try {
-                return DateField.formatExternal(new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy").parse(dateString));
-            } catch (ParseException e) {
-                return dateString;
+            for(SimpleDateFormat format : formatOptions) {
+                try {
+                    Date date = format.parse(dateString);
+                    return DateField.formatExternal(date);
+                } catch (ParseException e) {
+                    //logger.error(e.getMessage());
+                }
             }
         }
         return dateString;
@@ -155,7 +165,7 @@ public class DateUtils {
 
     public static String getShortDateStringFromSolrDate(String solrDate) {
         try {
-            return shortParser.format(DateField.parseDate(solrDate));
+            return shortDateFormat.format(DateField.parseDate(solrDate));
         } catch (ParseException e) {
             System.err.println(e.getMessage());
         }

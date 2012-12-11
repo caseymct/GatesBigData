@@ -52,11 +52,7 @@ public class HttpClientUtils {
 
             return getResponse(responseEntity);
 
-        } catch (URISyntaxException e) {
-            System.out.println(e.getMessage());
         } catch (IOException e) {
-            System.out.println(e.getMessage());
-        } catch (org.apache.http.HttpException e) {
             System.out.println(e.getMessage());
         }
 
@@ -93,11 +89,7 @@ public class HttpClientUtils {
 
             return getResponse(responseEntity);
 
-        } catch (URISyntaxException e) {
-            System.out.println(e.getMessage());
         } catch (IOException e) {
-            System.out.println(e.getMessage());
-        } catch (org.apache.http.HttpException e) {
             System.out.println(e.getMessage());
         }
 
@@ -139,11 +131,7 @@ public class HttpClientUtils {
 
             return getResponse(response.getEntity());
 
-        } catch (URISyntaxException e) {
-            System.out.println(e.getMessage());
         } catch (IOException e) {
-            System.out.println(e.getMessage());
-        } catch (org.apache.http.HttpException e) {
             System.out.println(e.getMessage());
         }
 
@@ -159,11 +147,7 @@ public class HttpClientUtils {
 
             return getResponse(response.getEntity());
 
-        } catch (URISyntaxException e) {
-            System.out.println(e.getMessage());
         } catch (IOException e) {
-            System.out.println(e.getMessage());
-        } catch (org.apache.http.HttpException e) {
             System.out.println(e.getMessage());
         }
 
@@ -184,11 +168,7 @@ public class HttpClientUtils {
 
             return getResponse(response.getEntity());
 
-        } catch (URISyntaxException e) {
-            System.out.println(e.getMessage());
         } catch (IOException e) {
-            System.out.println(e.getMessage());
-        } catch (org.apache.http.HttpException e) {
             System.out.println(e.getMessage());
         }
 
@@ -204,11 +184,7 @@ public class HttpClientUtils {
 
             return getResponse(response.getEntity());
 
-        } catch (URISyntaxException e) {
-            System.out.println(e.getMessage());
         } catch (IOException e) {
-            System.out.println(e.getMessage());
-        } catch (org.apache.http.HttpException e) {
             System.out.println(e.getMessage());
         }
 

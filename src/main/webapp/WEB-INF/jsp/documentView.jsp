@@ -21,7 +21,7 @@
     <!--<div id="tree_view"></div>-->
     <div id="doc_view"></div>
 
-    <script type="text/javascript" src="<c:url value="/static/js/search.js" />"></script>
+    <script type="text/javascript" src="<c:url value="/static/js/search/search.js" />"></script>
 
     <script type="text/javascript">
     (function() {
