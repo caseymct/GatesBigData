@@ -138,6 +138,31 @@ a.down {
     background: url(../images/sprite.png)  13px -168px no-repeat #f3f3f3;
     width: 18px;
 }
+a.move {
+    background: url(../images/movebuttons.jpg) no-repeat;
+    background-position-y: -5px;
+    width: 3px;
+    background-size: 120px;
+    height: 10px;
+    border: none;
+    margin-right: 0;
+}
+a.move_up {
+    background-position-x: -90px;
+}
+
+a.move_down {
+    background-position-x: -34px;
+}
+
+a.move_left {
+    background-position-x: -61px;
+}
+
+a.move_right {
+    background-position-x: -5px;
+}
+
 a.save-big {
     background: url(../images/sprite.png) 15px 11px no-repeat #f3f3f3;
     font-size: 16px;

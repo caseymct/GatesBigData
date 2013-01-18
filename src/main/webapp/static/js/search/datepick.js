@@ -20,9 +20,9 @@ DATEPICK.util = {};
         dateRangeUrl = "";
 
     DATEPICK.ui.init = function(names) {
-        dateField = names['dateField'];
-        dateRangeUrl = names['dateRangeUrl'];
-        buildHTML(names['datePickElName']);
+        dateField    = names[UI.DATEPICK.DATE_FIELD_KEY];
+        dateRangeUrl = names[UI.DATE_PICKER_URL_KEY];
+        buildHTML(names[UI.DATEPICK.DATE_PICK_EL_NAME_KEY]);
     };
 
     function formatDateString(day, month, year) {
@@ -52,10 +52,10 @@ DATEPICK.util = {};
     function buildHTML(datePickElName) {
         var datePickDiv = Dom.get(datePickElName);
 
-        var l = UI.addDomElementChild('label', datePickDiv, { for: dateBeginInputElName, innerHTML : "Constrain by "});
+        var l = UI.addDomElementChild('label', datePickDiv, { "for" : dateBeginInputElName, innerHTML : "Constrain by "});
         UI.addDomElementChild('span', l, { id : dateConstraintTextElName });
         UI.addDomElementChild('input', datePickDiv, { type : 'text', size: dateTextInputSize, id : dateBeginInputElName, value: '*'});
-        UI.addDomElementChild('label', datePickDiv, { for : dateEndInputElName, innerHTML: " to "});
+        UI.addDomElementChild('label', datePickDiv, { "for" : dateEndInputElName, innerHTML: " to "});
         UI.addDomElementChild('input', datePickDiv, { type : 'text', size: dateTextInputSize, id : dateEndInputElName, value: '*'});
         UI.addDomElementChild('br', datePickDiv);
         var s = UI.addDomElementChild('span', datePickDiv, { innerHTML: "In this index, field " }, { "font-size" : "12px", "padding-top" : "3px" });

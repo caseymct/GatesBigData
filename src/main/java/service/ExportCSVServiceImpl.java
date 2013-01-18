@@ -2,19 +2,19 @@ package service;
 
 import LucidWorksApp.utils.Constants;
 import LucidWorksApp.utils.SolrUtils;
-import net.sf.json.JSONArray;
+import LucidWorksApp.utils.Utils;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.nutch.protocol.Content;
-import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
+import org.codehaus.jackson.JsonGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.servlet.ServletOutputStream;
 import java.io.IOException;
 import java.io.Writer;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
 import java.util.*;
 
@@ -28,56 +28,78 @@ public class ExportCSVServiceImpl extends ExportService {
         this.hdfsService = hdfsService;
     }
 
-    public void exportHeaderData(long numDocs, String query, String fq, String coreName, final Writer writer, String delimiter, String newLine) {
+    public void exportHeaderData(long numDocs, String query, String fq, String coreName, final Writer writer) throws IOException {
         query = "\"" + query.replaceAll("\"", "\"\"") + "\"";
         fq = (fq == null) ? "" : "\"" + fq.replaceAll("\"", "\"\"") + "\"";
 
-        try {
-            writer.append("# Found").append(delimiter).append("Solr Query").append(delimiter);
-            writer.append("Core name").append(delimiter).append("Filter Query").append(delimiter);
-            writer.append(newLine);
+        writer.append(NUM_FOUND_HDR).append(delimiter).append(SOLR_QUERY_HDR).append(delimiter);
+        writer.append(CORE_NAME_HDR).append(delimiter).append(FILTER_QUERY_HDR).append(delimiter);
+        writer.append(newLine);
 
-            writer.append(Long.toString(numDocs)).append(delimiter).append(query).append(delimiter);
-            writer.append(coreName).append(delimiter).append(fq).append(delimiter);
-            writer.append(newLine).append(newLine);
-
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
+        writer.append(Long.toString(numDocs)).append(delimiter).append(query).append(delimiter);
+        writer.append(coreName).append(delimiter).append(fq).append(delimiter);
+        writer.append(newLine).append(newLine);
     }
 
-    public void closeWriters(final Writer writer) {
-        try {
-            writer.close();
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
+    public void writeEmptyResultSet(final Writer writer) throws IOException {
+        writer.append("No search results.");
     }
 
-    public void writeEmptyResultSet(final Writer writer) {
-        try {
-            writer.append("No search results.");
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
-    private void buildCSVHeaderRow(List<String> fields, String newLine, String delimeter, final Writer writer) throws IOException {
-        writer.append(StringUtils.join(fields, delimeter));
+    private void buildCSVHeaderRow(List<String> fields, final Writer writer) throws IOException {
+        writer.append(StringUtils.join(fields, delimiter));
         writer.append(newLine);
     }
 
+    public void beginExportWrite(Writer writer) throws IOException {}
+    public void endExportWrite(Writer writer, ServletOutputStream outputStream) throws IOException {}
+    public void beginDocWrite(Writer writer) throws IOException {}
 
-    public void exportJSONDocs(JSONArray docs, List<String> fields, String coreName, final Writer writer, String delimeter, String newLine) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+    public void endDocWrite(Writer writer) throws IOException {
+        writer.append(newLine);
+    }
+
+    public void write(String field, String value, boolean lastField, Writer writer) throws IOException {
+        writer.append(value);
+        if (!lastField) {
+            writer.append(delimiter);
+        }
+    }
+
+    /*private void _export(SolrDocumentList docs, List<String> fields, final Writer writer, String delimeter, String newLine)
+            throws IOException {
+        // build the csv header row
+        buildCSVHeaderRow(fields, newLine, delimeter, writer);
+
+        solrDocExport(docs, fields, newLine, writer);
+        for(SolrDocument doc : docs) {
+            for(int i = 0; i < fields.size(); i++) {
+                String field = fields.get(i);
+                String val = doc.containsKey(field) ? Utils.getUTF8String(doc.getFieldValue(field).toString()) : "";
+                writer.append(StringEscapeUtils.escapeCsv(val));
+
+                if (i < fields.size()) {
+                    writer.append(delimeter);
+                }
+            }
+            writer.append(newLine);
+        }
+
+        writer.flush();
+    }          */
+
+    public void export(SolrDocumentList docs, List<String> fields, final Writer writer) throws IOException {
+        logger.debug("Exporting to CSV");
+        buildCSVHeaderRow(fields, writer);
+        solrDocExport(docs, fields, writer);
+    }
+
+
+    private void exportJSONDocsFromHDFS(SolrDocumentList docs, List<String> fields, String coreName, final Writer writer, String delimeter, String newLine) throws IOException {
         logger.debug("Exporting JSON docs to CSV");
 
         writer.append("Documents with Content-type : ").append(Constants.JSON_CONTENT_TYPE).append(newLine);
 
-        // build the csv header row
-        if (fields.size() == 0) {
-            fields = SolrUtils.getLukeFieldNames(coreName);
-        }
-        buildCSVHeaderRow(fields, newLine, delimeter, writer);
+        buildCSVHeaderRow(fields, writer);
 
         HashMap<String, List<String>> segToFileMap = SolrUtils.getSegmentToFilesMap(docs);
 
@@ -107,30 +129,6 @@ public class ExportCSVServiceImpl extends ExportService {
                 }
                 writer.append(newLine);
             }
-        }
-        writer.flush();
-    }
-
-    public void export(JSONArray docs, List<String> fields, String coreName, final Writer writer, String delimeter, String newLine) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-        logger.debug("Exporting to CSV");
-
-        // build the csv header row
-        fields = FIELDS_TO_EXPORT;
-        buildCSVHeaderRow(fields, newLine, delimeter, writer);
-
-        for(int i = 0; i < docs.size(); i++) {
-            JSONObject doc = docs.getJSONObject(i);
-
-            Iterator<String> fieldIterator = fields.iterator();
-            while(fieldIterator.hasNext()) {
-                String field = fieldIterator.next();
-                Object val = doc.getString(field);
-                writer.append(StringEscapeUtils.escapeCsv(val != null ? new String(val.toString().getBytes(), Charset.forName(Constants.UTF8)) : ""));
-                if (fieldIterator.hasNext()) {
-                    writer.append(delimeter);
-                }
-            }
-            writer.append(newLine);
         }
         writer.flush();
     }

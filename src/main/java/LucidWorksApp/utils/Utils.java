@@ -1,20 +1,21 @@
 package LucidWorksApp.utils;
 
+import model.ValueComparator;
+import org.apache.commons.httpclient.URIException;
+import org.apache.commons.httpclient.util.URIUtil;
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.fs.*;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonGenerator;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
-import java.text.DateFormat;
 import java.util.*;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 
 public class Utils {
@@ -32,8 +33,38 @@ public class Utils {
         return localhost.equals(Constants.PRODUCTION_HOSTNAME);
     }
 
-    public static boolean stringIsNullOrEmpty(String s) {
-        return s == null || s.equals("");
+    public static String escapeQuotes(String s) {
+        return s.replaceAll("\"", "\\\"");
+    }
+
+    public static String replaceHTMLAmpersands(String s) {
+        return s.replaceAll("&amp;", "&");
+    }
+
+    public static <T> boolean nullOrEmpty(T t) {
+        if (t == null) return true;
+
+        Method m = null;
+        for(String methodName : Arrays.asList("size", "length")) {
+            try {
+                m = t.getClass().getDeclaredMethod(methodName);
+                break;
+            } catch (NoSuchMethodException e) {
+                m = null;
+            }
+        }
+        if (m != null) {
+            m.setAccessible(true);
+            try {
+                return (Integer) m.invoke(t) == 0;
+            } catch (IllegalAccessException e) {
+                logger.error(e.getMessage());
+            } catch (InvocationTargetException e) {
+                logger.error(e.getMessage());
+            }
+        }
+
+        return false;
     }
 
     public static boolean fileHasExtension(String file, String ext) {
@@ -44,7 +75,7 @@ public class Utils {
     }
 
     public static String addToUrlIfNotEmpty(String url, String endpoint) {
-        return stringIsNullOrEmpty(endpoint) ? url : url + "/" + endpoint;
+        return nullOrEmpty(endpoint) ? url : url + "/" + endpoint;
     }
 
     private static List<String> getParamListFromHashMap(HashMap<String, String> params) {
@@ -92,6 +123,15 @@ public class Utils {
         return s;
     }
 
+    public static String encodeQuery(String s) {
+        try {
+            s = URIUtil.encodeQuery(s);
+        } catch (URIException e) {
+            logger.error(e.getMessage());
+        }
+        return s;
+    }
+
     public static String getUTF8String(byte[] bytes) {
         try {
             return new String(bytes, Constants.UTF8);
@@ -128,7 +168,7 @@ public class Utils {
                 g.writeNumberField(key, (Long) value);
             }
         } else {
-            g.writeStringField(key, new String(value.toString().getBytes(), Charset.forName("UTF-8")));
+            g.writeStringField(key, new String(value.toString().getBytes(), Charset.forName(Constants.UTF8)));
         }
     }
 
@@ -248,22 +288,10 @@ public class Utils {
         }
     }
 
-    public static void addToZipFile(String fileName, ZipOutputStream zos) throws FileNotFoundException, IOException {
-
-        System.out.println("Writing '" + fileName + "' to zip file");
-
-        File file = new File(fileName);
-        FileInputStream fis = new FileInputStream(file);
-        ZipEntry zipEntry = new ZipEntry(fileName);
-        zos.putNextEntry(zipEntry);
-
-        byte[] bytes = new byte[1024];
-        int length;
-        while ((length = fis.read(bytes)) >= 0) {
-            zos.write(bytes, 0, length);
-        }
-
-        zos.closeEntry();
-        fis.close();
+    public static Map<String, Number> sortByValue(Map<String, Number> map) {
+        ValueComparator bvc = new ValueComparator(map);
+        TreeMap<String, Number> sortedMap = new TreeMap<String, Number>(bvc);
+        sortedMap.putAll(map);
+        return sortedMap;
     }
 }

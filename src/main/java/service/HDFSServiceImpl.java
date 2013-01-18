@@ -187,39 +187,43 @@ public class HDFSServiceImpl implements HDFSService, ThreadCompleteListener {
 
         return new byte[0];
     }
-            
-    public FacetFieldEntryList getHDFSFacetFields(String coreName) {
-        FacetFieldEntryList facetFieldEntryList = new FacetFieldEntryList();
 
-        String response = getFileContents(HDFSUtils.getHDFSFacetFieldsCustomFile(coreName));
-        if (!Utils.stringIsNullOrEmpty(response)) {
-            for(String ret : response.split(",")) {
-                String[] n = ret.split(":");
-                facetFieldEntryList.add(n[0], n[1], n[2]);
-            }
-        } else {
-            facetFieldEntryList = SolrUtils.getLukeFacetFieldEntryList(coreName);
-        }
-
-        return facetFieldEntryList;
-    }
-
-    public String getHDFSViewFields(String coreName) {
-        String response = getFileContents(HDFSUtils.getHDFSViewFieldsCustomFile(coreName));
+    private String returnResponseIfNoError(String response) {
         if (!HDFSUtils.hasHDFSErrorString(response)) {
             return response;
         }
+        return null;
+    }
 
-        return StringUtils.join(SolrUtils.getViewFieldNames(coreName), Constants.DEFAULT_DELIMETER);
+    public String getInfoFileContents(String coreName, String type) {
+        String contents = "";
+
+        if (type.equals(Constants.SOLR_FACET_FIELDS_ID_FIELD_NAME)) {
+            contents = getFileContents(HDFSUtils.getHDFSFacetFieldsCustomFile(coreName));
+        } else if (type.equals(Constants.SOLR_VIEW_FIELDS_ID_FIELD_NAME)) {
+            contents = getFileContents(HDFSUtils.getHDFSViewFieldsCustomFile(coreName));
+        } else if (type.equals(Constants.SOLR_PREVIEW_FIELDS_ID_FIELD_NAME)) {
+            contents = getFileContents(HDFSUtils.getHDFSPreviewFieldsCustomFile(coreName));
+        }
+
+        return returnResponseIfNoError(contents);
     }
 
     public List<String> getHDFSPreviewFields(String coreName) {
-        String response = getFileContents(HDFSUtils.getHDFSPreviewFieldsCustomFile(coreName));
-        if (!HDFSUtils.hasHDFSErrorString(response)) {
-            return Arrays.asList(response.split(","));
-        }
+        String response = getInfoFileContents(coreName, Constants.SOLR_PREVIEW_FIELDS_ID_FIELD_NAME);
+        return Utils.nullOrEmpty(response) ? null : Arrays.asList(response.split(","));
+    }
 
-        return null;
+    public HashMap<String, String> getInfoFilesContents(String coreName) {
+        HashMap<String, String> infoFileContents = new HashMap<String, String>();
+
+        for(String infoField : Constants.SOLR_INFO_FILES_LIST) {
+            String content = getInfoFileContents(coreName, infoField);
+            if (!Utils.nullOrEmpty(content)) {
+                infoFileContents.put(infoField, content);
+            }
+        }
+        return infoFileContents;
     }
 
     public List<String> listFiles(Path hdfsDirectory, boolean recurse) {

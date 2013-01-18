@@ -1,26 +1,29 @@
 package LucidWorksApp.api;
 
 import LucidWorksApp.utils.Constants;
-import LucidWorksApp.utils.JsonParsingUtils;
 import LucidWorksApp.utils.SolrUtils;
 import LucidWorksApp.utils.Utils;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import model.SolrCollectionSchemaInfo;
+import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocumentList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
+import service.CoreService;
 import service.ExportService;
 import service.SearchService;
 
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.lang.reflect.InvocationTargetException;
+import javax.servlet.http.HttpSession;
+import java.io.*;
 import java.util.Arrays;
 import java.util.List;
 
@@ -36,66 +39,48 @@ public class ExportAPIController extends APIController {
 
     public static final int PAGE_SIZE = 200;
 
+    private static Logger logger = Logger.getLogger(ExportAPIController.class);
+
     private SearchService searchService;
+    private CoreService coreService;
     private ExportService exportCSVService;
     private ExportService exportJSONService;
     private ExportService exportZipService;
 
     @Autowired
-    public ExportAPIController(SearchService searchService,
+    public ExportAPIController(SearchService searchService, CoreService coreService,
                                @Qualifier("exportCSVService")  ExportService exportCSVService,
                                @Qualifier("exportJSONService") ExportService exportJSONService,
                                @Qualifier("exportZipService")  ExportService exportZipService) {
         this.searchService = searchService;
+        this.coreService = coreService;
         this.exportCSVService = exportCSVService;
         this.exportJSONService = exportJSONService;
         this.exportZipService = exportZipService;
     }
 
-    private int getNumFound(JSONObject response) {
-        return (Integer) JsonParsingUtils.extractJSONProperty(response, Arrays.asList("response", "numFound"), Integer.class, Constants.INVALID_INTEGER);
-    }
+    private void export(String query, String fq, String coreName, String sortField, SolrQuery.ORDER sortOrder,
+                        List<String> fields, SolrCollectionSchemaInfo schemaInfo, ExportService exportService,
+                        PrintWriter writer, ServletOutputStream outputStream) throws IOException {
 
-    private JSONArray getDocs(JSONObject response) {
-        return (JSONArray) JsonParsingUtils.extractJSONProperty(response, Arrays.asList("response", "docs"), JSONArray.class, new JSONArray());
-    }
-
-    private void exportHeaderData(String query, String fq, String coreName, String sortType,
-                                  SolrQuery.ORDER sortOrder, ExportService exportService, PrintWriter writer) throws IOException {
-
-        JSONObject response = searchService.execQuery(query, coreName, SolrUtils.SOLR_SCHEMA_HDFSKEY, sortOrder, 0, 0, fq, null, "");
-        int numFound = getNumFound(response);
-
-        exportService.exportHeaderData(numFound, query, fq, coreName, writer);
-    }
-
-    private void export(boolean onlyJsonContentType, String query, String fq, String coreName,
-                        String sortType, SolrQuery.ORDER sortOrder, List<String> fields,
-                        ExportService exportService, PrintWriter writer) throws IOException, IllegalAccessException, InvocationTargetException, NoSuchMethodException{
-
-        fq = (fq == null ? "" : fq) + (onlyJsonContentType ? "+" : "-") + "content_type:\"" + Constants.JSON_CONTENT_TYPE + "\"";
         int start = 0;
-        long numDocs = -1;
+        long numDocs = Constants.INVALID_LONG;
+        exportService.beginExportWrite(writer);
 
         do {
-            JSONObject response = searchService.execQuery(query, coreName, SolrUtils.SOLR_SCHEMA_HDFSKEY,
-                                                          sortOrder, start, PAGE_SIZE, fq, null, null);
-            JSONArray results = getDocs(response);
-            if (numDocs == -1) {
-                numDocs = getNumFound(response);
-            }
+            QueryResponse rsp = searchService.execQuery(query, coreName, sortField, sortOrder, start, PAGE_SIZE, fq, null, null, schemaInfo);
+            SolrDocumentList docs = rsp.getResults();
 
-            if (numDocs > 0) {
-                if (onlyJsonContentType) {
-                    //exportService.exportJSONDocs(rsp.getResults(), fields, coreName, writer);
-                    exportService.exportJSONDocs(results, fields, coreName, writer);
-                } else {
-                    //exportService.export(rsp.getResults(), fields, coreName, writer);
-                    exportService.export(results, fields, coreName, writer);
-                }
+            if (numDocs == Constants.INVALID_LONG) {
+                numDocs = docs.getNumFound();
+                exportService.exportHeaderData(numDocs, query, fq, coreName, writer);
             }
+            exportService.export(docs, fields, writer);
+
             start += PAGE_SIZE;
         } while (start < numDocs);
+
+        exportService.endExportWrite(writer, outputStream);
     }
 
     @InitBinder(ATTRIBUTE_COMMAND)
@@ -117,55 +102,64 @@ public class ExportAPIController extends APIController {
         return "";
     }
 
+    private PrintWriter getWriterByContentType(String contentType, HttpServletResponse response)
+            throws IOException{
+        return contentType.equals(Constants.ZIP_CONTENT_TYPE) ? null : response.getWriter();
+    }
+
+    private ServletOutputStream getOutputStreamByContentType(String contentType, HttpServletResponse response)
+            throws IOException {
+        return contentType.equals(Constants.ZIP_CONTENT_TYPE) ? response.getOutputStream() : null;
+    }
+
     @RequestMapping(value = "/export")
     public void exportSearchResults(@RequestParam(value = EXPORT_FILENAME, required = true) String fileName,
                                     @RequestParam(value = EXPORT_FILETYPE, required = true) String fileType,
-                                    @RequestParam(value = EXPORT_FIELDS, required = true) String fieldString,
+                                    @RequestParam(value = EXPORT_FIELDS, required = false) String fieldString,
                                     @RequestParam(value = PARAM_QUERY, required = true) String query,
                                     @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
-                                    @RequestParam(value = PARAM_SORT_TYPE, required = true) String sortType,
+                                    @RequestParam(value = PARAM_SORT_FIELD, required = true) String sortField,
                                     @RequestParam(value = PARAM_SORT_ORDER, required = true) String sortOrder,
                                     @RequestParam(value = PARAM_FQ, required = false) String fq,
+                                    HttpServletRequest request,
                                     HttpServletResponse response) throws IOException {
 
-        List<String> indices = Arrays.asList(fieldString.substring(1).split(","));
-        List<String> fields = SolrUtils.getLukeFieldNames(coreName, indices, fieldString.startsWith("+"));
+        HttpSession session = request.getSession();
+        SolrServer server = coreService.getSolrServer(coreName);
+        SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(server, coreName, session);
+
+        List<String> fields;
+        if (Utils.nullOrEmpty(fieldString)) {
+            fields = schemaInfo.getViewFieldNames();
+        } else {
+            List<String> indices = Arrays.asList(fieldString.substring(1).split(","));
+            fields = schemaInfo.getFieldNamesSubset(indices, fieldString.startsWith("+"));
+        }
 
         if (!fileName.endsWith("." + fileType)) {
             fileName += "." + fileType;
         }
-        long time = System.currentTimeMillis();
 
         ExportService exportService = getExportServiceByFileType(fileType);
+        exportService.setExportFileName(fileName);
         String contentType = getContentTypeByFileType(fileType);
 
         response.reset();
         response.setContentType(contentType);
-        response.setHeader("Content-Disposition", "attachment; fileName=" + fileName);
-        PrintWriter writer = response.getWriter();
+        response.setHeader(Constants.CONTENT_DISP_HEADER, Constants.getContentDispositionFileAttachHeader(fileName));
 
-        SolrQuery.ORDER order = SolrUtils.getSortOrder(sortOrder);
+        PrintWriter writer = getWriterByContentType(contentType, response);
+        ServletOutputStream outputStream = getOutputStreamByContentType(contentType, response);
 
+        long time = System.currentTimeMillis();
         if (query != null) {
-            try {
-                exportHeaderData(query, fq, coreName, sortType, order, exportService, writer);
-                export(true, query, fq, coreName, sortType, order, fields, exportService, writer);
-                exportService.writeDefaultNewline(writer);
-                export(false, query, fq, coreName, sortType, order, fields, exportService, writer);
-
-            } catch (InvocationTargetException e) {
-                System.out.println(e.getMessage());
-            } catch (NoSuchMethodException e) {
-                System.out.println(e.getMessage());
-            } catch (IllegalAccessException e) {
-                System.out.println(e.getMessage());
-            }
+            export(query, fq, coreName, sortField, SolrUtils.getSortOrder(sortOrder), fields, schemaInfo, exportService, writer, outputStream);
         } else {
             exportService.writeEmptyResultSet(writer);
         }
 
-        exportService.closeWriters(writer);
-        System.out.println("EXPORT TIME " + (System.currentTimeMillis() - time));
+        exportService.closeWriters(writer, outputStream);
+        System.out.println("Export time: " + (System.currentTimeMillis() - time));
     }
 
 }

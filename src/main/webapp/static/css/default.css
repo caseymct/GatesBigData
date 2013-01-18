@@ -256,6 +256,15 @@ form div.form-buttons {
     background: -moz-linear-gradient(linear,0% 40%,0% 70%,from(#F5F5F5),to(#F1F1F1));
 }
 
+#facet_container {
+    float: left;
+    position: relative;
+    top: 90px;
+    left: -180px;
+    z-index: 4;
+    visibility: hidden;
+}
+
 .string, .regexp {
   color: #f39;
 }
@@ -307,13 +316,10 @@ a:hover {
     font-size: 12px;
 }
 
-#facet_container {
-    float: left;
-    position: relative;
-    top: 90px;
-    left: -180px;
-    z-index: 4;
+.hidden_element {
     visibility: hidden;
+    height: 0;
+    width: 0;
 }
 
 .string { color: darkred; }

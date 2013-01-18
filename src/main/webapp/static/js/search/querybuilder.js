@@ -46,8 +46,8 @@ QUERYBUILDER.util = {};
     }
 
     QUERYBUILDER.ui.init = function(names) {
-        populateFieldAutoCompleteUrl = names.url;
-        buildHTML(names.tabListElName, names.tabContentElName);
+        populateFieldAutoCompleteUrl = names[UI.QUERY_BUILDER_AC_URL_KEY];
+        buildHTML(names[UI.TAB_LIST_EL_NAME_KEY], names[UI.TAB_CONTENT_EL_NAME_KEY]);
     };
 
     function adjustGeneralQueryByConstraint(hasWordsButtonGroup, doesNotHaveWordsButtonGroup) {
@@ -135,36 +135,36 @@ QUERYBUILDER.util = {};
         UI.addDomElementChild('a', li, { href : "#", innerHTML: "<em>Construct General Query</em>"});
 
         var tabNode = Dom.get(tabContentEl);
-        var p = UI.addDomElementChild('div', tabNode, {id : generalQueryTabElName }, {class : "search_tab_style row"});
+        var p = UI.addDomElementChild('div', tabNode, {id : generalQueryTabElName }, { "class" :  "search_tab_style row"});
 
-        var txtAreaDiv = UI.addDomElementChild('div', p, null, {class : "row", padding : "2px"});
+        var txtAreaDiv = UI.addDomElementChild('div', p, null, { "class" :  "row", padding : "2px"});
         UI.addDomElementChild('textarea', txtAreaDiv, {id : genQuerySearchInputElName, value : "*:*"}, null);
 
         var fieldset = UI.addDomElementChild('fieldset', p, null, { "padding-top": 0} );
     
-        var legend = UI.addDomElementChild('legend', fieldset, null, { class : "search_legend"});
+        var legend = UI.addDomElementChild('legend', fieldset, null, { "class" :  "search_legend"});
         UI.addDomElementChild('a', legend, {id : addToQueryElName, href : "#", innerHTML : "Add a constraint"}, null);
 
-        var d = UI.addDomElementChild('div', fieldset, null, { class : fieldsetRowCSSClass });
-        UI.addDomElementChild('label', d, {for : fieldConstraintElName, innerHTML: "Field name:" }, {"margin-top" : "10px"});
+        var d = UI.addDomElementChild('div', fieldset, null, { "class" :  fieldsetRowCSSClass });
+        UI.addDomElementChild('label', d, { "for" : fieldConstraintElName, innerHTML: "Field name:" }, {"margin-top" : "10px"});
         var d1 = UI.addDomElementChild('div', d, { id : fieldAutoCompleteName }, null);
         UI.addDomElementChild('input', d1, { id : fieldConstraintElName },  null);
         UI.addDomElementChild('div', d1, { id : fieldAutoCompleteContainerName }, null);
 
         // Has words
-        d = UI.addDomElementChild('div', fieldset, null, { class : fieldsetRowCSSClass });
-        UI.addDomElementChild('label', d, { id : hasWordsFieldElName + "_label", for : hasWordsFieldElName, innerHTML : "Has words:"}, null);
+        d = UI.addDomElementChild('div', fieldset, null, { "class" :  fieldsetRowCSSClass });
+        UI.addDomElementChild('label', d, { id : hasWordsFieldElName + "_label", "for" : hasWordsFieldElName, innerHTML : "Has words:"}, null);
         
-        d1 = UI.addDomElementChild('div', d, { id : hasWordsButtonGroupDiv }, { class: fieldsetRowButtonDivCSSClass });
+        d1 = UI.addDomElementChild('div', d, { id : hasWordsButtonGroupDiv }, { "class" :  fieldsetRowButtonDivCSSClass });
         UI.addDomElementChild('input', d1, { id : hasWordsFieldElName + "_some", type : "radio", name : hasWordsFieldElName + "_input", value : "Some"});
         UI.addDomElementChild('input', d1, { id : hasWordsFieldElName + "_all",  type : "radio", name : hasWordsFieldElName + "_input", value : "All"});
         UI.addDomElementChild('input', d, { id : hasWordsFieldElName });
 
         // does not have words
-        d = UI.addDomElementChild('div', fieldset, null, { class : fieldsetRowCSSClass });
-        UI.addDomElementChild('label', d, { id : doesNotHaveWordsFieldElName + "_label", for : doesNotHaveWordsFieldElName, 
+        d = UI.addDomElementChild('div', fieldset, null, { "class" :  fieldsetRowCSSClass });
+        UI.addDomElementChild('label', d, { id : doesNotHaveWordsFieldElName + "_label", "for" : doesNotHaveWordsFieldElName,
             innerHTML : "Does not have words:" }, null);
-        d1 = UI.addDomElementChild('div', d, { id : doesNotHaveWordsButtonGroupDiv}, { class : fieldsetRowButtonDivCSSClass });
+        d1 = UI.addDomElementChild('div', d, { id : doesNotHaveWordsButtonGroupDiv}, { "class" :  fieldsetRowButtonDivCSSClass });
         UI.addDomElementChild('input', d1, { id : doesNotHaveWordsFieldElName + "_some", type : "radio",
                 name : doesNotHaveWordsFieldElName + "_input", value : "Some"});
         UI.addDomElementChild('input', d1, { id : doesNotHaveWordsFieldElName + "_all", type : "radio",
@@ -172,25 +172,25 @@ QUERYBUILDER.util = {};
         UI.addDomElementChild('input', d, { id : doesNotHaveWordsFieldElName }, null);
 
         // has phrase
-        d = UI.addDomElementChild('div', fieldset, null, { class : fieldsetRowCSSClass, "padding-top":"10px" });
-        UI.addDomElementChild('label', d, { id : hasPhraseFieldElName + "_label", for : hasPhraseFieldElName, innerHTML : "Has phrase:" }, null);
+        d = UI.addDomElementChild('div', fieldset, null, { "class" :  fieldsetRowCSSClass, "padding-top":"10px" });
+        UI.addDomElementChild('label', d, { id : hasPhraseFieldElName + "_label", "for" : hasPhraseFieldElName, innerHTML : "Has phrase:" }, null);
         UI.addDomElementChild('input', d, { id : hasPhraseFieldElName }, null);
 
         // is exactly
-        d = UI.addDomElementChild('div', fieldset, null, { class : fieldsetRowCSSClass, "padding-top":"10px" });
-        UI.addDomElementChild('label', d, { id : isExactFieldElName + "_label", for:isExactFieldElName, innerHTML:"Is exactly:" }, null);
+        d = UI.addDomElementChild('div', fieldset, null, { "class" :  fieldsetRowCSSClass, "padding-top":"10px" });
+        UI.addDomElementChild('label', d, { id : isExactFieldElName + "_label", "for" :isExactFieldElName, innerHTML:"Is exactly:" }, null);
         UI.addDomElementChild('input', d, { id : isExactFieldElName }, null);
 
         // checkboxes
-        d = UI.addDomElementChild('div', fieldset, null, { class : fieldsetRowCSSClass,  "padding-top": "10px" });
-        UI.addDomElementChild('label', d, { for : fieldMustExistCheckBox,  innerHTML : "Field must exist:" }, { float : "left", width : "130px" });
+        d = UI.addDomElementChild('div', fieldset, null, { "class" :  fieldsetRowCSSClass,  "padding-top": "10px" });
+        UI.addDomElementChild('label', d, { "for" : fieldMustExistCheckBox,  innerHTML : "Field must exist:" }, { float : "left", width : "130px" });
         UI.addDomElementChild('input', d, { id : fieldMustExistCheckBox,  type : "checkbox"}, { width : "20px", float : "left"});
 
-        d = UI.addDomElementChild('div', fieldset, null, { class : fieldsetRowCSSClass,  "padding-top": "10px" });
-        UI.addDomElementChild('label', d, { for : fieldNonEmptyCheckBox,  innerHTML : "Field is not empty:" }, { float : "left", width : "130px" });
+        d = UI.addDomElementChild('div', fieldset, null, { "class" :  fieldsetRowCSSClass,  "padding-top": "10px" });
+        UI.addDomElementChild('label', d, { "for" : fieldNonEmptyCheckBox,  innerHTML : "Field is not empty:" }, { float : "left", width : "130px" });
         UI.addDomElementChild('input', d, { id : fieldNonEmptyCheckBox,  type : "checkbox"}, { width : "20px", float : "left"});
 
-        UI.addDomElementChild('div', fieldset, null, { class : clearBothCSSClass } );
-        UI.addDomElementChild('div', p, null, { class : clearBothCSSClass } );
+        UI.addDomElementChild('div', fieldset, null, { "class" :  clearBothCSSClass } );
+        UI.addDomElementChild('div', p, null, { "class" :  clearBothCSSClass } );
         }
 })();

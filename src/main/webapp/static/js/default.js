@@ -1,8 +1,73 @@
 var UI = {};
 UI.util = {};
+UI.DATEPICK = {};
+UI.EXPORT = {};
+UI.SEARCH = {};
+UI.FACET = {};
 
 (function() {
     var Dom = YAHOO.util.Dom;
+
+    // Define universal URL keys
+    UI.URLS_KEY                     = 'urls';
+    UI.QUERY_BUILDER_AC_URL_KEY     = 'queryBuilderAutoCompleteUrl';
+    UI.VIEW_DOC_URL_KEY             = 'viewDocUrl';
+    UI.LOADING_IMG_URL_KEY          = 'loadingImgUrl';
+    UI.THUMBNAIL_URL_KEY            = 'thumbnailUrl';
+    UI.FIELD_NAMES_URL_KEY          = 'fieldNamesUrl';
+    UI.FACET_URL_KEY                = 'facetUrl';
+    UI.SEARCH_URL_KEY               = 'searchUrl';
+    UI.SEARCH_BASE_URL_KEY          = 'searchBaseUrl';
+    UI.SUGGEST_URL_KEY              = 'suggestUrl';
+    UI.DATE_PICKER_URL_KEY          = 'datePickerUrl';
+    UI.EXPORT_URL_KEY               = 'exportUrl';
+    UI.JSP_EXPORT_URL_KEY           = 'jspExportUrl';
+
+    // Define element name keys
+    UI.TAB_LIST_EL_NAME_KEY         = 'tabListElName';
+    UI.TAB_CONTENT_EL_NAME_KEY      = 'tabContentElName';
+    UI.SNIPPET_DATA_INPUT_EL_NAME   = 'snippetData';
+    UI.QUERY_DATA_INPUT_EL_NAME     = 'queryData';
+    UI.CONTENT_EL_NAME              = 'content';
+
+    // Define keys
+    UI.SELECTED_CORE_KEY            = 'selectedCore';
+    UI.CORE_NAMES_KEY               = 'coreNames';
+    UI.TAB_DISPLAY_NAMES_KEY        = 'tabDisplayNames';
+    UI.DISPLAY_NAME_KEY             = 'displayName';
+    UI.BUILD_CORE_TAB_HTML_FN_KEY   = 'buildCoreTabHtmlFn';
+    UI.DATE_FIELD_KEY               = 'dateField';
+    UI.DATA_TYPE_KEY                = 'dataType';
+    UI.DATA_TYPE_STRUCTURED         = 'structured';
+    UI.DATA_TYPE_UNSTRUCTURED       = 'unstructured';
+
+    UI.FACET.INSERT_FACET_HTML_AFTER_EL_NAME_KEY        = 'insertFacetHtmlAfterElName';
+
+    UI.SEARCH.GET_SEARCH_REQ_PARAMS_FN_KEY              = 'searchRequestParamsFn';
+    UI.SEARCH.SELECT_DATA_COLUMN_DEFS_KEY               = 'selectDataColumnDefs';
+    UI.SEARCH.DATA_SOURCE_FIELDS_KEY                    = 'dataSourceFields';
+    UI.SEARCH.SELECT_DATA_REGEX_IGNORE_KEY              = 'selectDataRegexIgnore';
+    UI.SEARCH.SUBMIT_FN_KEY                             = 'submitFn';
+    UI.SEARCH.RESET_FN_KEY                              = 'resetFn';
+    UI.SEARCH.SEARCH_FN_KEY                             = 'searchFn';
+    UI.SEARCH.ACKEYUP_FN_KEY                            = 'acKeyupFn';
+    UI.SEARCH.FORMAT_SEARCH_RESULT_FN_KEY               = 'formatSearchResultFn';
+    UI.SEARCH.GET_FILTER_QUERY_FN_KEY                   = 'getFilterQueryFn';
+    UI.SEARCH.SEARCH_TAB_EL_NAME_KEY                    = 'searchTabElName';
+    UI.SEARCH.SEARCH_HEADER_EL_NAME_KEY                 = 'searchHeaderElName';
+    UI.SEARCH.SEARCH_INPUT_ELS_KEY                      = 'searchInputEls';
+    UI.SEARCH.INITIAL_SELECT_INDEX_KEY                  = 'initialSelectIndex';
+    UI.SEARCH.TOOLTIP_EL_NAME_KEY                       = 'toolTipElName';
+    UI.SEARCH.INSERT_SEARCH_RESULTS_AFTER_EL_NAME_KEY   = 'insertSearchResultsAfterElName';
+    UI.SEARCH.INSERT_SORT_BUTTONS_AFTER_EL_NAME_KEY     = 'insertSortButtonsAfterElName';
+    UI.SEARCH.INSERT_SEARCH_BUTTONS_AFTER_EL_NAME_KEY   = 'insertSearchButtonsAfterElName';
+
+    UI.DATEPICK.DATE_FIELD_KEY                          = 'dateField';
+    UI.DATEPICK.DATE_PICK_EL_NAME_KEY                   = 'datePickElName';
+
+    UI.EXPORT.OPEN_SEPARATE_EXPORT_PAGE_KEY             = 'openSeparateExportPage';
+    UI.EXPORT.EXPORT_BUTTON_EL_ID_KEY                   = 'exportButtonElId';
+    UI.EXPORT.HTML_SIBLING_NAME_KEY                     = 'htmlSiblingElName';
 
     /* UI and Dom functionality */
     UI.removeDivChildNodes = function(divName) {
@@ -42,6 +107,49 @@ UI.util = {};
         return el;
     }
 
+    if ( !Array.prototype.forEach ) {
+        Array.prototype.forEach = function(fn, scope) {
+            for(var i = 0, len = this.length; i < len; ++i) {
+                fn.call(scope, this[i], i, this);
+            }
+        }
+    }
+
+    Object.keys = Object.keys || (function () {
+        var hasOwnProperty = Object.prototype.hasOwnProperty,
+            hasDontEnumBug = !{toString:null}.propertyIsEnumerable("toString"),
+            DontEnums = [
+                'toString',
+                'toLocaleString',
+                'valueOf',
+                'hasOwnProperty',
+                'isPrototypeOf',
+                'propertyIsEnumerable',
+                'constructor'
+            ],
+            DontEnumsLength = DontEnums.length;
+
+        return function (o) {
+            if (typeof o != "object" && typeof o != "function" || o === null)
+                throw new TypeError("Object.keys called on a non-object");
+
+            var result = [];
+            for (var name in o) {
+                if (hasOwnProperty.call(o, name))
+                    result.push(name);
+            }
+
+            if (hasDontEnumBug) {
+                for (var i = 0; i < DontEnumsLength; i++) {
+                    if (hasOwnProperty.call(o, DontEnums[i]))
+                        result.push(DontEnums[i]);
+                }
+            }
+
+            return result;
+        };
+    })();
+
     UI.addDomElementChild = function(type, parentNode, attributes, styles) {
         var el = createDomElement(type, attributes, styles);
         parentNode.appendChild(el);
@@ -54,12 +162,18 @@ UI.util = {};
         return el;
     };
 
+    UI.insertDomElementAsFirstChild = function(type, parentNode, attributes, styles) {
+        var el = createDomElement(type, attributes, styles);
+        parentNode.insertBefore(el, parentNode.firstChild);
+        return el;
+    };
+
     UI.addClearBothDiv = function(parent) {
         return UI.addDivWithClass(parent, "clearboth");
     };
 
     UI.addDivWithClass = function(parent, classname) {
-        return UI.addDomElementChild('div', parent, {}, { class : classname });
+        return UI.addDomElementChild('div', parent, {}, { "class" : classname });
     };
 
     UI.alertErrors = function(o) {
@@ -108,16 +222,16 @@ UI.util = {};
         var containerDiv, childDiv, resultsTable = Dom.get(tableName);
 
         for(var i = 0; i < keys.length; i++) {
-            containerDiv = UI.addDomElementChild("div", resultsTable, null, { class : "info_details_results_div" });
+            containerDiv = UI.addDomElementChild("div", resultsTable, null, { "class" : "info_details_results_div" });
             childDiv = UI.addDomElementChild("div", containerDiv, { innerHTML : "<b>" + keys[i] + "</b>: " + result[keys[i]] },
-                                             { class: "info_details_child_div" });
+                                             { "class" : "info_details_child_div" });
 
             if (i < keys.length) {
                 childDiv = UI.addDomElementChild("div", containerDiv, { innerHTML : "<b>" + keys[++i] + "</b>: " + result[keys[i]] },
-                    { class: "info_details_child_div" });
+                    { "class" : "info_details_child_div" });
             }
 
-            UI.addDomElementChild("div", containerDiv, null, { class: "clearboth"});
+            UI.addDomElementChild("div", containerDiv, null, { "class" : "clearboth"});
         }
     };
 
@@ -372,3 +486,4 @@ UI.util = {};
 
 
 })();
+   

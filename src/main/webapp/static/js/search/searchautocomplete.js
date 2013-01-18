@@ -16,11 +16,11 @@ SEARCHAUTOCOMPLETE.util = {};
         acKeyupFn         = undefined;
 
     SEARCHAUTOCOMPLETE.ui.init = function(vars) {
-        suggestUrl  = vars.url;
-        searchFn    = vars.searchFn;
-        acKeyupFn   = vars.acKeyupFn;
+        suggestUrl  = vars[UI.SUGGEST_URL_KEY];
+        searchFn    = vars[UI.SEARCH.SEARCH_FN_KEY];
+        acKeyupFn   = vars[UI.SEARCH.ACKEYUP_FN_KEY];
 
-        buildHTML(vars.tabListElName, vars.tabContentElName);
+        buildHTML(vars[UI.TAB_LIST_EL_NAME_KEY], vars[UI.TAB_CONTENT_EL_NAME_KEY]);
 
         var ds = new XHRDataSource(suggestUrl);
         ds.responseType = XHRDataSource.TYPE_JSON;
@@ -52,11 +52,11 @@ SEARCHAUTOCOMPLETE.util = {};
 
     function buildHTML(tabListElName, tabContentElName) {
         var tabList = Dom.get(tabListElName);
-        var li = UI.addDomElementChild('li', tabList, {}, { class: "selected tab_selected" });
+        var li = UI.addDomElementChild('li', tabList, {}, { "class": "selected tab_selected" });
         UI.addDomElementChild('a', li, { href : "#tab1", innerHTML: "<em>Search</em>"});
 
         var tabNode = Dom.get(tabContentElName);
-        var tabDiv = UI.addDomElementChild('div', tabNode, {id : acTabElName }, {class : acTabCSSClass});
+        var tabDiv = UI.addDomElementChild('div', tabNode, {id : acTabElName }, { "class" : acTabCSSClass});
         var div = UI.addDomElementChild('div', tabDiv, {id : acDivElName});
         UI.addDomElementChild('input', div, {id : acInputElName, type: "text"});
         UI.addDomElementChild('div', div, {id: acContainerElName});

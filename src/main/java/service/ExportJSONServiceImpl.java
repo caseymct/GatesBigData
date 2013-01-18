@@ -1,120 +1,79 @@
 package service;
 
-import LucidWorksApp.utils.Constants;
-import LucidWorksApp.utils.SolrUtils;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.nutch.protocol.Content;
-import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.impl.DefaultPrettyPrinter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.lang.reflect.InvocationTargetException;
-import java.nio.charset.Charset;
 import java.util.*;
 
 @Service
 public class ExportJSONServiceImpl extends ExportService {
-    private HDFSService hdfsService;
-    private SolrService solrService;
+
     private JsonGenerator g;
 
+    /*
+    private HDFSService hdfsService;
     @Autowired
-    public void setServices(HDFSService hdfsService, SolrService solrService) {
+    public void setServices(HDFSService hdfsService) {
         this.hdfsService = hdfsService;
-        this.solrService = solrService;
+    } */
+
+    public void beginExportWrite(Writer writer) throws IOException {
+        JsonFactory f = new JsonFactory();
+        g = f.createJsonGenerator(writer);
+        g.setPrettyPrinter(new DefaultPrettyPrinter());
+        g.writeStartObject();
     }
 
-    public void exportHeaderData(long numDocs, String query, String fq, String coreName, final Writer writer, String delimiter, String newLine) {
-        try {
-            JsonFactory f = new JsonFactory();
-            g = f.createJsonGenerator(writer);
-            g.setPrettyPrinter(new DefaultPrettyPrinter());
-            g.writeStartObject();
-
-            g.writeNumberField("Num found", numDocs);
-            g.writeStringField("Core name", coreName);
-            g.writeStringField("Query", query);
-            g.writeStringField("Filter Query", fq == null ? "" : fq);
-
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
+    public void exportHeaderData(long numDocs, String query, String fq, String coreName, final Writer writer) throws IOException {
+        g.writeNumberField(NUM_FOUND_HDR, numDocs);
+        g.writeStringField(CORE_NAME_HDR, coreName);
+        g.writeStringField(QUERY_KEY, query);
+        g.writeStringField(FILTER_QUERY_HDR, fq == null ? "" : fq);
     }
 
-    public void closeWriters(final Writer writer) {
-        try {
-            g.writeEndObject();
-            g.close();
-
-            writer.close();
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
-    public void writeEmptyResultSet(final Writer writer) {
-        try {
-            JsonFactory f = new JsonFactory();
-            g = f.createJsonGenerator(writer);
-            g.setPrettyPrinter(new DefaultPrettyPrinter());
-            g.writeStartObject();
-            g.writeNumberField("Num found", 0);
-            g.writeArrayFieldStart("Results");
-            g.writeEndArray();
-            g.flush();
-
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
-    public void exportJSONDocs(JSONArray docs, List<String> fields, String coreName, final Writer writer, String delimeter, String newLine) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
-
-        g.writeArrayFieldStart("JSON document results");
-        g.flush();
-        writer.append(newLine);
-
-        HashMap<String, List<String>> segToFileMap = SolrUtils.getSegmentToFilesMap(docs);
-
-        for (Map.Entry<String, List<String>> entry : segToFileMap.entrySet()) {
-            for (Content content : hdfsService.getFileContents(coreName, entry.getKey(), entry.getValue())) {
-                if (content == null || !(content.getContentType().equals(Constants.JSON_CONTENT_TYPE))) {
-                    continue;
-                }
-
-                JSONObject jsonObject = JSONObject.fromObject(new String(content.getContent()));
-                writer.append(jsonObject.toString(2)).append(newLine);
-            }
-        }
+    public void writeEmptyResultSet(final Writer writer) throws IOException {
+        g.writeNumberField(NUM_FOUND_HDR, 0);
+        g.writeArrayFieldStart(RESULTS_HDR);
         g.writeEndArray();
         g.flush();
-        writer.flush();
     }
 
-    public void export(JSONArray docs, List<String> fields, String coreName, final Writer writer, String delimeter, String newLine) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
-        g.writeArrayFieldStart("Non-JSON document results");
+    public void beginDocWrite(Writer writer) throws IOException {
+        g.writeStartObject();
+    }
 
-        //fields = FIELDS_TO_EXPORT;
+    public void endDocWrite(Writer writer) throws IOException {
+        g.writeEndObject();
+    }
 
-        for (int i = 0; i < docs.size(); i++) {
-            JSONObject doc = docs.getJSONObject(i);
-            g.writeStartObject();
+    public void write(String field, String value, boolean lastField, Writer writer) throws IOException {
+        g.writeStringField(field, value);
+    }
 
-            for(String field : fields) {
-                Object val = doc.getString(field);
-                g.writeStringField(field, StringEscapeUtils.escapeCsv(val != null ? new String(val.toString().getBytes(), Charset.forName("UTF-8")) : ""));
-            }
+    public void endExportWrite(Writer writer) throws IOException {
+        g.writeEndObject();
+        g.close();
+    }
 
-            g.writeEndObject();
-        }
+    public void export(SolrDocumentList docs, List<String> fields, final Writer writer) throws IOException {
+        g.writeArrayFieldStart(RESULTS_HDR);
+        solrDocExport(docs, fields, writer);
         g.writeEndArray();
     }
+
+    /*for(SolrDocument doc : docs) {
+       g.writeStartObject();
+
+       for(String field : fields) {
+           Object val = doc.get(field);
+           g.writeStringField(field, StringEscapeUtils.escapeCsv(val != null ? new String(val.toString().getBytes(), Charset.forName("UTF-8")) : ""));
+       }
+
+       g.writeEndObject();
+   } */
 }

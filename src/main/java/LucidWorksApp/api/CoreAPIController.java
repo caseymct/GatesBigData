@@ -1,11 +1,13 @@
 package LucidWorksApp.api;
 
-import LucidWorksApp.utils.Constants;
-import LucidWorksApp.utils.DateUtils;
-import LucidWorksApp.utils.SolrUtils;
-import LucidWorksApp.utils.Utils;
+import LucidWorksApp.utils.*;
+import model.SolrCollectionSchemaInfo;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
+import org.apache.avro.generic.GenericData;
+import org.apache.hadoop.fs.Path;
+import org.apache.solr.common.SolrInputDocument;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -19,14 +21,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import service.CoreService;
+import service.HDFSService;
+import service.SearchService;
 import service.SolrReindexService;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static java.util.Collections.singletonList;
 import static org.springframework.http.HttpStatus.OK;
@@ -37,16 +41,24 @@ public class CoreAPIController extends APIController {
 
     private CoreService coreService;
     private SolrReindexService solrReindexService;
+    private HDFSService hdfsService;
+    private SearchService searchService;
 
     @Autowired
-    public CoreAPIController(CoreService coreService, SolrReindexService solrReindexService) {
+    public CoreAPIController(CoreService coreService, SolrReindexService solrReindexService,
+                             HDFSService hdfsService, SearchService searchService) {
         this.coreService = coreService;
         this.solrReindexService = solrReindexService;
+        this.hdfsService = hdfsService;
+        this.searchService = searchService;
     }
 
     @RequestMapping(value="/fieldnames", method = RequestMethod.GET)
-    public ResponseEntity<String> getFieldNames(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
+    public ResponseEntity<String> getFieldNames(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
+                                                HttpServletRequest request) throws IOException {
 
+        SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreService.getSolrServer(coreName),
+                coreName, request.getSession());
         StringWriter writer = new StringWriter();
         JsonFactory f = new JsonFactory();
         JsonGenerator g = f.createJsonGenerator(writer);
@@ -54,7 +66,7 @@ public class CoreAPIController extends APIController {
         g.writeStartObject();
         g.writeArrayFieldStart("names");
 
-        for(String name : SolrUtils.getLukeFieldNames(coreName)) {
+        for(String name : schemaInfo.getViewFieldNames()) {
             g.writeString(name);
         }
 
@@ -68,11 +80,16 @@ public class CoreAPIController extends APIController {
     }
 
     @RequestMapping(value="/info", method = RequestMethod.GET)
-    public ResponseEntity<String> coreInfo(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+    public ResponseEntity<String> coreInfo(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
+                                           HttpServletRequest request)
+            throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+
+        SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreService.getSolrServer(coreName),
+                coreName, request.getSession());
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>(coreService.getCoreData(coreName).toString(), httpHeaders, OK);
+        return new ResponseEntity<String>(schemaInfo.getIndexInfoAsJSON().toString(), httpHeaders, OK);
     }
 
     @RequestMapping(value="/empty", method = RequestMethod.GET)
@@ -83,6 +100,18 @@ public class CoreAPIController extends APIController {
         JSONObject response = new JSONObject();
         response.put("Core", coreName);
         response.put("Deleted", deleted);
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
+        return new ResponseEntity<String>(response.toString(), httpHeaders, OK);
+    }
+
+    @RequestMapping(value="/add/infofiles", method = RequestMethod.GET)
+    public ResponseEntity<String> addFacetFields(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) {
+
+        boolean added = coreService.addInfoFilesToSolr(coreName, hdfsService.getInfoFilesContents(coreName));
+        JSONObject response = new JSONObject();
+        response.put("Added", added);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
@@ -132,9 +161,18 @@ public class CoreAPIController extends APIController {
         ObjectMapper mapper = new ObjectMapper();
         Map<String, Object> newDataSource = mapper.readValue(body, TypeFactory.mapType(HashMap.class, String.class, Object.class));
 
+        //curl 'http://localhost:8984/solr/admin/collections?action=CREATE&name=$name&numShards=$nshards&repl
+        //icationFactor=0'
+
         String coreName = (String) newDataSource.get("coreName");
+        int nShards = (Integer) newDataSource.get("nShards");
+        int replicationFactor = (Integer) newDataSource.get("replicationFactor");
+
         HashMap<String, Object> properties = new HashMap<String, Object>();
         properties.put("name", coreName);
+        properties.put("action", "CREATE");
+        properties.put("numShards", nShards);
+        properties.put("replicationFactor", replicationFactor);
 
         String result = "";
         //http://localhost:8983/solr/admin/cores?action=CREATE&name=coreX&instanceDir=path_to_instance_directory&config=config_file_name.xml&schema=schem_file_name.xml&dataDir=data

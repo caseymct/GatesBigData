@@ -4,13 +4,11 @@ import jcifs.smb.SmbFile;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.*;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapred.*;
 import org.apache.log4j.Logger;
 import org.apache.nutch.crawl.*;
-import org.apache.nutch.indexer.IndexerOutputFormat;
 import org.apache.nutch.metadata.HttpHeaders;
 import org.apache.nutch.metadata.Metadata;
 import org.apache.nutch.metadata.Nutch;
@@ -62,6 +60,7 @@ public class SolrUnstructuredIndexer {
         public static final String SMB_USERNAME        = "bigdatasvc";
         public static final String SMB_PASSWORD        = "Crawl2012";
         public static final String TIKA_ERROR_STRING   = "Can't retrieve Tika parser for mime-type application/octet-stream";
+        //private IndexingFilters filters;
 
         private NtlmPasswordAuthentication auth;
 
@@ -78,6 +77,7 @@ public class SolrUnstructuredIndexer {
 
         public void configure(JobConf job) {
             setConf(job);
+            //this.filters = new IndexingFilters(getConf());
             SOLR_URL = job.get("SOLR_URL");
             SERVER = new HttpSolrServer(SOLR_URL);
         }
@@ -229,6 +229,33 @@ public class SolrUnstructuredIndexer {
                         doc.addField("title", urlItems[urlItems.length - 1]);
                     }
 
+                    /*final Parse parse = new ParseImpl(parseText, parseData);
+                    NutchDocument nutchDoc = new NutchDocument();
+                    nutchDoc.add("segment", metadata.get(Nutch.SEGMENT_NAME_KEY));
+                    nutchDoc.add("digest", metadata.get(Nutch.SIGNATURE_KEY));
+
+                    try {
+                        // extract information from dbDatum and pass it to
+                        // fetchDatum so that indexing filters can use it
+                        final Text urlText = (Text) dbDatum.getMetaData().get(Nutch.WRITABLE_REPR_URL_KEY);
+                        if (urlText != null) {
+                            fetchDatum.getMetaData().put(Nutch.WRITABLE_REPR_URL_KEY, urlText);
+                        }
+
+                        nutchDoc = this.filters.filter(nutchDoc, parse, key, fetchDatum, inlinks);
+
+                    } catch (final IndexingException e) {
+                        logger.warn("Error indexing "+key+": "+e);
+                        reporter.incrCounter("IndexerStatus", "Errors", 1);
+                        return;
+                    }
+
+                    // skip documents discarded by indexing filters
+                    if (nutchDoc == null) {
+                        reporter.incrCounter("IndexerStatus", "Skipped by filters", 1);
+                        return;
+                    }
+                    */
                     try {
                         SERVER.add(doc);
                     } catch (SolrServerException e) {
@@ -272,21 +299,32 @@ public class SolrUnstructuredIndexer {
         return filePaths;
     }
 
+    public static void deleteIndex() throws SolrServerException, IOException {
+        SERVER.deleteByQuery("*:*");
+        SERVER.commit();
+    }
+
     public static void main(String[] args) throws Exception {
         String coreName = args[0];
         setMRVariables(coreName);
-
-        // Delete the index.
         SERVER = new HttpSolrServer(SOLR_URL);
-        SERVER.deleteByQuery("*:*");
-        SERVER.commit();
-
-        long currTime = System.currentTimeMillis();
+        deleteIndex();
 
         JobConf conf = new JobConf(SolrUnstructuredIndexer.class);
         conf.setJobName("UnstructuredIndexer");
         conf.set("SOLR_URL", SOLR_URL);
-        conf.set("mapred.child.java.opts", "-Xms256m -Xmx2048m");
+        conf.set("mapred.child.java.opts", "-Xms256m -Xmx1024m -Djava.protocol.handler.pkgs=jcifs");
+        conf.set("yarn.nodemanager.resource.memory-gb", "16");
+        conf.set("yarn.nodemanager.vmem.to.pmem.limit.ratio", "2.1");
+        conf.set("mapreduce.map.memory.mb", "1024");
+
+        conf.set("plugin.folders", "classes/plugins");
+        conf.set("plugin.includes", "index-basic");
+        conf.set("http.content.limit", "-1");
+        conf.set("db.max.outlinks.per.page", "-1");
+        conf.set("fetcher.threads.fetch", "20");
+        conf.set("fetcher.threads.per.queue", "20");
+
         //conf.setInputFormat(KeyValueTextInputFormat.class);
         //conf.setInputFormat(TextInputFormat.class);
         conf.setInputFormat(SequenceFileInputFormat.class);
@@ -313,14 +351,11 @@ public class SolrUnstructuredIndexer {
         conf.setMapperClass(Map.class);
         conf.setReducerClass(Reduce.class);
 
-        //conf.setOutputFormat(TextOutputFormat.class);
-        conf.setOutputFormat(IndexerOutputFormat.class);
-        //FileInputFormat.setInputPaths(conf, new Path(args[0]));
+        conf.setOutputFormat(TextOutputFormat.class);
+        //conf.setOutputFormat(IndexerOutputFormat.class);
 
         JobClient.runJob(conf);
 
         SERVER.commit();
-
-        System.out.println("Time elapsed: " + (System.currentTimeMillis() - currTime));
     }
 }

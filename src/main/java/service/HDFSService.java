@@ -29,11 +29,11 @@ public interface HDFSService {
 
     public Configuration getNutchConfiguration();
 
-    public FacetFieldEntryList getHDFSFacetFields(String hdfsDir);
-
-    public String getHDFSViewFields(String coreName);
-
     public List<String> getHDFSPreviewFields(String coreName);
+
+    public HashMap<String, String> getInfoFilesContents(String coreName);
+
+    public String getInfoFileContents(String coreName, String type);
 
     public boolean addFile(String remoteFilePath, String localFilePath);
 

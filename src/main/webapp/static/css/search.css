@@ -26,6 +26,14 @@ pre {
     margin-bottom: 5px;
 }
 
+.preview_result_div {
+    position: absolute;
+    width: 41%;
+    height: 400px;
+    left: 570px;
+    overflow: hidden;
+}
+
 .yui-menu-button em.yui-button-label {
     font-style: normal;
     display: block;

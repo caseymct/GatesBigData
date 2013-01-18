@@ -1,5 +1,8 @@
 package model;
 
+import LucidWorksApp.utils.JsonParsingUtils;
+import net.sf.json.JSONArray;
+
 import java.util.*;
 
 public class SuggestionList implements Iterable<Suggestion> {
@@ -9,7 +12,7 @@ public class SuggestionList implements Iterable<Suggestion> {
     public SuggestionList() {
     }
 
-    public void add(String text, String field, int numFound, double score) {
+    public void add(String text, String field, long numFound, double score) {
         this.suggestions.add(new Suggestion(text, field, numFound, score));
     }
 
@@ -26,7 +29,7 @@ public class SuggestionList implements Iterable<Suggestion> {
                 if (x1 > x2) return -1;
                 if (x1 < x2) return 1;
 
-                int nf1 = s1.getNumFound(), nf2 = s2.getNumFound();
+                long nf1 = s1.getNumFound(), nf2 = s2.getNumFound();
                 if (nf1 > nf2) return -1;
                 if (nf1 < nf2) return 1;
                 return 0;
@@ -48,6 +51,10 @@ public class SuggestionList implements Iterable<Suggestion> {
     public List<String> getSortedFormattedSuggestionList() {
         sort();
         return getFormattedSuggestionList();
+    }
+
+    public JSONArray getSortedFormattedSuggestionJSONArray() {
+        return JsonParsingUtils.convertStringListToJSONArray(getSortedFormattedSuggestionList());
     }
 
     public int size() {

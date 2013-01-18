@@ -51,7 +51,7 @@ public class DocumentAPIController extends APIController {
 
     public SolrRecord getSolrRecord(String coreName, String id, String segment) {
         SolrRecord record;
-        if (Utils.stringIsNullOrEmpty(segment)) {
+        if (Utils.nullOrEmpty(segment)) {
             // then this is a Solr record. Get contents.
             record = new SolrRecord(searchService.getRecord(coreName, id));
         } else {
@@ -156,8 +156,8 @@ public class DocumentAPIController extends APIController {
                                                 @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
 
         StringWriter writer = new StringWriter();
-        if (!Utils.stringIsNullOrEmpty(id)) {
-            if (!Utils.stringIsNullOrEmpty(segment) && !Utils.fileHasExtension(id, Constants.JSON_FILE_EXT)) {
+        if (!Utils.nullOrEmpty(id)) {
+            if (!Utils.nullOrEmpty(segment) && !Utils.fileHasExtension(id, Constants.JSON_FILE_EXT)) {
                 hdfsService.printImageFileContents(coreName, segment, id, writer);
             } else {
                 searchService.printRecord(coreName, id, writer, hdfsService.getHDFSPreviewFields(coreName));

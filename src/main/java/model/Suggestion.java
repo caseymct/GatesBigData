@@ -3,11 +3,11 @@ package model;
 
 public class Suggestion {
     public String text;
-    public int numFound;
+    public long numFound;
     public double score;
     public String field;
 
-    public Suggestion(String text, String field, int numFound, double score) {
+    public Suggestion(String text, String field, long numFound, double score) {
         this.text = text;
         this.numFound = numFound;
         this.score = score;
@@ -22,7 +22,7 @@ public class Suggestion {
         this.text = text;
     }
 
-    public int getNumFound() {
+    public long getNumFound() {
         return numFound;
     }
 

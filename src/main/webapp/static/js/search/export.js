@@ -6,26 +6,30 @@ EXPORT.util = {};
     var Event           = YAHOO.util.Event,
         Dom             = YAHOO.util.Dom;
 
-    var exportDialogElName      = "export_dialog",
-        exportDialogCSSClass    = "yui-pe-content",
-        exportInputFileElName   = "export_file_name",
-        exportUrl               = "",
-        exportButtonElId        = "",
-        openSeparateExportPage  = false,
-        getExportUrlParamsFn    = undefined,
-        exportDlg               = undefined;
+    var exportDialogElName       = "export_dialog",
+        exportDialogCSSClass     = "yui-pe-content",
+        exportInputFileElName    = "export_file_name",
+        exportUrl                = "",
+        exportButtonElId         = "",
+        openSeparateExportPage   = false,
+        getSearchRequestParamsFn = undefined,
+        exportDlg                = undefined;
 
     EXPORT.ui.init = function(vars) {
-        exportUrl               = vars.exportUrl;
-        openSeparateExportPage  = vars.openSeparateExportPage;
-        exportButtonElId        = vars.exportButtonElId;
-        getExportUrlParamsFn    = vars.getExportUrlParamsFn;
+        openSeparateExportPage   = vars[UI.EXPORT.OPEN_SEPARATE_EXPORT_PAGE_KEY];
+        exportButtonElId         = vars[UI.EXPORT.EXPORT_BUTTON_EL_ID_KEY];
+        getSearchRequestParamsFn = vars[UI.SEARCH.GET_SEARCH_REQ_PARAMS_FN_KEY];
+        exportUrl                = vars[UI.EXPORT_URL_KEY];
+
+        if (openSeparateExportPage == false) {
+            buildHTML(vars[UI.EXPORT.HTML_SIBLING_NAME_KEY]);
+        }
 
         Event.addListener(exportButtonElId, "click", function (e) {
             Event.stopEvent(e);
 
             if (openSeparateExportPage) {
-                var urlParams = getExportUrlParamsFn();
+                var urlParams = getSearchRequestParamsFn();
                 if (urlParams == "") {
                     alert("You need to search first!");
                 } else {
@@ -38,7 +42,8 @@ EXPORT.util = {};
     };
 
     function exportFile(type, dlg) {
-        window.open(exportUrl + "?type=" + type + "&file=" + Dom.get(exportInputFileElName).value);
+        var urlParams = getSearchRequestParamsFn() + "&type=" + type + "&file=" + Dom.get(exportInputFileElName).value;
+        window.open(exportUrl + urlParams);
         window.focus();
         dlg.hide();
     }
@@ -51,15 +56,13 @@ EXPORT.util = {};
         exportDlg.render(document.body);
     });
 
-
-
-    EXPORT.ui.buildHTML = function(siblingElName) {
+    function buildHTML(siblingElName) {
         var sibling = Dom.get(siblingElName);
 
-        var exportDiv = UI.insertDomElementAfter('div', sibling, {id : exportDialogElName}, {class : exportDialogCSSClass});
-        UI.addDomElementChild('div', exportDiv, null, {class : "hd"});
-        var bd = UI.addDomElementChild('div', exportDiv, null, {class : "bd"});
-        UI.addDomElementChild('label', bd, {for: exportInputFileElName, innerHTML: "File Name: "});
+        var exportDiv = UI.insertDomElementAfter('div', sibling, {id : exportDialogElName}, { "class" : exportDialogCSSClass});
+        UI.addDomElementChild('div', exportDiv, null, { "class" : "hd"});
+        var bd = UI.addDomElementChild('div', exportDiv, null, { "class" : "bd"});
+        UI.addDomElementChild('label', bd, { "for" : exportInputFileElName, innerHTML: "File Name: "});
         UI.addDomElementChild('input', bd, {id : exportInputFileElName, type: "text", value: "test"}, { width: "100%"});
-    };
+    }
 })();

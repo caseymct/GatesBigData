@@ -1,135 +1,176 @@
 package service;
 
-
 import LucidWorksApp.utils.Constants;
 import LucidWorksApp.utils.SolrUtils;
 import LucidWorksApp.utils.Utils;
-import net.sf.json.JSONArray;
+import model.InMemoryOutputStream;
+import net.lingala.zip4j.exception.ZipException;
+import net.lingala.zip4j.io.ZipOutputStream;
+import net.lingala.zip4j.model.ZipParameters;
+import net.lingala.zip4j.util.Zip4jConstants;
+import org.apache.avro.generic.GenericData;
 import org.apache.log4j.Logger;
-import org.apache.nutch.protocol.Content;
+import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
-import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.servlet.ServletOutputStream;
 import java.io.*;
-import java.lang.reflect.InvocationTargetException;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 public class ExportZipServiceImpl extends ExportService {
 
-    private FileOutputStream fileOutputStream;
     private ZipOutputStream zipOutputStream;
+    private InMemoryOutputStream inMemoryOutputStream;
+
     private static String HEADER_FILENAME = "HeaderData.txt";
-
     private static final Logger logger = Logger.getLogger(ExportZipServiceImpl.class);
-    private HDFSService hdfsService;
+    private List<String> headerStrings = new ArrayList<String>();
+    private static byte[] nl = System.getProperty("line.separator").getBytes();
 
-    @Autowired
-    public void setServices(HDFSService hdfsService) {
-        this.hdfsService = hdfsService;
-    }
+    public void export(SolrDocumentList docs, List<String> fields, Writer writer) throws IOException {
 
-    public void initializeZipfile(String zipfileName) {
-        try {
-            fileOutputStream = new FileOutputStream(zipfileName);
-            zipOutputStream = new ZipOutputStream(fileOutputStream);
-        } catch (FileNotFoundException e) {
-            logger.error(e.getMessage());
+        List<String> docsWithNullContent = new ArrayList<String>();
+
+        for(SolrDocument doc : docs) {
+            String contentStr = SolrUtils.getFieldValue(doc, Constants.SOLR_CONTENT_FIELD_NAME, "");
+            String title = SolrUtils.getFieldValue(doc, Constants.SOLR_TITLE_FIELD_NAME, "No title");
+
+            if (!Utils.nullOrEmpty(contentStr)) {
+                writeToZipOutputStream(contentStr.getBytes(), title);
+            } else {
+                docsWithNullContent.add(title);
+            }
         }
-    }
 
-    public void exportJSONDocs(JSONArray docs, List<String> fields, String coreName, final Writer writer) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
-        export(docs, fields, coreName, writer, Constants.DEFAULT_DELIMETER, Constants.DEFAULT_NEWLINE);
-    }
-
-    public void exportJSONDocs(JSONArray docs, List<String> fields, String coreName, final Writer writer, String delimiter, String newLine) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
-        export(docs, fields, coreName, writer, delimiter, newLine);
-    }
-
-    public void export(JSONArray docs, List<String> fields, String coreName, final Writer writer, String delimiter, String newLine) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
-        export(docs, fields, coreName, writer, delimiter, newLine);
-    }
-
-    public void export(JSONArray docs, List<String> fields, String coreName, final Writer writer) throws InvocationTargetException, IOException, NoSuchMethodException, IllegalAccessException {
-        HashMap<String, List<String>> segToFileMap = SolrUtils.getSegmentToFilesMap(docs);
-
-        for (Map.Entry<String, List<String>> entry : segToFileMap.entrySet()) {
-            for (Content content : hdfsService.getFileContents(coreName, entry.getKey(), entry.getValue())) {
-
-                if (content == null || !content.getContentType().equals(Constants.JSON_CONTENT_TYPE)) {
-                    continue;
-                }
-                ByteArrayInputStream inputStream = new ByteArrayInputStream(content.getContent());
-                DataInputStream in = new DataInputStream(inputStream);
-                writeToZipOutputStream(in, content.getUrl());
-
-                Utils.closeResource(in);
-                Utils.closeResource(inputStream);
+        if (!Utils.nullOrEmpty(docsWithNullContent)) {
+            headerStrings.add("# Documents found with null content : " + docsWithNullContent.size());
+            for(String title : docsWithNullContent) {
+                headerStrings.add("\t" + title);
             }
         }
     }
 
-    public void exportHeaderData(long numDocs, String query, String fq, String coreName, final Writer writer, String delimiter, String newLine) {
-        initializeZipfile(this.exportFileName);
-        StringBuilder inputStringBuilder = new StringBuilder();
+    public void beginExportWrite(Writer writer) throws IOException {
+        inMemoryOutputStream = new InMemoryOutputStream();
+        zipOutputStream = new ZipOutputStream(inMemoryOutputStream);
+    }
+
+    public void endExportWrite(Writer writer, ServletOutputStream outputStream) throws IOException {
+        try {
+            zipOutputStream.finish();
+        } catch (ZipException e) {
+            logger.error(e.getMessage());
+        }
+
+        writeContentsToZipFile();
+        outputStream.write(getBytesFromZipOutputFile());
+
+        Utils.closeResource(zipOutputStream);
+        Utils.closeResource(inMemoryOutputStream);
+        Utils.closeResource(outputStream);
+        Utils.removeLocalFile(this.exportFileName);
+    }
+
+    private byte[] getBytesFromZipOutputFile() throws IOException {
+        List<String> byteList = new ArrayList<String>();
+
+        FileInputStream is = new FileInputStream(new File(this.exportFileName));
+        int readLen = -1;
+        byte[] buff = new byte[4096];
+
+        while((readLen = is.read(buff)) != -1) {
+            for (int i = 0; i < readLen; i++) {
+                byteList.add(Byte.toString(buff[i]));
+            }
+        }
+        Utils.closeResource(is);
+
+        return getByteArrayFromList(byteList);
+    }
+
+    private byte[] getByteArrayFromList(List byteList) {
+        byte[] buff = new byte[byteList.size()];
+
+        for (int i = 0; i < byteList.size(); i++) {
+            buff[i] = Byte.parseByte((String)byteList.get(i));
+        }
+
+        return buff;
+    }
+
+    private List<Byte> addStringBytes(String s, List<Byte> byteList) {
+        for(byte b : s.getBytes()) {
+            byteList.add(b);
+        }
+        return byteList;
+    }
+
+    private void writeHeaderFile() {
+        int hdrLen = 0;
+
+        List<Byte> headerBytes = new ArrayList<Byte>();
+        for(String headerString : headerStrings) {
+            headerBytes = addStringBytes(headerString, headerBytes);
+            headerBytes = addStringBytes(nl, headerBytes);
+        }
+        for(byte[] b: headerBytes) {
+            hdrLen += b.length;
+        }
+        byte[] hdr = new byte[hdrLen];
+
+        int currlen = 0;
+        for(byte[] h : headerBytes) {
+            System.arraycopy(h, 0, hdr, currlen, h.length);
+            currlen += h.length;
+        }
+
+        writeToZipOutputStream(hdr, HEADER_FILENAME);
+    }
+
+    public void exportHeaderData(long numDocs, String query, String fq, String coreName, Writer writer) throws IOException {
+        headerStrings.add(NUM_FOUND_HDR    + ": " + Long.toString(numDocs));
+        headerStrings.add(SOLR_QUERY_HDR   + ": " + query);
+        headerStrings.add(CORE_NAME_HDR    + ": " + coreName);
+        headerStrings.add(FILTER_QUERY_HDR + ": " + fq);
+    }
+
+    private void writeToZipOutputStream(String inputString, String fileName) {
+        writeToZipOutputStream(inputString.getBytes(), fileName);
+    }
+
+    private void writeToZipOutputStream(byte[] bytesToWrite, String fileName) {
+        try {
+            ZipParameters parameters = new ZipParameters();
+            parameters.setCompressionMethod(Zip4jConstants.COMP_DEFLATE);
+            parameters.setCompressionLevel(Zip4jConstants.DEFLATE_LEVEL_NORMAL);
+            parameters.setFileNameInZip(fileName);
+            parameters.setSourceExternalStream(true);
+
+            zipOutputStream.putNextEntry(null, parameters);
+            zipOutputStream.write(bytesToWrite);
+            zipOutputStream.closeEntry();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void writeContentsToZipFile() {
+        byte[] zipContent = inMemoryOutputStream.getZipContent();
 
         try {
-            inputStringBuilder.append("# Found: ").append(Long.toString(numDocs));
-            inputStringBuilder.append("Solr Query: ").append(query);
-            inputStringBuilder.append("Core name: ").append(coreName);
-            inputStringBuilder.append("Filter Query: ").append(fq);
-
-            String inputString = inputStringBuilder.toString();
-            ByteArrayInputStream stream = new ByteArrayInputStream(inputString.getBytes("UTF-8"));
-            writeToZipOutputStream(stream, HEADER_FILENAME);
-
-            Utils.closeResource(stream);
-
+            FileOutputStream os = new FileOutputStream(new File(this.exportFileName));
+            os.write(zipContent);
+            Utils.closeResource(os);
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            logger.error(e.getMessage());
         }
     }
 
-    private void writeToZipOutputStream(InputStream inputStream, String fileName) throws IOException {
-        ZipEntry zipEntry = new ZipEntry(fileName);
-        this.zipOutputStream.putNextEntry(zipEntry);
-
-        byte[] bytes = new byte[1024];
-        int length;
-        while ((length = inputStream.read(bytes)) >= 0) {
-            this.zipOutputStream.write(bytes, 0, length);
-        }
-
-        this.zipOutputStream.closeEntry();
-    }
-
-    public void addToZipFile(String fileName) throws IOException {
-
-        System.out.println("Writing '" + fileName + "' to zip file");
-
-        File file = new File(fileName);
-        FileInputStream fis = new FileInputStream(file);
-        writeToZipOutputStream(fis, fileName);
-        fis.close();
-    }
-
-
-    public void closeWriters(final Writer writer) {
-        try {
-            writer.close();
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
-    public void writeEmptyResultSet(final Writer writer) {
-        try {
-            writer.append("No search results.");
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
-    }
+    public void writeEmptyResultSet(final Writer writer) throws IOException {}
+    public void beginDocWrite(final Writer writer) throws IOException {}
+    public void endDocWrite(final Writer writer) throws IOException {}
+    public void write(String field, String value, boolean lastField, Writer writer) throws IOException {}
 }

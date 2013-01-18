@@ -1,5 +1,3 @@
-package service.solrReindexer;
-
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.*;
 
@@ -38,7 +36,6 @@ public class SolrTSVIndexer {
         public void close() throws IOException { }
 
         public void map(LongWritable key, Text value, OutputCollector<Text, Text> output, Reporter reporter) throws IOException {
-        //public void map(Text key, Writable value, OutputCollector<Text, Text> output, Reporter reporter) throws IOException {
             SolrInputDocument solrDoc = new SolrInputDocument();
             String fieldInfo = value.toString().replaceAll("^\"|\"$", "");
             if (fieldInfo.trim().equals("")) return;
@@ -132,8 +129,8 @@ public class SolrTSVIndexer {
         JobConf conf = new JobConf(SolrTSVIndexer.class);
         conf.setJobName("TSVtest");
         //conf.setInputFormat(KeyValueTextInputFormat.class);
-        //conf.setInputFormat(TextInputFormat.class);
-        conf.setInputFormat(TSVRecordInputFormat.class);
+        conf.setInputFormat(TextInputFormat.class);
+        //conf.setInputFormat(TSVRecordInputFormat.class);
 
         //conf.set("textinputformat.record.delimiter", "\"");
         conf.setOutputKeyClass(Text.class);

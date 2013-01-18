@@ -17,25 +17,23 @@
     (function() {
 
         var dateField = "last_modified",
-            core = SEARCH.ui.coreName;
+                core = SEARCH.ui.coreName;
 
         var coreUrlReqStr  = "core=" + core,
-            fieldUrlReqStr = "field=" + dateField;
+                fieldUrlReqStr = "field=" + dateField,
+                searchBaseUrl  = '<c:url value="/search/" />';
 
-        var datePickerUrl     = '<c:url value="/core/field/daterange?" />' + coreUrlReqStr + "&" + fieldUrlReqStr,
-                searchBaseUrl     = '<c:url value="/search/" />',
-                facetUrl          = searchBaseUrl + "solrfacets?" + coreUrlReqStr,
-                searchUrl         = searchBaseUrl + "solrquery",
-                suggestUrl        = searchBaseUrl + "suggest?" + coreUrlReqStr,
-                queryBuilderACUrl = searchBaseUrl + "fields/all?" + coreUrlReqStr,
-                exportUrl         = '<c:url value="/core/export/" />' + core,
-                viewDocUrl        = '<c:url value="/core/document/prizmview" />',
-                loadingImgUrl     = '<c:url value="/static/images/loading.png" />',
-                thumbnailUrl      = '<c:url value="/document/thumbnail/get" />';
-
-        var urls = { datePickerUrl : datePickerUrl, searchBaseUrl : searchBaseUrl, facetUrl : facetUrl, suggestUrl : suggestUrl,
-                     searchUrl : searchUrl, queryBuilderAutoCompleteUrl : queryBuilderACUrl, exportUrl : exportUrl, viewDocUrl : viewDocUrl,
-                     loadingImgUrl : loadingImgUrl, thumbnailUrl : thumbnailUrl };
+        var urls = {};
+        urls[UI.SEARCH_BASE_URL_KEY]        = searchBaseUrl;
+        urls[UI.DATE_PICKER_URL_KEY]        = '<c:url value="/core/field/daterange?" />' + coreUrlReqStr + "&" + fieldUrlReqStr;
+        urls[UI.FACET_URL_KEY]              = searchBaseUrl + "solrfacets?" + coreUrlReqStr;
+        urls[UI.SEARCH_URL_KEY]             = searchBaseUrl + "solrquery";
+        urls[UI.SUGGEST_URL_KEY]            = searchBaseUrl + "suggest?" + coreUrlReqStr;
+        urls[UI.QUERY_BUILDER_AC_URL_KEY]   = searchBaseUrl + "fields/all?" + coreUrlReqStr;
+        urls[UI.EXPORT_URL_KEY]             = '<c:url value="/export" />';
+        urls[UI.VIEW_DOC_URL_KEY]           = '<c:url value="/core/document/prizmview" />';
+        urls[UI.LOADING_IMG_URL_KEY]        = '<c:url value="/static/images/loading.png" />';
+        urls[UI.THUMBNAIL_URL_KEY]          = '<c:url value="/document/thumbnail/get" />';
 
         var columnDefs = [
             {key:'title', label:'Title', sortable:true, formatter:SEARCH.ui.formatLink, width:SEARCH.ui.longStringWidth},
@@ -65,17 +63,18 @@
 
         UI.initWait();
 
-        DATA_TABVIEW.init({
-            selectedCore : core,
-            urls : urls,
-            dateField : dateField,
-            selectDataColumnDefs : columnDefs,
-            dataSourceFields : dataSourceFields,
-            openSeparateExportPage: false,
-            dataType: "unstructured",
-            coreNames: ["test2_data", "test_data"]
-        });
-
+        var params = {};
+        params[UI.SELECTED_CORE_KEY] = core;
+        params[UI.URLS_KEY] = urls;
+        params[UI.DATE_FIELD_KEY] = dateField;
+        params[UI.SEARCH.SELECT_DATA_COLUMN_DEFS_KEY] = columnDefs;
+        params[UI.SEARCH.DATA_SOURCE_FIELDS_KEY] = dataSourceFields;
+        params[UI.EXPORT.OPEN_SEPARATE_EXPORT_PAGE_KEY] = false;
+        params[UI.DATA_TYPE_KEY] = UI.DATA_TYPE_UNSTRUCTURED;
+        params[UI.CORE_NAMES_KEY] = ['test2_data', 'test_data'];
+        params[UI.TAB_DISPLAY_NAMES_KEY] = ['Unstructured data test 2', 'Unstructured data test 1'];
+        params[UI.DATA_TYPE_KEY] = UI.DATA_TYPE_UNSTRUCTURED;
+        DATA_TABVIEW.init(params);
 
     })();
     </script>

@@ -17,11 +17,12 @@
 
     <script type="text/javascript">
         (function() {
-            var exportUrl       = '<c:url value="/export" />',
-                fieldNamesUrl   = '<c:url value="/core/fieldnames" />';
-            var urls            = { exportUrl : exportUrl, fieldNamesUrl : fieldNamesUrl };
+            var exportOptionsParams = {};
+            exportOptionsParams[UI.URLS_KEY] = {};
+            exportOptionsParams[UI.URLS_KEY][UI.EXPORT_URL_KEY]     = '<c:url value="/export" />';
+            exportOptionsParams[UI.URLS_KEY][UI.FIELD_NAMES_URL_KEY]= '<c:url value="/core/fieldnames" />';
 
-            EXPORTOPTIONS.init({ urls : urls });
+            EXPORTOPTIONS.init(exportOptionsParams);
         })();
     </script>
 </layout:main>

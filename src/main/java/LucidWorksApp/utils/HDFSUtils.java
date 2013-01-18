@@ -230,7 +230,7 @@ public class HDFSUtils {
 
     public static String getContentTypeFromParseData(ParseData parseData){
         String contentType = parseData.getContentMeta().get(HttpHeaders.CONTENT_TYPE);
-        if (Utils.stringIsNullOrEmpty(contentType)) {
+        if (Utils.nullOrEmpty(contentType)) {
             contentType = parseData.getParseMeta().get(HttpHeaders.CONTENT_TYPE);
         }
         return (contentType == null) ? "" : contentType;

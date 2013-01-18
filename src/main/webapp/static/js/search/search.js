@@ -11,10 +11,11 @@ SEARCH.util = {};
       Connect = YAHOO.util.Connect,         LocalDS = YAHOO.util.LocalDataSource,
       ScrollingDataTable = YAHOO.widget.ScrollingDataTable;
 
-    SEARCH.ui.longStringWidth       = 210;
-    SEARCH.ui.shortStringWidth      = 80;
-    SEARCH.ui.urlSearchParams       = "";
-    SEARCH.ui.facetsFromLastSearch  = null;
+    SEARCH.ui.longStringWidth        = 210;
+    SEARCH.ui.shortStringWidth       = 80;
+    SEARCH.ui.urlSearchParams        = "";
+    SEARCH.ui.facetsFromLastSearch   = null;
+    SEARCH.ui.snippetsFromLastSearch = null;
 
     var colStringMaxChars      = 20,
         colDateStringMaxChars  = 30;
@@ -33,10 +34,15 @@ SEARCH.util = {};
         searchUrl            = "";
 
     var previewDataName                 = "preview_image",
+        displayName                     = "",
 
         submitButtonElId                = "submit",
         resetButtonElId                 = "reset",
         exportButtonElId                = "export",
+        analyzeButtonElId               = "analyze",
+        analyzeFormElId                 = "analyzeForm",
+
+        unstructuredData                = false,
 
         showQueryElName                 = "show_query",
         showQueryEl                     = null,
@@ -45,6 +51,8 @@ SEARCH.util = {};
         paginator                       = null,
 
         searchResultContainerElName     = "search_result_container",
+        searchResultContainerElWidth    = "56%",
+        searchResultSubheadingCSSClass  = "search_subheading",
 
         numFoundElName                  = "num_found",
         numFoundEl                      = null,
@@ -52,9 +60,12 @@ SEARCH.util = {};
 
         searchResultsElName             = "search_results",
         searchResultsEl                 = null,
+        searchResultDivCSSClass         = "search_result_div",
+        previewDivCSSClass              = 'preview_result_div',
 
         previewContainerElName          = "preview_container",
         previewContainerEl              = null,
+        currPreviewContainerEl          = null,
 
         searchTabElName                 = "",
         searchTab                       = null,
@@ -81,40 +92,54 @@ SEARCH.util = {};
         getFilterQueryFn                = null,
         formatSearchResultFn            = function(a) { return a;};
 
+    var solrResponseKey             = "response",
+        solrResponseFacetKey        = "facet_counts",
+        solrResponseNumFoundKey     = "num_found",
+        solrResponseSnippetKey      = "snippet_analyzer",
+        solrResponseDocsKey         = "docs",
+        solrResponseHighlightingKey = "highlighting",
+        solrDocIdFieldName          = "id",
+        solrDocHDFSSegmentFieldName = "HDFSSegment",
+        solrDocHDFSKeyFieldName     = "HDFSKey",
+        thumbnailKey                = "thumbnail";
+
     /* Set core name and header for this search file */
     var url = window.location.href.split('/');
     SEARCH.ui.coreName = url[url.length - 1];
 
     SEARCH.ui.init = function(names) {
-        dataSourceFields      = names['dataSourceFields'];
-        selectDataColumnDefs  = names['selectDataColumnDefs'];
-        selectDataRegexIgnore = names['selectDataRegexIgnore'];
-        searchTabElName       = names['searchTabElName'];
-        searchHeaderElName    = names['searchHeaderElName'];
-        searchInputEls        = names['searchInputEls'];
+        displayName           = names[UI.DISPLAY_NAME_KEY];
+        dataSourceFields      = names[UI.SEARCH.DATA_SOURCE_FIELDS_KEY];
+        selectDataColumnDefs  = names[UI.SEARCH.SELECT_DATA_COLUMN_DEFS_KEY];
+        selectDataRegexIgnore = names[UI.SEARCH.SELECT_DATA_REGEX_IGNORE_KEY];
+        searchTabElName       = names[UI.SEARCH.SEARCH_TAB_EL_NAME_KEY];
+        searchHeaderElName    = names[UI.SEARCH.SEARCH_HEADER_EL_NAME_KEY];
+        searchInputEls        = names[UI.SEARCH.SEARCH_INPUT_ELS_KEY];
 
-        insertSearchResultsAfterElName = names['insertSearchResultsAfterElName'];
-        insertSortButtonsAfterElName   = names['insertSortButtonsAfterElName'];
-        insertSearchButtonsAfterElName = names['insertSearchButtonsAfterElName'];
+        insertSearchResultsAfterElName = names[UI.SEARCH.INSERT_SEARCH_RESULTS_AFTER_EL_NAME_KEY];
+        insertSortButtonsAfterElName   = names[UI.SEARCH.INSERT_SORT_BUTTONS_AFTER_EL_NAME_KEY];
+        insertSearchButtonsAfterElName = names[UI.SEARCH.INSERT_SEARCH_BUTTONS_AFTER_EL_NAME_KEY];
 
-        submitFn             = names['submitFn'];
-        resetFn              = names['resetFn'];
-        getFilterQueryFn     = names['getFilterQueryFn'];
-        formatSearchResultFn = UI.util.returnIfDefined(formatSearchResultFn, names['formatSearchResultFn']);
+        submitFn             = names[UI.SEARCH.SUBMIT_FN_KEY];
+        resetFn              = names[UI.SEARCH.RESET_FN_KEY];
+        getFilterQueryFn     = names[UI.SEARCH.GET_FILTER_QUERY_FN_KEY];
+        formatSearchResultFn = UI.util.returnIfDefined(formatSearchResultFn, names[UI.SEARCH.FORMAT_SEARCH_RESULT_FN_KEY]);
 
-        var urls = names['urls'];
-        viewDocUrl    = urls['viewDocUrl'];
-        loadingImgUrl = urls['loadingImgUrl'];
-        thumbnailUrl  = urls['thumbnailUrl'];
-        searchUrl     = urls['searchUrl'];
+        var urls      = names[UI.URLS_KEY];
+        viewDocUrl    = urls[UI.VIEW_DOC_URL_KEY];
+        loadingImgUrl = urls[UI.LOADING_IMG_URL_KEY];
+        thumbnailUrl  = urls[UI.THUMBNAIL_URL_KEY];
+        searchUrl     = urls[UI.SEARCH_URL_KEY];
 
-        initialSelectIndex = UI.util.returnIfDefined(initialSelectIndex, names['initialSelectIndex']);        
-        if (names['tooltipElName'] !== undefined) {
-            initToolTip(names['tooltipElName']);
+        initialSelectIndex = UI.util.returnIfDefined(initialSelectIndex, names[UI.SEARCH.INITIAL_SELECT_INDEX_KEY]);
+        if (names[UI.SEARCH.TOOLTIP_EL_NAME_KEY] !== undefined) {
+            initToolTip(names[UI.SEARCH.TOOLTIP_EL_NAME_KEY]);
         }
-        
-        if (names['dataType'] == "unstructured") {
+
+        unstructuredData = (names[UI.DATA_TYPE_KEY] == UI.DATA_TYPE_UNSTRUCTURED);
+        if (unstructuredData) {
             buildSearchResultHtmlFn = buildSearchResultList;
+            searchResultContainerElWidth = "100%";
         }
 
         buildHTML();
@@ -123,36 +148,47 @@ SEARCH.util = {};
     function buildHTML() {
         // sort order buttongroup code
         var sortButtonsInsertAfterEl = Dom.get(insertSortButtonsAfterElName);
-        var el = UI.insertDomElementAfter('div', sortButtonsInsertAfterEl, { id: sortByDivElName }, { class: "row" });
+        var el = UI.insertDomElementAfter('div', sortButtonsInsertAfterEl, { id: sortByDivElName }, { "class" :  "row" });
         var div = UI.addDomElementChild('div', el);
         UI.addDomElementChild('label', div, { id: sortBySelectElName, innerHTML: "Order by: " });
-        div = UI.addDomElementChild('div', el, { id: sortOrderButtonGroupElName }, { class: "yui-buttongroup search-button-style" });
+        div = UI.addDomElementChild('div', el, { id: sortOrderButtonGroupElName }, { "class" :  "yui-buttongroup search-button-style" });
         UI.addDomElementChild('input', div, { type: "radio", name: "sorttype", value: "asc", id: "sort_asc"});
         UI.addDomElementChild('input', div, { type: "radio", name: "sorttype", value: "desc", id: "sort_desc", checked: "checked"});
-        UI.addDomElementChild('div', el, null, { class: "clearboth" });
+        UI.addDomElementChild('div', el, null, { "class" :  "clearboth" });
 
         // Search result HTML
         var searchResultsInsertAfterEl = Dom.get(insertSearchResultsAfterElName);
         el = UI.insertDomElementAfter('div', searchResultsInsertAfterEl);
-        div = UI.addDomElementChild('div', el, { id : searchResultContainerElName }, { width: "56%"} );
+        div = UI.addDomElementChild('div', el, { id : searchResultContainerElName }, { width: searchResultContainerElWidth } );
         UI.addDomElementChild('div', div, { id : showQueryElName });
         UI.addDomElementChild('div', div, { id : numFoundElName });
         UI.addDomElementChild('div', div, { id : searchResultsElName });
         UI.addDomElementChild('div', el,  { id : previewContainerElName });
-        UI.addDomElementChild('div', el, null, { class: "clearboth" });
+        UI.addClearBothDiv(el);
         UI.insertDomElementAfter('div', searchResultsInsertAfterEl, { id: paginatorElName });
 
+        // Build buttons
         var searchButtonsInsertAfterEl = Dom.get(insertSearchButtonsAfterElName);
-        el = UI.insertDomElementAfter('div', searchButtonsInsertAfterEl, null, { class: "buttons", "padding-bottom" : "5px" });
-        UI.addDomElementChild('a', el, { id: submitButtonElId, innerHTML: "Search", href: "#"}, { class : "button small"});
-        UI.addDomElementChild('a', el, { id: resetButtonElId,  innerHTML: "Reset",  href: "#"}, { class : "button small"});
-        UI.addDomElementChild('a', el, { id: exportButtonElId, innerHTML: "Export", href: "#"}, { class : "button small"});
-        UI.insertDomElementAfter('div', el, null, { class: "row" });
+        el = UI.insertDomElementAfter('div', searchButtonsInsertAfterEl, null, { "class" :  "buttons", "padding-bottom" : "5px" });
+        UI.addDomElementChild('a', el, { id: submitButtonElId, innerHTML: "Search", href: "#"}, { "class" :  "button small"});
+        UI.addDomElementChild('a', el, { id: resetButtonElId,  innerHTML: "Reset",  href: "#"}, { "class" :  "button small"});
+        UI.addDomElementChild('a', el, { id: exportButtonElId, innerHTML: "Export", href: "#"}, { "class" :  "button small"});
+        if (unstructuredData) {
+            UI.addDomElementChild('a', el, { id: analyzeButtonElId, innerHTML: "Analyze", href: "#"}, { "class" :  "button small"});
+            var f = UI.addDomElementChild('form', el, { id : analyzeFormElId, method: "POST", target : "_blank", action: "analyze"});
+            UI.addDomElementChild('input', f, { id: UI.SNIPPET_DATA_INPUT_EL_NAME, name: UI.SNIPPET_DATA_INPUT_EL_NAME, type: "text" },
+                { visibility: "hidden"});
+            UI.addDomElementChild('input', f, { id: UI.QUERY_DATA_INPUT_EL_NAME, name: UI.QUERY_DATA_INPUT_EL_NAME, type: "text" },
+                { visibility: "hidden"});
+        }
 
-        previewContainerEl = Dom.get(previewContainerElName);
-        numFoundEl         = Dom.get(numFoundElName);
-        showQueryEl        = Dom.get(showQueryElName);
-        searchResultsEl    = Dom.get(searchResultsElName);
+        UI.insertDomElementAfter('div', el, null, { "class" :  "row" });
+
+        previewContainerEl      = Dom.get(previewContainerElName);
+        currPreviewContainerEl  = previewContainerEl;
+        numFoundEl              = Dom.get(numFoundElName);
+        showQueryEl             = Dom.get(showQueryElName);
+        searchResultsEl         = Dom.get(searchResultsElName);
 
         setSearchHeader();
         initSearchTab();
@@ -162,6 +198,10 @@ SEARCH.util = {};
         initPaginator();
         initSortOrderButtonGroup();
     }
+
+    SEARCH.ui.getUrlSearchParams = function() {
+        return SEARCH.ui.urlSearchParams;
+    };
 
     SEARCH.ui.getExportButtonElId = function() {
         return exportButtonElId;
@@ -203,9 +243,10 @@ SEARCH.util = {};
                 UI.hideWait();
 
                 var result = Json.parse(o.responseText);
-                SEARCH.ui.facetsFromLastSearch = result.facets;
+                SEARCH.ui.facetsFromLastSearch = result[solrResponseKey][solrResponseFacetKey];
+                SEARCH.ui.snippetsFromLastSearch = result[solrResponseKey][solrResponseHighlightingKey];
 
-                updateNumFound(result.response.numFound, 1);
+                updateNumFound(result[solrResponseKey][solrResponseNumFoundKey], 1);
                 updatePaginatorAfterSearch();
                 buildSearchResultHtmlFn(result);
 
@@ -232,6 +273,15 @@ SEARCH.util = {};
             Event.stopEvent(e);
             submitFn();
         });
+
+        if (unstructuredData) {
+            Event.addListener(analyzeButtonElId, "click", function (e) {
+                Event.stopEvent(e);
+                Dom.get(UI.SNIPPET_DATA_INPUT_EL_NAME).value = Json.stringify(SEARCH.ui.snippetsFromLastSearch);
+                Dom.get(UI.QUERY_DATA_INPUT_EL_NAME).value = SEARCH.ui.getUrlSearchParams();
+                document.forms[analyzeFormElId].submit();
+            });
+        }
     }
 
     function initSearchTab() {
@@ -253,7 +303,7 @@ SEARCH.util = {};
     }
 
     function setSearchHeader() {
-        Dom.get(searchHeaderElName).innerHTML = "Search Core: " + SEARCH.ui.coreName;
+        Dom.get(searchHeaderElName).innerHTML = "Search " + displayName;
     }
 
     function updateNumFound (n, start) {
@@ -284,7 +334,7 @@ SEARCH.util = {};
     function setPreviewContainerImageData(title, dataStr) {
         var htmlStr = getPreviewHtmlTitleString(title);
         htmlStr += "<img src='" + dataStr + "' height='400px' width='400px' id='" + previewDataName + "'>";
-        previewContainerEl.innerHTML = htmlStr;
+        currPreviewContainerEl.innerHTML = htmlStr;
 
         Dom.setStyle(previewDataName, 'zoom', 2);
         Event.addListener('previewzoomin', 'click', function(e) {
@@ -300,7 +350,7 @@ SEARCH.util = {};
     function setPreviewContainerTextData(title, dataStr) {
         var htmlStr = getPreviewHtmlTitleString(title);
         htmlStr += "<div id='" + previewDataName + "'>" + UI.util.jsonSyntaxHighlight(dataStr) + "</div>";
-        previewContainerEl.innerHTML = htmlStr;
+        currPreviewContainerEl.innerHTML = htmlStr;
 
         Dom.setStyle(previewDataName, 'font-size', '10px');
         Event.addListener('previewzoomin', 'click', function(e) {
@@ -315,27 +365,26 @@ SEARCH.util = {};
     }
 
     function setPreviewContainerData(title, dataStr, dataType, i) {
-        Dom.setStyle(previewContainerEl, "border", "1px solid gray");
-        Dom.setStyle(previewContainerEl, "background-image", "none");
+        Dom.setStyle(currPreviewContainerEl, "border", "1px solid gray");
+        Dom.setStyle(currPreviewContainerEl, "background-image", "none");
 
         if (dataType == "image") {
-            Dom.setStyle(previewContainerEl, "margin-top", (65 + 92*i) + "px");
             setPreviewContainerImageData(title, dataStr);
         } else {
             setPreviewContainerTextData(title, dataStr);
         }
     }
 
-    function setPreviewContainerLoadingImage(img) {
-        previewContainerEl.innerHTML = "";
-        Dom.setStyle(previewContainerEl, "background-image", "url(\"" + img + "\")");
-        Dom.setStyle(previewContainerEl, "background-position", "50% 10%");
-        Dom.setStyle(previewContainerEl, "background-repeat", "no-repeat");
+    function setPreviewContainerLoadingImage() {
+        currPreviewContainerEl.innerHTML = "";
+        Dom.setStyle(currPreviewContainerEl, "background-image", "url(\"" + loadingImgUrl + "\")");
+        Dom.setStyle(currPreviewContainerEl, "background-position", "50% 10%");
+        Dom.setStyle(currPreviewContainerEl, "background-repeat", "no-repeat");
     }
 
     function clearPreviewContainerImage() {
-        Dom.setStyle(previewContainerEl, "border", "none");
-        previewContainerEl.innerHTML = "";
+        Dom.setStyle(currPreviewContainerEl, "border", "none");
+        currPreviewContainerEl.innerHTML = "";
     }
 
     /* Search tab */
@@ -452,25 +501,25 @@ SEARCH.util = {};
             data = record.getData();
 
         var urlParams = "?core=" + SEARCH.ui.coreName + "&id=" + UI.util.returnEmptyIfUndefined(data.id);
-        if (data.HDFSSegment != undefined) {
-            urlParams += "&segment=" + data.HDFSSegment;
+        if (data[solrDocHDFSSegmentFieldName] != undefined) {
+            urlParams += "&segment=" + data[solrDocHDFSSegmentFieldName];
         }
 
         var callback = {
             success: function(o) {
                 var response = Json.parse(o.responseText);
-                this.argument.table.updateCell(record, "thumbnail", response.Contents);
-                this.argument.table.updateCell(record, "thumbnailType", response.contentType);
-                setPreviewContainerData(record.getData().title, response.Contents, response.contentType);
+                this.argument.table.updateCell(record, thumbnailKey, response["Contents"]);
+                this.argument.table.updateCell(record, "thumbnailType", response["contentType"]);
+                setPreviewContainerData(record.getData().title, response["Contents"], response["contentType"]);
             },
             argument: { table: dataTable, record: record}
         };
 
-        if (data.thumbnail == undefined) {
-            setPreviewContainerLoadingImage(loadingImgUrl);
+        if (data[thumbnailKey] == undefined) {
+            setPreviewContainerLoadingImage();
             Connect.asyncRequest('GET', thumbnailUrl + urlParams, callback);
         } else {
-            setPreviewContainerData(data.title, data.thumbnail, data.thumbnailType);
+            setPreviewContainerData(data.title, data[thumbnailKey], data["thumbnailType"]);
         }
     }
 
@@ -518,31 +567,48 @@ SEARCH.util = {};
     function buildSearchResultList(result) {
         searchResultsEl.innerHTML = "";
 
-        var docs = result.response.docs, i = 0, highlight = result.highlighting;
+        function getIndexFromSearchResultDivId(id)  { return id.match("searchResult([0-9]+)")[1]; }
+        function constructSearchResultDivId(i)      { return "searchResult" + i; }
+        function constructPreviewDivId(i)           { return "preview" + i; }
+        function constructLinkDivId(i)              { return "link" + i; }
+
+        var i = 0,
+            docs = result[solrResponseKey][solrResponseDocsKey],
+            highlight = result[solrResponseKey][solrResponseHighlightingKey];
 
         docs.forEach(function(doc) {
-            var titleHref = viewDocUrl + "?core=" + SEARCH.ui.coreName + "&segment=" +
-                            doc['HDFSSegment'] + "&id=" + doc['id'] + "&view=preview";
-            var titleId = "link_" + i, searchResultDivId = "searchResult_" + i;
+            var titleHref = viewDocUrl + "?view=preview" +
+                            "&core=" + SEARCH.ui.coreName +
+                            "&segment=" + doc[solrDocHDFSSegmentFieldName] +
+                            "&id=" + doc[solrDocIdFieldName];
+            var titleId = constructLinkDivId(i),
+                searchResultDivId = constructSearchResultDivId(i),
+                previewDivId = constructPreviewDivId(i);
             i = i + 1;
 
-            var div   = UI.addDomElementChild("div", searchResultsEl, { id: searchResultDivId }, { class: "search_result_div" });
+            var div   = UI.addDomElementChild("div", searchResultsEl, { id: searchResultDivId },
+                { "class" :  searchResultDivCSSClass, width: "56%" });
             var title = UI.addDomElementChild("div", div);
-            UI.addDomElementChild("a", title, { id: titleId, href: titleHref, innerHTML: doc.title }, { color: "blue" });
-            UI.addDomElementChild("div", div, { innerHTML: "Author: <b>" + doc.author + "</b>"}, { class: "search_subheading" });
-            UI.addDomElementChild("div", div, { innerHTML: "Content type: <b>" + doc.content_type + "</b>"}, { class: "search_subheading" });
-            UI.addDomElementChild("div", div, { innerHTML: "Created On: <i>" + doc.creation_date + "</i>, " +
-                                                           "Last Modified: <i>" + doc.last_modified + "</i>"}, { class: "search_subheading"});
+            UI.addDomElementChild("a", title, { id: titleId, href: titleHref, innerHTML: doc['title'] }, { color: "blue" });
+            UI.addDomElementChild("div", div, { innerHTML: "Author: <b>" + doc['author'] + "</b>"},
+                                              { "class" :  searchResultSubheadingCSSClass });
+            UI.addDomElementChild("div", div, { innerHTML: "Content type: <b>" + doc['content_type'] + "</b>"},
+                                              { "class" :  searchResultSubheadingCSSClass });
+            UI.addDomElementChild("div", div, { innerHTML: "Created On: <i>" + doc['creation_date'] + "</i>, " +
+                                                           "Last Modified: <i>" + doc['last_modified'] + "</i>"},
+                                              { "class" :  searchResultSubheadingCSSClass});
 
-            var highlightObj = highlight[doc.HDFSKey];
+            var highlightObj = highlight[doc[solrDocHDFSKeyFieldName]];
             Object.keys(highlightObj).forEach(function(key) {
-                UI.addDomElementChild("div", div, { innerHTML: "Field <b>" + key + "</b>"}, { class: "search_subheading", color: "darkgreen"});
+                UI.addDomElementChild("div", div, { innerHTML: "Field <b>" + key + "</b>"},
+                                                  { "class" :  searchResultSubheadingCSSClass, color: "darkgreen"});
                 highlightObj[key].forEach(function(s) {
-                    UI.addDomElementChild("div", div, { innerHTML: "... " + s + "... "}, { class: "search_result"});
+                    UI.addDomElementChild("div", div, { innerHTML: "... " + s + "... "}, { "class" :  "search_result"});
                 })
             });
 
-            UI.addDomElementChild("div", div, {}, {class: "clearboth"});
+            UI.addDomElementChild("div", searchResultsEl, { id: previewDivId }, { "class" :  previewDivCSSClass, top: div.offsetTop + "px" });
+            UI.addClearBothDiv(div);
 
             Event.addListener(titleId, "click", function(e) {
                 Event.stopEvent(e);
@@ -550,24 +616,29 @@ SEARCH.util = {};
             });
 
             Event.addListener(searchResultDivId, "mouseover", function(e) {
-                var idx   = this.id.match("searchResult_([0-9]+)")[1];
-                var href  = Dom.get("link_" + idx).href;
-                var file  = href.match("id=([^&]+)[&|$]")[1], segment = href.match("segment=([^&]+)[&|$]")[1];
-                var title = file.substring(file.lastIndexOf("/") + 1);
+                clearPreviewContainerImage();
+
+                var idx     = getIndexFromSearchResultDivId(this.id);
+                var href    = Dom.get(constructLinkDivId(idx)).href;
+                var file    = href.match("id=([^&]+)(&|$)")[1];
+                var segment = href.match("segment=([^&]+)(&|$)")[1];
+                var title   = file.substring(file.lastIndexOf("/") + 1);
+
+                currPreviewContainerEl = Dom.get(constructPreviewDivId(idx));
 
                 if (thumbnailData[file] == undefined) {
-                    setPreviewContainerLoadingImage(loadingImgUrl);
+                    setPreviewContainerLoadingImage();
                     var urlParams = "?core=" + SEARCH.ui.coreName + "&segment=" + segment + "&id=" + file;
                     Connect.asyncRequest('GET', thumbnailUrl + urlParams, {
                         success: function(o) {
                             var response = Json.parse(o.responseText);
-                            thumbnailData[file] = { "contents" : response.Contents, "contentType" : response.contentType };
-                            setPreviewContainerData(title, response.Contents, response.contentType, idx);
+                            thumbnailData[file] = { contents : response['Contents'], contentType : response['contentType'] };
+                            setPreviewContainerData(title, response['Contents'], response['contentType'], idx);
                         }
                     });
 
                 } else {
-                    setPreviewContainerData(title, thumbnailData[file].contents, thumbnailData[file].contentType, idx);
+                    setPreviewContainerData(title, thumbnailData[file]['contents'], thumbnailData[file]['contentType'], idx);
                 }
             });
         });

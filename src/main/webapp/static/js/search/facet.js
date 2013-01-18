@@ -20,7 +20,9 @@ FACET.util = {};
         contentContainer            = Dom.get(contentContainerDivElName),
         contentContainerMinHeight   = parseInt(Dom.getStyle("content_container", "height").replace("px", "")),
 
-        facetTreeUrl                = "";
+        facetTreeUrl                = "",
+        responseFacetKey            = "response",
+        solrResponseFacetKey        = "facet_counts";
 
     function makeVisible(el) {
         Dom.setStyle(el, "visibility", "visible");
@@ -37,15 +39,15 @@ FACET.util = {};
     overlay.render(contentContainer);
 
     FACET.ui.init = function(names) {
-        facetTreeUrl = names.facetTreeUrl;
-        buildHTML(names.insertFacetHtmlAfterElName);
+        facetTreeUrl = names[UI.FACET_URL_KEY];
+        buildHTML(names[UI.FACET.INSERT_FACET_HTML_AFTER_EL_NAME_KEY]);
         FACET.ui.buildInitialFacetTree();
     };
 
     function buildHTML(insertAfterElName) {
         var insertAfterNode = Dom.get(insertAfterElName);
         var el = UI.insertDomElementAfter('div', insertAfterNode, { id: facetOptionsDivElName}, null);
-        UI.addDomElementChild('div', el, null, { class: "clearboth" });
+        UI.addClearBothDiv(el);
     }
 
     function adjustContentContainerHeight() {
@@ -77,10 +79,14 @@ FACET.util = {};
     FACET.ui.buildInitialFacetTree = function() {
         Connect.asyncRequest('GET', facetTreeUrl, {
             success: function(o) {
-                var result = Json.parse(o.responseText);
+                var result = Json.parse(o.responseText),
+                    facets = result[responseFacetKey][solrResponseFacetKey];
                 makeVisible(showOverlayButtonElName);
                 showOverlay();
-                FACET.ui.buildFacetTree(result.facets);
+
+                if (facets != undefined && facets != null) {
+                    FACET.ui.buildFacetTree(facets);
+                }
             },
             failure: function(o) {
                 alert("Could not build facets. " + o);
@@ -90,32 +96,29 @@ FACET.util = {};
 
     FACET.ui.buildFacetTree = function(facets) {
         var i, j, nameNode, valueNode, root = facetTreeView.getRoot();
-        var facetFieldNames = Object.keys(facets);
 
         facetTreeView.removeChildren(root);
 
-        for(i = 0; i < facetFieldNames.length; i++) {
-            var key = facetFieldNames[i], facetChildName = key;
+        for(i = 0; i < facets.length; i++) {
             var parent = root;
+            var name = facets[i]['name'], values = facets[i]['values'];
 
-            if (key.indexOf(".") > 0) {
-                var facetNameArray = key.split(".");
-                var facetParentName = facetNameArray[0];
-                facetChildName = facetNameArray[1];
+            if (name.indexOf(".") > 0) {
+                var nameArr = name.split(".");
+                var facetParentName = nameArr[0], facetChildName = nameArr[1];
                 var parentNode = facetTreeView.getNodeByProperty("label", facetParentName);
                 if (parentNode == null) {
                     parentNode = new TextNode(facetParentName, root, false);
                 }
                 parent = parentNode;
+                facets[i]['name'] = facetChildName;
             }
 
-            var vals = (facets[key] instanceof Array) ? facets[key] : [facets[key]];
-            if (vals.length > 0 &&
-                !(vals.length == 1 && vals[0].match(/^null\s\([0-9]+\)$/))) {
-                nameNode = new TextNode(facetChildName, parent, false);
+            if (values.length > 0 && !(values.length == 1 && values[0].match(/^null\s\([0-9]+\)$/))) {
+                nameNode = new TextNode(facets[i]['name'], parent, false);
 
-                for(j = 0; j < vals.length; j++) {
-                    valueNode = new TextNode(vals[j], nameNode, false);
+                for(j = 0; j < values.length; j++) {
+                    valueNode = new TextNode(facets[i]['values'][j], nameNode, false);
                     valueNode.isLeaf = true;
                 }
             }
@@ -139,7 +142,7 @@ FACET.util = {};
 
             if (Dom.inDocument("treeNode" + node.index) == false) {
                 var anchor = UI.addDomElementChild("a", Dom.get(facetOptionsDivElName),
-                    { id: ("treeNode" + node.index) }, { margin: "2px", class: "button delete" });
+                    { id: ("treeNode" + node.index) }, { margin: "2px", "class" : "button delete" });
                 anchor.appendChild(document.createTextNode(anchorText));
 
                 Event.addListener("treeNode" + node.index, "click", function(e) {

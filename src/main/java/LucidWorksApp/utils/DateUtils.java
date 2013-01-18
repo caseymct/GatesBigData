@@ -15,10 +15,8 @@ public class DateUtils {
     private static TimeZone UTC = TimeZone.getTimeZone("UTC");
 
     private static DateMathParser p = new DateMathParser(UTC, Locale.US);
-    private static Pattern dateStringNoMilliseconds = Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z");
-    private static Pattern shortDatePattern = Pattern.compile("\\d{2}-\\d{2}-\\d{4} \\d{2}:\\d{2} [A-Z]{3}");
-    private static Pattern shortDate2Pattern = Pattern.compile("\\d{2}-[A-Z]{3}-\\d{2} \\d{2}:\\d{2}:\\d{2}");
-    private static Pattern solrDateString = Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z");
+    //private static Pattern solrDateString = Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d{3}Z");
+    private static Pattern solrDateString = Pattern.compile("(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})(\\.*)(\\d*)(Z*)");
     private static Pattern onlyDatePattern = Pattern.compile("^(\\d{4})-(\\d{2})-(\\d{2})$");
 
     private static SimpleDateFormat shortDateFormat          = new SimpleDateFormat("MM-dd-yyyy HH:mm z", Locale.US);
@@ -59,23 +57,33 @@ public class DateUtils {
         return "+" + ms + "MILLISECONDS";
     }
 
-    private static String addDateMillisecondsIfMissing(String date) {
+  /*  private static String addDateMillisecondsIfMissing(String date) {
         Matcher m = dateStringNoMilliseconds.matcher(date);
         if (m.matches()) {
             date = date.replaceAll("(\\d{2})Z", "$1\\.000Z");
         }
         return date;
-    }
+    } */
 
     public static String formatToSolr(Date date) {
         return solrDateFormat.format(date);
+    }
+
+    public static String getFullSolrDate(String value) {
+        Matcher m = solrDateString.matcher(value);
+        if (m.matches()) {
+            String newValue = m.group(1) + ".";
+            newValue += (m.group(3).equals("") ? "000" : m.group(3)) + "Z";
+            return newValue;
+        }
+        return null;
     }
 
     public static Date solrDateMath(String solrDate, String gap) {
         solrDateFormatNoTimeZone.setTimeZone(UTC);
 
         try {
-            solrDate = addDateMillisecondsIfMissing(solrDate);
+            solrDate = getFullSolrDate(solrDate);
             p.setNow(solrDateFormatNoTimeZone.parse(solrDate));
             return p.parseMath(gap);
         } catch (ParseException e) {
@@ -102,17 +110,16 @@ public class DateUtils {
         return 0;
     }
     public static String getSolrDate(String dateString) {
-        if (!Utils.stringIsNullOrEmpty(dateString)) {
-            dateString = addDateMillisecondsIfMissing(dateString);
+        if (!Utils.nullOrEmpty(dateString)) {
+            String newDateString = getFullSolrDate(dateString);
 
             // If it's already a solr date string, just return
-            Matcher m = solrDateString.matcher(dateString);
-            if (m.matches()) {
-                return dateString;
+            if (newDateString != null) {
+                return newDateString;
             }
 
             // If it's in the format yyyy-mm-dd
-            m = onlyDatePattern.matcher(dateString);
+            Matcher m = onlyDatePattern.matcher(dateString);
             if (m.matches()) {
                 Calendar calendar = Calendar.getInstance();
                 calendar.set(Integer.parseInt(m.group(1)), getCalendarMonth(Integer.parseInt(m.group(2))),

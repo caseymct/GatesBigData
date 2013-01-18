@@ -65,7 +65,7 @@ EXPORTOPTIONS.util = {};
     }
 
     EXPORTOPTIONS.init = function(vars) {
-        urls = vars['urls'];
+        urls = vars[UI.URLS_KEY];
         buildHtml();
         initVars();
         buildFieldsHtml();
@@ -80,14 +80,14 @@ EXPORTOPTIONS.util = {};
 
         for(i = 0; i < infoHtmlVars.length; i++) {
             div = UI.addDomElementChild('div', searchInfo, { id : infoHtmlVars[i]['containerEl'] });
-            UI.addDomElementChild('div', div, { innerHTML : infoHtmlVars[i]['html'] }, { class : infoLabelCSSClass });
-            UI.addDomElementChild('div', div, { id : infoHtmlVars[i]['infoEl'] }, { class: infoValueCSSClass });
+            UI.addDomElementChild('div', div, { innerHTML : infoHtmlVars[i]['html'] }, { "class" :  infoLabelCSSClass });
+            UI.addDomElementChild('div', div, { id : infoHtmlVars[i]['infoEl'] }, { "class" :  infoValueCSSClass });
         }
         UI.addClearBothDiv(searchInfo);
 
         div = UI.addDivWithClass(contentEl, "buttons");
-        UI.addDomElementChild('a', div, { href: "#", id : checkAllButtonElName, innerHTML: "Check all" }, { class : buttonSmallCSSClass });
-        UI.addDomElementChild('a', div, { href: "#", id : checkNoneButtonElName, innerHTML: "Check none" }, { class : buttonSmallCSSClass });
+        UI.addDomElementChild('a', div, { href: "#", id : checkAllButtonElName, innerHTML: "Check all" }, { "class" :  buttonSmallCSSClass });
+        UI.addDomElementChild('a', div, { href: "#", id : checkNoneButtonElName, innerHTML: "Check none" }, { "class" :  buttonSmallCSSClass });
         UI.addClearBothDiv(contentEl);
 
         UI.addDomElementChild('div', contentEl, { id : exportOptionsElName });
@@ -97,13 +97,13 @@ EXPORTOPTIONS.util = {};
         UI.addDomElementChild('input', div, { id : exportInputFileElName, type : "text", value : "export.csv" });
 
         div = UI.addDivWithClass(contentEl, "buttons");
-        UI.addDomElementChild('a', div, { href: "#", id : exportButtonElName, innerHTML: "Export" }, { class : exportButtonCSSClass });
+        UI.addDomElementChild('a', div, { href: "#", id : exportButtonElName, innerHTML: "Export" }, { "class" :  exportButtonCSSClass });
 
         UI.addDivWithClass(contentEl, "row");
     }
 
     function initVars() {
-        // TODO: put query information on page
+        // TODO: put core information on page
         Dom.get(queryInfoElName).innerHTML    = "<b>" + decodeURIComponent(query) + "</b>";
         Dom.get(sortInfoElName).innerHTML     = "<b>" + sort + ", " + order + "</b>";
         Dom.get(coreInfoElName).innerHTML     = "<b>" + coreName + "</b>";
@@ -125,13 +125,14 @@ EXPORTOPTIONS.util = {};
         Event.addListener(exportButtonElName, "click", function(e) {
             Event.stopEvent(e);
 
+            debugger;
             var urlParams = "?type=csv&file=" + Dom.get(exportInputFileElName).value + "&" + urlStr;
             var exportFields = getAllCheckedFields();
             if (exportFields != "") {
                 urlParams += "&fields=" + exportFields;
             }
 
-            window.open(urls['exportUrl'] + urlParams);
+            window.open(urls[UI.EXPORT_URL_KEY] + urlParams);
             window.focus();
         });
     }
@@ -167,15 +168,15 @@ EXPORTOPTIONS.util = {};
         if (Dom.get(overlayEl) == null) {
             var overlayLink    = getOverlayLinkElName(parent);
             var overlayInnerEl = overlayEl + "_child";
-            var outerDiv = UI.addDomElementChild('div', exportOptionsEl, { id : overlayEl }, { class : overlayElCSSClass });
+            var outerDiv = UI.addDomElementChild('div', exportOptionsEl, { id : overlayEl }, { "class" :  overlayElCSSClass });
 
             UI.addDomElementChild('a', outerDiv, { id: overlayLink },
                 { "margin-right" : "2px", float : "left", class: buttonShowOverlayCSSClass });
             UI.addDomElementChild('div', outerDiv, { innerHTML: parent });
 
-            var div = UI.addDomElementChild('div', outerDiv, { id: parent }, { class: overlayDivCSSClass });
+            var div = UI.addDomElementChild('div', outerDiv, { id: parent }, { "class" :  overlayDivCSSClass });
 
-            currCheckboxParent = UI.addDomElementChild('div', div, { id: overlayInnerEl }, { class: overlayInnerElCSSClass });
+            currCheckboxParent = UI.addDomElementChild('div', div, { id: overlayInnerEl }, { "class" :  overlayInnerElCSSClass });
 
             currOverlay = new Overlay(parent, {
                 context: [overlayEl, "tl","bl", ["beforeShow", "windowResize"]],
@@ -222,7 +223,7 @@ EXPORTOPTIONS.util = {};
                     }
                     var chkboxId = names[i].toUpperCase();
 
-                    var d = UI.addDomElementChild('div', currCheckboxParent, null, { class: overlayElCSSClass });
+                    var d = UI.addDomElementChild('div', currCheckboxParent, null, { "class" :  overlayElCSSClass });
 
                     var c = UI.addDomElementChild('input', d, {type: "checkbox", name: checkboxGrpElName, value: i, id: chkboxId});
                     if (child.match(/^[A-Z]/) != null) c.checked = true;
