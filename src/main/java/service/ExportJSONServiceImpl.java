@@ -6,6 +6,7 @@ import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.impl.DefaultPrettyPrinter;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.ServletOutputStream;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.*;
@@ -55,7 +56,7 @@ public class ExportJSONServiceImpl extends ExportService {
         g.writeStringField(field, value);
     }
 
-    public void endExportWrite(Writer writer) throws IOException {
+    public void endExportWrite(Writer writer, ServletOutputStream outputStream) throws IOException {
         g.writeEndObject();
         g.close();
     }

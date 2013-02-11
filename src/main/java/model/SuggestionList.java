@@ -1,6 +1,6 @@
 package model;
 
-import LucidWorksApp.utils.JsonParsingUtils;
+import GatesBigData.utils.JsonParsingUtils;
 import net.sf.json.JSONArray;
 
 import java.util.*;

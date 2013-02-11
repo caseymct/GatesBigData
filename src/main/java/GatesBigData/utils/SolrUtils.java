@@ -1,21 +1,14 @@
-package LucidWorksApp.utils;
+package GatesBigData.utils;
 
 import model.FacetFieldEntryList;
 import model.SolrCollectionSchemaInfo;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import org.apache.http.client.HttpClient;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.nutch.indexer.solr.SolrConstants;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.impl.CloudSolrServer;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 
-import java.net.MalformedURLException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -97,6 +90,10 @@ public class SolrUtils {
             return (String) doc.get(fieldName);
         }
         return defaultValue;
+    }
+
+    public static boolean shouldHaveThumbnail(String fileName) {
+        return !Utils.fileHasExtension(fileName, Constants.JSON_FILE_EXT);
     }
 
     public static SolrQuery setResponseFormatAsJSON(SolrQuery query) {

@@ -1,13 +1,12 @@
-package LucidWorksApp.api;
+package GatesBigData.api;
 
-import LucidWorksApp.utils.Constants;
-import LucidWorksApp.utils.SolrUtils;
-import LucidWorksApp.utils.Utils;
+import GatesBigData.utils.Constants;
+import GatesBigData.utils.SolrUtils;
+import GatesBigData.utils.Utils;
 import model.FacetFieldEntryList;
 import model.SolrCollectionSchemaInfo;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
-import org.apache.solr.common.SolrDocument;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -21,12 +20,10 @@ import service.SearchService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
-import java.io.IOException;
-import java.io.StringWriter;
+import java.io.*;
 import java.util.*;
 
 import static java.util.Collections.singletonList;
-import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.OK;
 
 
@@ -113,7 +110,7 @@ public class SearchAPIController extends APIController {
         return map;
     }
 
-    //http://localhost:8080/LucidWorksApp/search/solrquery?query=*:*&core=collection1t&sort=score&order=desc&start=0
+    //http://localhost:8080/GatesBigData/search/solrquery?query=*:*&core=collection1t&sort=score&order=desc&start=0
     @RequestMapping(value="/solrquery", method = RequestMethod.GET)
     public ResponseEntity<String> execSolrQuery(@RequestParam(value = PARAM_QUERY, required = true) String query,
                                                 @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,

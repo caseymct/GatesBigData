@@ -1,4 +1,4 @@
-package LucidWorksApp.utils;
+package GatesBigData.utils;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONNull;

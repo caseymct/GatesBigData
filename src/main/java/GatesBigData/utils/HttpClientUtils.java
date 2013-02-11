@@ -1,4 +1,4 @@
-package LucidWorksApp.utils;
+package GatesBigData.utils;
 
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.http.HttpEntity;
@@ -15,7 +15,6 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.*;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 

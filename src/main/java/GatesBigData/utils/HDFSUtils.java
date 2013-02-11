@@ -1,11 +1,8 @@
-package LucidWorksApp.utils;
+package GatesBigData.utils;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.MapFile;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.MapFileOutputFormat;
 import org.apache.hadoop.mapred.Partitioner;
 import org.apache.hadoop.mapred.lib.HashPartitioner;
@@ -17,10 +14,8 @@ import org.apache.nutch.metadata.Metadata;
 import org.apache.nutch.parse.ParseData;
 import org.apache.nutch.parse.ParseText;
 import org.apache.nutch.protocol.Content;
-import org.apache.nutch.util.NutchConfiguration;
 
 import java.io.IOException;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

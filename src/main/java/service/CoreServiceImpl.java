@@ -1,12 +1,11 @@
 package service;
 
-import LucidWorksApp.utils.*;
+import GatesBigData.utils.*;
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
-import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
 import org.apache.nutch.metadata.Metadata;
 import org.apache.nutch.parse.ParseData;
@@ -23,7 +22,6 @@ import org.apache.solr.schema.DateField;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.swing.*;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.text.ParseException;

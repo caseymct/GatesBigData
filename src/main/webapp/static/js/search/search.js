@@ -15,10 +15,12 @@ SEARCH.util = {};
     SEARCH.ui.shortStringWidth       = 80;
     SEARCH.ui.urlSearchParams        = "";
     SEARCH.ui.facetsFromLastSearch   = null;
-    SEARCH.ui.snippetsFromLastSearch = null;
 
-    var colStringMaxChars      = 20,
-        colDateStringMaxChars  = 30;
+    var highlightSnippets            = "",
+        highlightIdToTitleMapJsonKey = "idToTitleMap";
+
+    var colStringMaxChars     = 20,
+        colDateStringMaxChars = 30;
 
     var searchInputEls       = [],
         queryDefaultValue    = "*:*",
@@ -95,13 +97,15 @@ SEARCH.util = {};
     var solrResponseKey             = "response",
         solrResponseFacetKey        = "facet_counts",
         solrResponseNumFoundKey     = "num_found",
-        solrResponseSnippetKey      = "snippet_analyzer",
         solrResponseDocsKey         = "docs",
         solrResponseHighlightingKey = "highlighting",
         solrDocIdFieldName          = "id",
         solrDocHDFSSegmentFieldName = "HDFSSegment",
         solrDocHDFSKeyFieldName     = "HDFSKey",
-        thumbnailKey                = "thumbnail";
+        thumbnailKey                = "thumbnail",
+        thumbnailTypeKey            = "thumbnail_type",
+        solrDocContentsKey          = "content",
+        solrDocContentTypeKey       = "content_type";
 
     /* Set core name and header for this search file */
     var url = window.location.href.split('/');
@@ -180,6 +184,8 @@ SEARCH.util = {};
                 { visibility: "hidden"});
             UI.addDomElementChild('input', f, { id: UI.QUERY_DATA_INPUT_EL_NAME, name: UI.QUERY_DATA_INPUT_EL_NAME, type: "text" },
                 { visibility: "hidden"});
+            UI.addDomElementChild('input', f, { id: UI.VIEW_DOC_URL_INPUT_EL_NAME, name: UI.VIEW_DOC_URL_INPUT_EL_NAME, type: "text" },
+                { visibility: "hidden"});
         }
 
         UI.insertDomElementAfter('div', el, null, { "class" :  "row" });
@@ -229,6 +235,14 @@ SEARCH.util = {};
         el.innerHTML = '<a href="#">' + data + '</a>';
     };
 
+    function updateAnalysisData(highlighting, docs) {
+        highlighting[highlightIdToTitleMapJsonKey] = {};
+        for(var i = 0; i < docs.length; i++) {
+            highlighting[highlightIdToTitleMapJsonKey][docs[i]['id']] = docs[i]['title'];
+        }
+        highlightSnippets = Json.stringify(highlighting);
+    }
+
     SEARCH.ui.search = function() {
         UI.showWait();
 
@@ -244,11 +258,12 @@ SEARCH.util = {};
 
                 var result = Json.parse(o.responseText);
                 SEARCH.ui.facetsFromLastSearch = result[solrResponseKey][solrResponseFacetKey];
-                SEARCH.ui.snippetsFromLastSearch = result[solrResponseKey][solrResponseHighlightingKey];
+                //SEARCH.ui.snippetsFromLastSearch = result[solrResponseKey][solrResponseHighlightingKey];
+                buildSearchResultHtmlFn(result);
 
+                updateAnalysisData(result[solrResponseKey][solrResponseHighlightingKey], result[solrResponseKey][solrResponseDocsKey]);
                 updateNumFound(result[solrResponseKey][solrResponseNumFoundKey], 1);
                 updatePaginatorAfterSearch();
-                buildSearchResultHtmlFn(result);
 
                 return numFound;
             },
@@ -277,8 +292,9 @@ SEARCH.util = {};
         if (unstructuredData) {
             Event.addListener(analyzeButtonElId, "click", function (e) {
                 Event.stopEvent(e);
-                Dom.get(UI.SNIPPET_DATA_INPUT_EL_NAME).value = Json.stringify(SEARCH.ui.snippetsFromLastSearch);
-                Dom.get(UI.QUERY_DATA_INPUT_EL_NAME).value = SEARCH.ui.getUrlSearchParams();
+                Dom.get(UI.SNIPPET_DATA_INPUT_EL_NAME).value = highlightSnippets; //Json.stringify(SEARCH.ui.snippetsFromLastSearch);
+                Dom.get(UI.QUERY_DATA_INPUT_EL_NAME).value   = SEARCH.ui.getUrlSearchParams();
+                Dom.get(UI.VIEW_DOC_URL_INPUT_EL_NAME).value = viewDocUrl + "?view=preview&core=" + SEARCH.ui.coreName;
                 document.forms[analyzeFormElId].submit();
             });
         }
@@ -501,16 +517,16 @@ SEARCH.util = {};
             data = record.getData();
 
         var urlParams = "?core=" + SEARCH.ui.coreName + "&id=" + UI.util.returnEmptyIfUndefined(data.id);
-        if (data[solrDocHDFSSegmentFieldName] != undefined) {
+       /* if (data[solrDocHDFSSegmentFieldName] != undefined) {
             urlParams += "&segment=" + data[solrDocHDFSSegmentFieldName];
-        }
+        }*/
 
         var callback = {
             success: function(o) {
                 var response = Json.parse(o.responseText);
-                this.argument.table.updateCell(record, thumbnailKey, response["Contents"]);
-                this.argument.table.updateCell(record, "thumbnailType", response["contentType"]);
-                setPreviewContainerData(record.getData().title, response["Contents"], response["contentType"]);
+                this.argument.table.updateCell(record, thumbnailKey, response[solrDocContentsKey]);
+                this.argument.table.updateCell(record, thumbnailTypeKey, response[solrDocContentTypeKey]);
+                setPreviewContainerData(record.getData().title, response[solrDocContentsKey], response[solrDocContentTypeKey]);
             },
             argument: { table: dataTable, record: record}
         };
@@ -519,7 +535,7 @@ SEARCH.util = {};
             setPreviewContainerLoadingImage();
             Connect.asyncRequest('GET', thumbnailUrl + urlParams, callback);
         } else {
-            setPreviewContainerData(data.title, data[thumbnailKey], data["thumbnailType"]);
+            setPreviewContainerData(data.title, data[thumbnailKey], data[thumbnailTypeKey]);
         }
     }
 
@@ -532,7 +548,7 @@ SEARCH.util = {};
             }
         });
 
-        var dataTable = new ScrollingDataTable('search_results', selectDataColumnDefs, dataSource, { width:"100%" });
+        var dataTable = new ScrollingDataTable(searchResultsElName, selectDataColumnDefs, dataSource, { width:"100%" });
 
         dataTable.subscribe("sortedByChange", function(e) {
             var sortField = e.newValue.column.key;
@@ -632,13 +648,16 @@ SEARCH.util = {};
                     Connect.asyncRequest('GET', thumbnailUrl + urlParams, {
                         success: function(o) {
                             var response = Json.parse(o.responseText);
-                            thumbnailData[file] = { contents : response['Contents'], contentType : response['contentType'] };
-                            setPreviewContainerData(title, response['Contents'], response['contentType'], idx);
+                            thumbnailData[file] = {};
+                            thumbnailData[file][solrDocContentsKey]    = response[solrDocContentsKey];
+                            thumbnailData[file][solrDocContentTypeKey] = response[solrDocContentTypeKey];
+
+                            setPreviewContainerData(title, response[solrDocContentsKey], response[solrDocContentTypeKey], idx);
                         }
                     });
 
                 } else {
-                    setPreviewContainerData(title, thumbnailData[file]['contents'], thumbnailData[file]['contentType'], idx);
+                    setPreviewContainerData(title, thumbnailData[file][solrDocContentsKey], thumbnailData[file][solrDocContentTypeKey], idx);
                 }
             });
         });

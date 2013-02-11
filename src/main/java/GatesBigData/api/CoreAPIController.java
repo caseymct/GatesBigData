@@ -1,13 +1,9 @@
-package LucidWorksApp.api;
+package GatesBigData.api;
 
-import LucidWorksApp.utils.*;
+import GatesBigData.utils.*;
 import model.SolrCollectionSchemaInfo;
-import net.sf.json.JSONArray;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
-import org.apache.avro.generic.GenericData;
-import org.apache.hadoop.fs.Path;
-import org.apache.solr.common.SolrInputDocument;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -26,7 +22,6 @@ import service.SearchService;
 import service.SolrReindexService;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;

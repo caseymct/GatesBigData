@@ -1,4 +1,4 @@
-package LucidWorksApp.api;
+package GatesBigData.api;
 
 
 import model.SolrCollectionSchemaInfo;

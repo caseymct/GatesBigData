@@ -1,14 +1,13 @@
 package service;
 
-import LucidWorksApp.utils.Constants;
-import LucidWorksApp.utils.SolrUtils;
-import LucidWorksApp.utils.Utils;
+import GatesBigData.utils.Constants;
+import GatesBigData.utils.SolrUtils;
+import GatesBigData.utils.Utils;
 import model.InMemoryOutputStream;
 import net.lingala.zip4j.exception.ZipException;
 import net.lingala.zip4j.io.ZipOutputStream;
 import net.lingala.zip4j.model.ZipParameters;
 import net.lingala.zip4j.util.Zip4jConstants;
-import org.apache.avro.generic.GenericData;
 import org.apache.log4j.Logger;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
@@ -16,22 +15,37 @@ import org.apache.solr.common.SolrDocumentList;
 import javax.servlet.ServletOutputStream;
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ExportZipServiceImpl extends ExportService {
 
     private ZipOutputStream zipOutputStream;
     private InMemoryOutputStream inMemoryOutputStream;
 
-    private static String HEADER_FILENAME = "HeaderData.txt";
+    private static String HEADER_FILENAME = "README.txt";
     private static final Logger logger = Logger.getLogger(ExportZipServiceImpl.class);
-    private List<String> headerStrings = new ArrayList<String>();
-    private static byte[] nl = System.getProperty("line.separator").getBytes();
+    private StringBuilder headerStringBuilder = new StringBuilder();
+
+    public void writeDocsWithNullContentToHeader(HashMap<String, String> docsWithNullContent) {
+        if (!Utils.nullOrEmpty(docsWithNullContent)) {
+            headerStringBuilder.append("Number of documents found with null content : ")
+                    .append(docsWithNullContent.size()).append(Constants.DEFAULT_NEWLINE);
+
+            for(Map.Entry<String, String> entry : docsWithNullContent.entrySet()) {
+                headerStringBuilder.append("\t");
+                headerStringBuilder.append(Constants.SOLR_TITLE_FIELD_NAME).append(" : ").append(entry.getValue());
+                headerStringBuilder.append(Constants.DEFAULT_DELIMETER).append(" ");
+                headerStringBuilder.append(Constants.SOLR_ID_FIELD_NAME).append(" : ").append(entry.getKey());
+                headerStringBuilder.append(Constants.DEFAULT_NEWLINE);
+            }
+        }
+    }
 
     public void export(SolrDocumentList docs, List<String> fields, Writer writer) throws IOException {
 
-        List<String> docsWithNullContent = new ArrayList<String>();
+        HashMap<String, String> docsWithNullContent = new HashMap<String, String>();
 
         for(SolrDocument doc : docs) {
             String contentStr = SolrUtils.getFieldValue(doc, Constants.SOLR_CONTENT_FIELD_NAME, "");
@@ -40,16 +54,13 @@ public class ExportZipServiceImpl extends ExportService {
             if (!Utils.nullOrEmpty(contentStr)) {
                 writeToZipOutputStream(contentStr.getBytes(), title);
             } else {
-                docsWithNullContent.add(title);
+                docsWithNullContent.put(SolrUtils.getFieldValue(doc, Constants.SOLR_ID_FIELD_NAME, ""), title);
             }
         }
 
-        if (!Utils.nullOrEmpty(docsWithNullContent)) {
-            headerStrings.add("# Documents found with null content : " + docsWithNullContent.size());
-            for(String title : docsWithNullContent) {
-                headerStrings.add("\t" + title);
-            }
-        }
+
+        writeDocsWithNullContentToHeader(docsWithNullContent);
+        writeHeaderFile();
     }
 
     public void beginExportWrite(Writer writer) throws IOException {
@@ -100,40 +111,15 @@ public class ExportZipServiceImpl extends ExportService {
         return buff;
     }
 
-    private List<Byte> addStringBytes(String s, List<Byte> byteList) {
-        for(byte b : s.getBytes()) {
-            byteList.add(b);
-        }
-        return byteList;
-    }
-
     private void writeHeaderFile() {
-        int hdrLen = 0;
-
-        List<Byte> headerBytes = new ArrayList<Byte>();
-        for(String headerString : headerStrings) {
-            headerBytes = addStringBytes(headerString, headerBytes);
-            headerBytes = addStringBytes(nl, headerBytes);
-        }
-        for(byte[] b: headerBytes) {
-            hdrLen += b.length;
-        }
-        byte[] hdr = new byte[hdrLen];
-
-        int currlen = 0;
-        for(byte[] h : headerBytes) {
-            System.arraycopy(h, 0, hdr, currlen, h.length);
-            currlen += h.length;
-        }
-
-        writeToZipOutputStream(hdr, HEADER_FILENAME);
+        writeToZipOutputStream(headerStringBuilder.toString().getBytes(), HEADER_FILENAME);
     }
 
     public void exportHeaderData(long numDocs, String query, String fq, String coreName, Writer writer) throws IOException {
-        headerStrings.add(NUM_FOUND_HDR    + ": " + Long.toString(numDocs));
-        headerStrings.add(SOLR_QUERY_HDR   + ": " + query);
-        headerStrings.add(CORE_NAME_HDR    + ": " + coreName);
-        headerStrings.add(FILTER_QUERY_HDR + ": " + fq);
+        headerStringBuilder.append(NUM_FOUND_HDR).append(": ").append(Long.toString(numDocs)).append(Constants.DEFAULT_NEWLINE);
+        headerStringBuilder.append(SOLR_QUERY_HDR).append(": ").append(query).append(Constants.DEFAULT_NEWLINE);
+        headerStringBuilder.append(CORE_NAME_HDR).append(": ").append(coreName).append(Constants.DEFAULT_NEWLINE);
+        headerStringBuilder.append(FILTER_QUERY_HDR).append(": ").append(fq).append(Constants.DEFAULT_NEWLINE);
     }
 
     private void writeToZipOutputStream(String inputString, String fileName) {

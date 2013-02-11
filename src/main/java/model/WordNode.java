@@ -1,46 +1,44 @@
 package model;
 
-
-import LucidWorksApp.utils.Utils;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import GatesBigData.utils.Utils;
+import java.util.*;
 
 public class WordNode {
     private int count;
     private String word;
-    private boolean isQuery;
-    private HashMap<String, Integer> altQueries = new HashMap<String, Integer>();
+    private Set<String> solrIds;
+
     private List<WordNode> children = new ArrayList<WordNode>();
 
     public WordNode(String word) {
         this.word = word;
         this.count = 1;
-        this.isQuery = false;
+        this.solrIds = new HashSet<String>();
     }
 
-    public WordNode(String query, String altQuery) {
-        this.word = query;
-        this.count = 1;
-        this.isQuery = true;
-        addAltQuery(altQuery);
+    public WordNode(String query, String solrId) {
+        this(query);
+        addSolrId(solrId);
+    }
+
+    public void addSolrId(String solrId) {
+        this.solrIds.add(solrId);
+    }
+
+    public Set<String> getSolrIds() {
+        return this.solrIds;
     }
 
     public String getWord() {
         return word;
     }
 
+    public void setWord(String word) {
+        this.word = word;
+    }
+
     public int getCount() {
         return count;
-    }
-
-    public boolean isQuery() {
-        return isQuery;
-    }
-
-    public HashMap<String, Integer> getAltQueries() {
-        return altQueries;
     }
 
     public List<WordNode> getChildren() {
@@ -59,19 +57,10 @@ public class WordNode {
         this.count++;
     }
 
-    public void increment(String query, String altQuery) {
-        this.count++;
-        addAltQuery(altQuery);
-    }
-
-    public void combine(WordNode child) {
-        this.word += " " + child.word;
+    public void combine(WordNode child, boolean isPrefix) {
+        this.word = isPrefix ? child.word + " " + this.word : this.word + " " + child.word;
         this.children = child.children;
-    }
-
-    public void addAltQuery(String altQuery) {
-        int aqCount = 1 + (altQueries.containsKey(altQuery) ? altQueries.get(altQuery) : 0);
-        altQueries.put(altQuery, aqCount);
+        this.solrIds.addAll(child.solrIds);
     }
 
     public WordNode addChild(String word) {

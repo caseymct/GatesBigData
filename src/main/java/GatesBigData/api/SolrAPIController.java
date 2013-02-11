@@ -1,6 +1,6 @@
-package LucidWorksApp.api;
+package GatesBigData.api;
 
-import LucidWorksApp.utils.Constants;
+import GatesBigData.utils.Constants;
 import net.sf.json.JSONObject;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import service.CoreService;
 import service.HDFSService;
 import service.SolrService;
@@ -18,6 +17,8 @@ import service.SolrService;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.util.Collections.singletonList;
 import static org.springframework.http.HttpStatus.OK;
@@ -37,20 +38,33 @@ public class SolrAPIController extends APIController {
         this.hdfsService = hdfsService;
     }
 
+    // Hackity hack hack
+    public String getCoreTitle(String coreName) {
+        if (coreName.equals("AR_data")) return "AR Data";
+        if (coreName.equals("NA_data")) return "AP Data";
+        if (coreName.equals("dnmsfp1")) return "dnmsfp1 crawl";
+        if (coreName.equals("test2_data")) return "Unstructured Data Test";
+        return coreName;
+    }
+
     @RequestMapping(value="/corenames", method = RequestMethod.GET)
     public ResponseEntity<String> getCollectionNames() throws IOException {
+        List<String> coreDisplayNames = new ArrayList<String>();
 
         StringWriter writer = new StringWriter();
         JsonFactory f = new JsonFactory();
         JsonGenerator g = f.createJsonGenerator(writer);
 
         g.writeStartObject();
-        g.writeArrayFieldStart("names");
-
+        g.writeArrayFieldStart("cores");
         for(String name : solrService.getCoreNames()) {
-            g.writeString(name);
-        }
+            if (name.equals(Constants.SOLR_THUMBNAILS_CORE_NAME)) continue;
 
+            g.writeStartObject();
+            g.writeStringField("name", name);
+            g.writeStringField("title", getCoreTitle(name));
+            g.writeEndObject();
+        }
         g.writeEndArray();
         g.writeEndObject();
         g.close();

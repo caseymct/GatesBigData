@@ -1,14 +1,11 @@
 package service;
 
 
-import LucidWorksApp.utils.Utils;
-import org.apache.hadoop.io.Text;
 import org.apache.nutch.protocol.Content;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.HashMap;
 
 public interface DocumentConversionService {
 

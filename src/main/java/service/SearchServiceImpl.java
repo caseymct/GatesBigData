@@ -1,9 +1,11 @@
 package service;
 
-import LucidWorksApp.utils.*;
+import GatesBigData.utils.*;
 import model.*;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.net.util.Base64;
+import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
@@ -16,21 +18,10 @@ import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 
 public class SearchServiceImpl implements SearchService {
@@ -61,10 +52,22 @@ public class SearchServiceImpl implements SearchService {
         return solrDoc;
     }
 
+    public SolrDocument getThumbnailRecord(String coreName, String id) {
+        SolrServer server = coreService.getSolrServer(Constants.SOLR_THUMBNAILS_CORE_NAME);
+        String queryString = Constants.SOLR_ID_FIELD_NAME + ":\"" + id + "\" AND " +
+                             Constants.SOLR_CORE_FIELD_NAME + ":\"" + coreName + "\"";
+        SolrDocument doc = getRecord(server, queryString);
+        return doc.containsKey(Constants.SOLR_ERRORSTRING_KEY) ? null : doc;
+    }
+
     public SolrDocument getRecord(String coreName, String id) {
-        SolrServer server = coreService.getSolrServer(coreName);
+        String queryString = Constants.SOLR_ID_FIELD_NAME + ":\"" + id + "\"";
+        return getRecord(coreService.getSolrServer(coreName), queryString);
+    }
+
+    public SolrDocument getRecord(SolrServer server, String queryString) {
         SolrQuery query = new SolrQuery();
-        query.setQuery("id:\"" + id + "\"");
+        query.setQuery(queryString);
 
         try {
             QueryResponse rsp = server.query(query);
@@ -76,34 +79,24 @@ public class SearchServiceImpl implements SearchService {
             logger.error(e.getMessage());
         }
 
-        return errorDoc("No document found in core " + coreName + " with ID " + id);
+        return errorDoc("Query " + queryString + " returned no results.");
     }
 
-    public void printRecord(String coreName, String id, StringWriter writer) {
-        SolrDocument doc = getRecord(coreName, id);
-        List<String> fields = new ArrayList<String>(doc.getFieldNames());
-        printRecord(doc, writer, fields);
-    }
 
-    public void printRecord(String coreName, String id, StringWriter writer, List<String> fields) {
-        printRecord(getRecord(coreName, id), writer, fields);
-    }
+    public void printRecord(String coreName, String id, boolean isPreview, StringWriter writer) {
+        if (Utils.nullOrEmpty(id)) return;
 
-    public void printRecord(SolrDocument doc, StringWriter writer, List<String> fields) {
         try {
             JsonFactory f = new JsonFactory();
             JsonGenerator g = f.createJsonGenerator(writer);
-
             g.writeStartObject();
-            g.writeObjectFieldStart("Contents");
 
-            for(String s : fields) {
-                if (doc.containsKey(s)) {
-                    g.writeStringField(s, (String) doc.get(s));
-                }
+            if (SolrUtils.shouldHaveThumbnail(id)) {
+                printThumbnailRecord(coreName, id, g);
+            } else {
+                printRecord(coreName, id, isPreview, g);
             }
 
-            g.writeEndObject();
             g.writeEndObject();
             g.close();
         } catch (JsonGenerationException e) {
@@ -111,6 +104,49 @@ public class SearchServiceImpl implements SearchService {
         } catch (IOException e) {
             logger.error(e.getMessage());
         }
+    }
+
+
+    private void printRecord(String coreName, String id, boolean isPreview, JsonGenerator g) throws IOException {
+        SolrDocument doc = getRecord(coreName, id);
+        g.writeObjectFieldStart(Constants.SOLR_CONTENT_FIELD_NAME);
+
+        for(String s : getFieldsToWrite(doc, coreName, isPreview)) {
+            if (doc.containsKey(s)) {
+                g.writeStringField(s, (String) doc.get(s));
+            }
+        }
+
+        g.writeEndObject();
+    }
+
+    private void printThumbnailRecord(String coreName, String id, JsonGenerator g) throws IOException {
+        String base64String = "";
+
+        SolrDocument thumbnailDoc = getThumbnailRecord(coreName, id);
+        if (thumbnailDoc != null) {
+            String content = SolrUtils.getFieldValue(thumbnailDoc, Constants.SOLR_THUMBNAIL_FIELD_NAME, "");
+            base64String = Base64.encodeBase64String(content.getBytes());
+        }
+
+        g.writeStringField(Constants.SOLR_URL_FIELD_NAME, id);
+        g.writeStringField(Constants.SOLR_CONTENT_TYPE_FIELD_NAME, Constants.IMG_CONTENT_TYPE);
+        g.writeStringField(Constants.SOLR_CONTENT_FIELD_NAME, Constants.BASE64_CONTENT_TYPE + "," + base64String);
+    }
+
+    private List<String> getFieldsToWrite(SolrDocument originalDoc, String coreName, boolean isPreview) {
+        if (isPreview) {
+            SolrDocument previewFieldsDoc = getRecord(coreName, Constants.SOLR_PREVIEW_FIELDS_ID_FIELD_NAME);
+            if (!Utils.nullOrEmpty(previewFieldsDoc)) {
+                String previewFields = SolrUtils.getFieldValue(previewFieldsDoc, Constants.SOLR_PREVIEW_FIELDS_ID_FIELD_NAME, "");
+
+                if (!Utils.nullOrEmpty(previewFields)) {
+                    return Arrays.asList(previewFields.split(","));
+                }
+            }
+        }
+
+        return new ArrayList<String>(originalDoc.getFieldNames());
     }
 
     private GroupResponse getSolrSuggestion(String coreName, String userInput, String prefixField, String fullField) {
@@ -142,14 +178,13 @@ public class SearchServiceImpl implements SearchService {
         List<Group> groups = response.getValues().get(0).getValues();
 
         for(int i = 0; i < groups.size() && suggestionList.size() < n; i++) {
-            Group group = groups.get(i);
-            SolrDocumentList docList = group.getResult();
-            long numFound = docList.getNumFound();
+            SolrDocumentList docList = groups.get(i).getResult();
+            if (Utils.nullOrEmpty(docList)) continue;
+
             SolrDocument doc = docList.get(0);
+            long numFound = docList.getNumFound();
             float score = (Float) doc.get("score");
             String text = Utils.getUTF8String((String) doc.get(fullField));
-
-            // TODO: why for test2_data is score a JSONArray and for NA_data score is a double??? mv fields? confused.
             suggestionList.add(text, fullField, numFound, score);
         }
 

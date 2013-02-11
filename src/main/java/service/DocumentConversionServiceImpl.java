@@ -1,18 +1,20 @@
 package service;
 
-import LucidWorksApp.utils.Constants;
-import LucidWorksApp.utils.HttpClientUtils;
-import LucidWorksApp.utils.Utils;
+import GatesBigData.utils.Constants;
+import GatesBigData.utils.HttpClientUtils;
+import GatesBigData.utils.Utils;
 
+import org.apache.commons.net.util.Base64;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
 import org.apache.nutch.protocol.Content;
 import org.springframework.stereotype.Service;
 
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 
 @Service

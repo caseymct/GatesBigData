@@ -1,9 +1,8 @@
 package service;
 
-import LucidWorksApp.utils.Constants;
-import LucidWorksApp.utils.HttpClientUtils;
-import LucidWorksApp.utils.JsonParsingUtils;
-import LucidWorksApp.utils.SolrUtils;
+import GatesBigData.utils.Constants;
+import GatesBigData.utils.JsonParsingUtils;
+import GatesBigData.utils.SolrUtils;
 import net.sf.json.JSONArray;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrServer;
@@ -104,7 +103,7 @@ public class SolrServiceImpl implements SolrService {
                 coreList.add(cores.getCoreStatus().getName(i));
             }
         }
-
+        Collections.sort(coreList);
         return coreList;
     }
 

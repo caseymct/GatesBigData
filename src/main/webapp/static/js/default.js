@@ -28,6 +28,7 @@ UI.FACET = {};
     UI.TAB_CONTENT_EL_NAME_KEY      = 'tabContentElName';
     UI.SNIPPET_DATA_INPUT_EL_NAME   = 'snippetData';
     UI.QUERY_DATA_INPUT_EL_NAME     = 'queryData';
+    UI.VIEW_DOC_URL_INPUT_EL_NAME   = 'viewDocUrlData';
     UI.CONTENT_EL_NAME              = 'content';
 
     // Define keys
@@ -416,6 +417,13 @@ UI.FACET = {};
 
     String.prototype.encodeForRequest = function() {
         return encodeURIComponent(this.replace(/&amp;/g, "&"));
+    };
+
+    Array.prototype.applyFn = function(fn) {
+        var a = this;
+        for(var i = 0; i < a.length; i++) {
+            a[i][fn]();
+        }
     };
 
     UI.util.returnIfDefined = function(origval, newval) {

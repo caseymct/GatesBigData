@@ -5,8 +5,10 @@ import model.FacetFieldEntryList;
 import model.SolrCollectionSchemaInfo;
 import net.sf.json.JSONObject;
 import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
+import org.codehaus.jackson.JsonGenerator;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -28,12 +30,12 @@ public interface SearchService {
                            String fq, FacetFieldEntryList facetFields, String viewFields, SolrCollectionSchemaInfo schemaInfo,
                            StringWriter writer) throws IOException;
 
+    public SolrDocument getThumbnailRecord(String coreName, String id);
+
     public SolrDocument getRecord(String coreName, String id);
 
-    public void printRecord(String coreName, String id, StringWriter writer);
+    public SolrDocument getRecord(SolrServer server, String queryString);
 
-    public void printRecord(String coreName, String id, StringWriter writer, List<String> previewFields);
-
-    public void printRecord(SolrDocument doc, StringWriter writer, List<String> fields);
+    public void printRecord(String coreName, String id, boolean isPreview, StringWriter writer);
 }
 

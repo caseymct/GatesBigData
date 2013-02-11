@@ -72,8 +72,4 @@ public interface HDFSService {
     public List<String> listSegments(String coreName);
 
     public void listFilesInCrawlDirectory(String coreName, StringWriter writer);
-
-    public void printFileContents(String coreName, String hdfsDate, String fileName, StringWriter writer, boolean preview);
-
-    public void printImageFileContents(String coreName, String segment, String fileName, StringWriter writer) throws IOException;
 }

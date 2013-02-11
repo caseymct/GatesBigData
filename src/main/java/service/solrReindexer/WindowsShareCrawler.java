@@ -465,3 +465,12 @@ public class WindowsShareCrawler extends NtlmAuthenticator {
         new WindowsShareCrawler();
     }
 }
+
+/*
+    Block size is typically 64 MB -- smallest -- x 1000.
+    Mount SMB on local fs on TaskTracker node
+    Get data into HDFS
+    maybe not write in Java? mount share locally - no reason to use Java SMB
+    create a few VMs and put other data nodes on the VMs. multiple mappers and multiple reducers
+    embedded cluster?
+*/

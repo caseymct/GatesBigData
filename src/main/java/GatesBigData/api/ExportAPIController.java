@@ -1,8 +1,8 @@
-package LucidWorksApp.api;
+package GatesBigData.api;
 
-import LucidWorksApp.utils.Constants;
-import LucidWorksApp.utils.SolrUtils;
-import LucidWorksApp.utils.Utils;
+import GatesBigData.utils.Constants;
+import GatesBigData.utils.SolrUtils;
+import GatesBigData.utils.Utils;
 import model.SolrCollectionSchemaInfo;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;

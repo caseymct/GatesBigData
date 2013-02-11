@@ -19,14 +19,14 @@
 
     <script type="text/javascript">
         (function() {
-            var     Dom = YAHOO.util.Dom,     Event = YAHOO.util.Event,
-                Connect = YAHOO.util.Connect,  Json = YAHOO.lang.JSON;
+            var Dom     = YAHOO.util.Dom,       Event   = YAHOO.util.Event,
+                Connect = YAHOO.util.Connect,   Json    = YAHOO.lang.JSON;
 
             var remoteSeg  = YAHOO.deconcept.util.getRequestParameter("segment");
             var id         = YAHOO.deconcept.util.getRequestParameter("id");
             var coreName   = YAHOO.deconcept.util.getRequestParameter("core");
-            var urlParams  = "?segment=" + remoteSeg + "&core=" + coreName + "&id=" + id;
-            var saveDoc = '<c:url value="/document/save?"/>' + "id=" + id + "&segment=" + remoteSeg + "&core=" + coreName;
+            var urlParams  = "?core=" + coreName + "&id=" + id + (remoteSeg != "" ? "segment=" + remoteSeg : "");
+            var saveDoc = '<c:url value="/document/save?"/>' + urlParams;
 
             Event.addListener("save", "click", function(e) {
                 window.open(saveDoc);

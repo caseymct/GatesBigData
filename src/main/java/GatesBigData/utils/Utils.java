@@ -1,4 +1,4 @@
-package LucidWorksApp.utils;
+package GatesBigData.utils;
 
 import model.ValueComparator;
 import org.apache.commons.httpclient.URIException;
@@ -31,6 +31,10 @@ public class Utils {
         }
 
         return localhost.equals(Constants.PRODUCTION_HOSTNAME);
+    }
+
+    public static Object getLastElement(List l) {
+        return l.get(l.size() - 1);
     }
 
     public static String escapeQuotes(String s) {

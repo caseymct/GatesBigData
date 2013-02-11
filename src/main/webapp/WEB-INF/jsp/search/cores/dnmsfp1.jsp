@@ -71,8 +71,8 @@
         params[UI.SEARCH.DATA_SOURCE_FIELDS_KEY] = dataSourceFields;
         params[UI.EXPORT.OPEN_SEPARATE_EXPORT_PAGE_KEY] = false;
         params[UI.DATA_TYPE_KEY] = UI.DATA_TYPE_UNSTRUCTURED;
-        params[UI.CORE_NAMES_KEY] = ['test2_data', 'test_data'];
-        params[UI.TAB_DISPLAY_NAMES_KEY] = ['Unstructured data test 2', 'Unstructured data test 1'];
+        params[UI.CORE_NAMES_KEY] = ['test2_data', 'dnmsfp1'];
+        params[UI.TAB_DISPLAY_NAMES_KEY] = ['Unstructured data test 2', 'dnmsfp1 crawl'];
         params[UI.DATA_TYPE_KEY] = UI.DATA_TYPE_UNSTRUCTURED;
         DATA_TABVIEW.init(params);
 

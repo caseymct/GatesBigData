@@ -1,8 +1,8 @@
 package service.solrReindexer;
 
-import LucidWorksApp.utils.Constants;
-import LucidWorksApp.utils.SolrUtils;
-import LucidWorksApp.utils.Utils;
+import GatesBigData.utils.Constants;
+import GatesBigData.utils.SolrUtils;
+import GatesBigData.utils.Utils;
 import net.sf.json.JSONObject;
 import org.apache.hadoop.io.Text;
 import org.apache.nutch.metadata.Metadata;

@@ -1,8 +1,8 @@
 package model;
 
-import LucidWorksApp.utils.Constants;
-import LucidWorksApp.utils.JsonParsingUtils;
-import LucidWorksApp.utils.SolrUtils;
+import GatesBigData.utils.Constants;
+import GatesBigData.utils.JsonParsingUtils;
+import GatesBigData.utils.SolrUtils;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;

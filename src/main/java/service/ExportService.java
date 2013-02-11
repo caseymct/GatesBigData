@@ -1,7 +1,7 @@
 package service;
 
-import LucidWorksApp.utils.Constants;
-import LucidWorksApp.utils.Utils;
+import GatesBigData.utils.Constants;
+import GatesBigData.utils.Utils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import org.apache.solr.common.SolrDocument;
@@ -15,7 +15,7 @@ import java.util.List;
 
 public abstract class ExportService {
     public static final String RESULTS_HDR         = "Results";
-    public static final String NUM_FOUND_HDR       = "# Found";
+    public static final String NUM_FOUND_HDR       = "Num Found";
     public static final String CORE_NAME_HDR       = "Core Name";
     public static final String QUERY_KEY           = "Query";
     public static final String FILTER_QUERY_HDR    = "Filter Query";

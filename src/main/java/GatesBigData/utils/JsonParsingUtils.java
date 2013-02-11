@@ -1,12 +1,10 @@
-package LucidWorksApp.utils;
+package GatesBigData.utils;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
-import org.apache.commons.collections.map.ListOrderedMap;
 import org.apache.solr.common.util.NamedList;
 import org.codehaus.jackson.JsonGenerator;
-import org.codehaus.jackson.JsonParseException;
 
 import java.io.IOException;
 import java.util.*;

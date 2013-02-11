@@ -1,4 +1,4 @@
-package LucidWorksApp.utils;
+package GatesBigData.utils;
 
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.schema.SchemaField;
@@ -8,6 +8,10 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 public class Constants {
+
+    public static final String DEFAULT_NEWLINE      = System.getProperty("line.separator");
+    public static final String DEFAULT_DELIMETER    = ",";
+
     public static final String HTTP_PROTOCOL        = "http://";
     public static final String PRODUCTION_SERVER    = "denlx006.dn.gates.com";
     public static final String PRODUCTION_HOSTNAME  = "denlx006";
@@ -32,6 +36,7 @@ public class Constants {
     public static final String TEXT_CONTENT_TYPE    = "text/plain";
     public static final String FLASH_CONTENT_TYPE   = "application/x-shockwave-flash";
     public static final String IMG_CONTENT_TYPE     = "image/png";
+    public static final String BASE64_CONTENT_TYPE  = "data:image/png;base64";
 
     public static final String SWF_FILE_EXT         = "swf";
     public static final String IMG_FILE_EXT         = "png";
@@ -44,13 +49,12 @@ public class Constants {
     public static final String CONTENT_DISP_HEADER   = "Content-Disposition";
     public static final String CONTENT_TYPE_VALUE    = JSON_CONTENT_TYPE + "; " + UTF8_CHARSET_ENC;
 
-    public static final String DEFAULT_DELIMETER     = ",";
-    public static final String DEFAULT_NEWLINE       = "\n";
-
     public static int INVALID_INTEGER               = -99999;
     public static long INVALID_LONG                 = -99999;
     public static double INVALID_DOUBLE             = -99999.99999;
 
+    public static final String SOLR_THUMBNAILS_CORE_NAME         = "thumbnails";
+    public static final String SOLR_THUMBNAIL_FIELD_NAME         = "thumbnails";
     public static final String SOLR_CONTENT_FIELD_NAME           = "content";
     public static final String SOLR_CONTENT_TYPE_FIELD_NAME      = "content_type";
     public static final String SOLR_FACET_FIELDS_ID_FIELD_NAME   = "facetFields";
@@ -58,6 +62,7 @@ public class Constants {
     public static final String SOLR_VIEW_FIELDS_ID_FIELD_NAME    = "viewFields";
     public static final List<String> SOLR_INFO_FILES_LIST        = Arrays.asList(SOLR_FACET_FIELDS_ID_FIELD_NAME, SOLR_VIEW_FIELDS_ID_FIELD_NAME, SOLR_PREVIEW_FIELDS_ID_FIELD_NAME);
     public static final String SOLR_ID_FIELD_NAME                = "id";
+    public static final String SOLR_CORE_FIELD_NAME              = "core";
     public static final String SOLR_URL_FIELD_NAME               = "url";
     public static final String SOLR_SCORE_FIELD_NAME             = "score";
     public static final String SOLR_TITLE_FIELD_NAME             = "title";
@@ -114,13 +119,11 @@ public class Constants {
     public static final String SOLR_RESPONSE_FACET_KEY          = "facet_counts";
     public static final String SOLR_RESPONSE_FACET_FIELDS_KEY   = "facet_fields";
     public static final String SOLR_RESPONSE_FACET_DATES_KEY    = "facet_dates";
-    public static final String SOLR_RESPONSE_NUMFOUND_KEY       = "numFound";
 
     public static final String SOLR_ERRORSTRING_KEY             = "ERROR";
 
-    public static final String SEARCH_RESPONSE_SNIPPET_ANALYZER_KEY = "snippet_analyzer";
-    public static final String SEARCH_RESPONSE_NUM_FOUND_KEY        = "num_found";
-    public static final String SEARCH_RESPONSE_NUM_DOCS_KEY         = "docs";
+    public static final String SEARCH_RESPONSE_NUM_FOUND_KEY    = "num_found";
+    public static final String SEARCH_RESPONSE_NUM_DOCS_KEY     = "docs";
 
     public static Pattern VIEW_FIELD_NAMES_PATTERN = Pattern.compile(".*(\\.facet|Suggest|Prefix)$");
     public static Pattern COPYSOURCE_PATTERN = Pattern.compile("^" + SchemaField.class.getName() + ":(.*)\\{.*");

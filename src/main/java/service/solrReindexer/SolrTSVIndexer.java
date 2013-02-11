@@ -27,7 +27,7 @@ public class SolrTSVIndexer {
 
         public void configure(JobConf job) {
             setConf(job);
-            SOLR_URL = job.get("SOLR_URL");
+            SOLR_URL = job.get("solrUrl");
             SERVER = new HttpSolrServer(SOLR_URL);
             DELIMITER = job.get("DELIMITER");
             FIELDS = job.get("FIELDS").split(DELIMITER);
@@ -142,7 +142,7 @@ public class SolrTSVIndexer {
 
         conf.set("FIELDS", FIELDS);
         conf.set("DELIMITER", DELIMITER);
-        conf.set("SOLR_URL", SOLR_URL);
+        conf.set("solrUrl", SOLR_URL);
         //conf.setReducerClass(Reduce.class);
 
         conf.setOutputFormat(TextOutputFormat.class);

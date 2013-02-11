@@ -1,7 +1,7 @@
 package model;
 
-import LucidWorksApp.utils.Constants;
-import LucidWorksApp.utils.Utils;
+import GatesBigData.utils.Constants;
+import GatesBigData.utils.Utils;
 import org.apache.solr.client.solrj.SolrQuery;
 
 

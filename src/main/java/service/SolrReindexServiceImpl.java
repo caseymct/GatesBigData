@@ -1,7 +1,7 @@
 package service;
 
-import LucidWorksApp.utils.HDFSUtils;
-import LucidWorksApp.utils.Utils;
+import GatesBigData.utils.HDFSUtils;
+import GatesBigData.utils.Utils;
 import model.HDFSNutchCoreFileIterator;
 import model.NotifyingThread;
 import service.solrReindexer.SolrIndexAction;
@@ -12,12 +12,8 @@ import org.apache.hadoop.mapred.*;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.log4j.Logger;
-import org.apache.nutch.crawl.CrawlDatum;
-import org.apache.nutch.crawl.Inlinks;
 import org.apache.nutch.crawl.NutchWritable;
 //import org.apache.nutch.indexer.solr.SolrUtils;
-import org.apache.nutch.metadata.Metadata;
-import org.apache.nutch.metadata.Nutch;
 import org.apache.nutch.parse.*;
 import org.apache.solr.common.SolrInputDocument;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,15 +1,13 @@
 package service;
 
-import LucidWorksApp.utils.Constants;
-import LucidWorksApp.utils.SolrUtils;
-import LucidWorksApp.utils.Utils;
+import GatesBigData.utils.Constants;
+import GatesBigData.utils.SolrUtils;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.nutch.protocol.Content;
 import org.apache.solr.common.SolrDocumentList;
-import org.codehaus.jackson.JsonGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.servlet.ServletOutputStream;

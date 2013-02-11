@@ -1,12 +1,10 @@
-package LucidWorksApp.api;
+package GatesBigData.api;
 
-import LucidWorksApp.utils.Constants;
+import GatesBigData.utils.Constants;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -16,12 +14,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import service.HDFSService;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import static java.util.Collections.singletonList;
 import static org.springframework.http.HttpStatus.OK;

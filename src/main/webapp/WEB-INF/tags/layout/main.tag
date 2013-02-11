@@ -80,9 +80,11 @@
 
             Connect.asyncRequest('GET', '<c:url value="/solr/corenames" />' , {
                 success : function(o) {
-                    var names = Json.parse(o.responseText).names;
-                    for(var i = 0; i < names.length; i++) {
-                        itemData.push({text: names[i], url: "<c:url value="/search/" />" + names[i] });
+                    var response = Json.parse(o.responseText);
+                    var cores = response['cores'];
+
+                    for(var i = 0; i < cores.length; i++) {
+                        itemData.push( {text: cores[i]['title'], url: "<c:url value="/search/" />" + cores[i]['name'] });
                     }
 
                     navMenu.subscribe("beforeRender", function () {

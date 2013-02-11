@@ -1,4 +1,4 @@
-package LucidWorksApp.utils;
+package GatesBigData.utils;
 
 import org.apache.log4j.Logger;
 import org.apache.solr.schema.DateField;

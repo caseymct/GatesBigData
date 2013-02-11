@@ -1,7 +1,7 @@
-package LucidWorksApp.api;
+package GatesBigData.api;
 
-import LucidWorksApp.utils.Constants;
-import LucidWorksApp.utils.Utils;
+import GatesBigData.utils.Constants;
+import GatesBigData.utils.Utils;
 import service.solrReindexer.SolrRecord;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -130,7 +130,7 @@ public class DocumentAPIController extends APIController {
         StringWriter writer = new StringWriter();
 
         boolean preview = viewType != null && viewType.equals("preview");
-        hdfsService.printFileContents(coreName, segment, key, writer, preview);
+        searchService.printRecord(coreName, key, preview, writer);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
@@ -138,9 +138,9 @@ public class DocumentAPIController extends APIController {
     }
 
     @RequestMapping(value = "/writelocal", method = RequestMethod.GET)
-    public ResponseEntity<String> writeNutchFileFromHDFS(@RequestParam(value = PARAM_HDFSSEGMENT, required = true) String segment,
-                                                         @RequestParam(value = PARAM_ID, required = true) String id,
-                                                         @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
+    public ResponseEntity<String> writeNutchFileFromHDFS(@RequestParam(value = PARAM_ID, required = true) String id,
+                                                         @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
+                                                         @RequestParam(value = PARAM_HDFSSEGMENT, required = false) String segment) throws IOException {
         StringWriter writer = new StringWriter();
         SolrRecord record = getSolrRecord(coreName, id, segment);
         documentConversionService.writeLocalCopy(record.getContent(), record.getFileName(), writer);
@@ -151,18 +151,12 @@ public class DocumentAPIController extends APIController {
     }
 
     @RequestMapping(value = "/thumbnail/get", method = RequestMethod.GET)
-    public ResponseEntity<String> getThumbnail( @RequestParam(value = PARAM_HDFSSEGMENT, required = false) String segment,
-                                                @RequestParam(value = PARAM_ID, required = true) String id,
-                                                @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
+    public ResponseEntity<String> getThumbnail(@RequestParam(value = PARAM_ID, required = true) String id,
+                                               @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
 
         StringWriter writer = new StringWriter();
-        if (!Utils.nullOrEmpty(id)) {
-            if (!Utils.nullOrEmpty(segment) && !Utils.fileHasExtension(id, Constants.JSON_FILE_EXT)) {
-                hdfsService.printImageFileContents(coreName, segment, id, writer);
-            } else {
-                searchService.printRecord(coreName, id, writer, hdfsService.getHDFSPreviewFields(coreName));
-            }
-        }
+        searchService.printRecord(coreName, id, true, writer);
+
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
