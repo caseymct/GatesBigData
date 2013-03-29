@@ -20,7 +20,8 @@
     <bean id="searchService"                class="service.SearchServiceImpl" />
     <bean id="exportCSVService"             class="service.ExportCSVServiceImpl" />
     <bean id="exportJSONService"            class="service.ExportJSONServiceImpl" />
-    <bean id="exportZipService"            class="service.ExportZipServiceImpl" />
+    <bean id="exportZipService"             class="service.ExportZipServiceImpl" />
     <bean id="documentConversionService"    class="service.DocumentConversionServiceImpl" />
+    <bean id="jdbcService"                  class="service.JDBCServiceImpl" />
 
 </beans>

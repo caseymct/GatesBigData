@@ -208,13 +208,14 @@
         function buildHtml() {
             var infoEl = UI.addDomElementChild('div', contentEl, { id : infoElId });
             var div = UI.addDomElementChild('div', infoEl, { id : queryInfoElId });
-            var keys = Object.keys(requestParams);
-            for(var i = 0; i < keys.length; i++) {
+
+            Object.keys(requestParams).forEach(function(key) {
                 var midDiv = UI.addDomElementChild('div', div, {}, { 'class' : searchLblCtrCSSClass });
-                UI.addDomElementChild('span', midDiv, { innerHTML : keys[i] });
-                UI.addDomElementChild('div',  midDiv, { innerHTML : requestParams[keys[i]] });
+                UI.addDomElementChild('span', midDiv, { innerHTML : key });
+                UI.addDomElementChild('div',  midDiv, { innerHTML : decodeURIComponent(requestParams[key]) });
                 UI.addClearBothDiv(midDiv);
-            }
+            });
+
             UI.addClearBothDiv(infoEl);
 
             UI.addDomElementChild('div', contentEl, { id : graphContentElId });

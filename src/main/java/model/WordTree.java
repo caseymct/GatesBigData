@@ -1,9 +1,7 @@
 package model;
 
-import GatesBigData.utils.Constants;
 import GatesBigData.utils.SolrUtils;
 import GatesBigData.utils.Utils;
-import org.apache.avro.generic.GenericData;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonGenerator;
@@ -22,7 +20,6 @@ public class WordTree {
     private String markPatternEnd;
     private Pattern markPattern;
     private String field;
-    private HashMap<String, String> solrIDToTitleMap;
 
     private HashMap<String, Integer> altQueries = new HashMap<String, Integer>();
 
@@ -30,8 +27,7 @@ public class WordTree {
     public static final String MARK_END_DEFAULT   = "</CENTERWORD>";
     public static final String COUNT_KEY          = "count";
     public static final String NAME_KEY           = "name";
-    public static final String SOLR_IDS_KEY       = "solr_ids";
-    public static final String GROUP_QUERIES_KEY  = "group_queries";
+    public static final String SENTENCE_KEY       = "sentence";
     public static final String ALT_QUERIES_KEY    = "alternate_queries";
     public static final String CHILDREN_KEY       = "children";
     public static final String SUFFIX_KEY         = "suffix";
@@ -40,20 +36,15 @@ public class WordTree {
 
     private Logger logger = Logger.getLogger(WordTree.class);
 
-    public WordTree(String field, String markPatternStart, String markPatternEnd, HashMap<String,String> solrIDToTitleMap) {
+    public WordTree(String field, String markPatternStart, String markPatternEnd) {
         this.field = field;
-        this.solrIDToTitleMap = solrIDToTitleMap;
         this.markPatternStart = markPatternStart;
         this.markPatternEnd = markPatternEnd;
         setMarkPattern();
     }
 
-    public WordTree(String field, String markPatternStart, String markPatternEnd) {
-        this(field, markPatternStart, markPatternEnd, new HashMap<String, String>());
-    }
-
     public WordTree(String field) {
-        this(field, MARK_START_DEFAULT, MARK_END_DEFAULT, new HashMap<String, String>());
+        this(field, MARK_START_DEFAULT, MARK_END_DEFAULT);
     }
 
     private void setMarkPattern() {
@@ -74,28 +65,10 @@ public class WordTree {
         altQueries.put(altQuery, aqCount);
     }
 
-    private void updateSolrIdToTitleMap(String id, String title) {
-        if (!solrIDToTitleMap.containsKey(id)) {
-            solrIDToTitleMap.put(id, title);
-        }
-    }
-
-    public void addSnippets(HashMap<String, String> highlightStringToIdMap) {
-        for(Map.Entry<String, String> entry : highlightStringToIdMap.entrySet()) {
-            addSnippet(entry.getKey(), entry.getValue());
-        }
-    }
-
-    public void addSnippets(List<String> snippets, String id, String title) {
-        updateSolrIdToTitleMap(id, title);
+    public void addSnippets(List<String> snippets) {
         for(String snippet : snippets) {
-            addSnippet(snippet, id);
+            addSnippet(snippet);
         }
-    }
-
-    public void addSnippet(String snippet, String id, String title) {
-        updateSolrIdToTitleMap(id, title);
-        addSnippet(snippet, id);
     }
 
     public void addGroupQuerySnippet(String snippet, long count) {
@@ -103,14 +76,13 @@ public class WordTree {
         List<String> words = getSnippetWords(snippet);
         String query = words.get(0);
 
-        suffixQueryRoot = addSnippetToWordNode(suffixQueryRoot, query, words.subList(1, words.size()), snippet, count);
-        prefixQueryRoot = addSnippetToWordNode(prefixQueryRoot, query, EMPTY_LIST, snippet, count);
+        suffixQueryRoot = addSnippetToWordNode(suffixQueryRoot, query, words, count, false);
+        prefixQueryRoot = addSnippetToWordNode(prefixQueryRoot, query, EMPTY_LIST, count, true);
     }
 
-    public void addSnippet(String snippet, String id) {
+    public void addSnippet(String snippet) {
         Matcher m = markPattern.matcher(snippet);
         List<String> words = getSnippetWords(snippet);
-        List<String> ids = Arrays.asList(id);
 
         while (m.find()) {
             String query = m.group(2);
@@ -118,35 +90,35 @@ public class WordTree {
             String wholeWord = m.group(1) + m.group(2) + m.group(3);
             addAltQuery(wholeWord);
 
-            int startIndex = words.indexOf(wholeWord) + 1, endIndex = words.size();
-            suffixQueryRoot = addSnippetToWordNode(suffixQueryRoot, query, words.subList(startIndex, endIndex), snippet, 1);
+            int startIndex = words.indexOf(wholeWord), endIndex = words.size();
+            suffixQueryRoot = addSnippetToWordNode(suffixQueryRoot, query, words.subList(startIndex, endIndex), 1, false);
 
             Collections.reverse(words);
-            startIndex = words.indexOf(wholeWord) + 1;
-            prefixQueryRoot = addSnippetToWordNode(prefixQueryRoot, query, words.subList(startIndex, endIndex), snippet, 1);
+            startIndex = words.indexOf(wholeWord);
+            prefixQueryRoot = addSnippetToWordNode(prefixQueryRoot, query, words.subList(startIndex, endIndex), 1, true);
         }
     }
 
-    private WordNode addSnippetToWordNode(WordNode wordNode, String query, List<String> words, String groupQuery, long count) {
+    private WordNode addSnippetToWordNode(WordNode wordNode, String query, List<String> words, long count, boolean isPrefix) {
         if (wordNode == null) {
-            wordNode = new WordNode(query, count, groupQuery);
+            wordNode = new WordNode(query, count, isPrefix);
         } else {
-            wordNode.update(count, groupQuery);
+            wordNode.update(count);
         }
 
-        addSnippetWords(wordNode, words, groupQuery, count);
+        addSnippetWords(wordNode, words, count);
         return wordNode;
     }
 
-    private void addSnippetWords(WordNode curr, List<String> words, String groupQuery, long count) {
-        for(String word : words) {
-            curr = curr.addChild(word, count, groupQuery);
+    private void addSnippetWords(WordNode curr, List<String> words, long count) {
+        for(int i = 1; i < words.size(); i++) {
+            curr = curr.addChild(words.get(i), count, StringUtils.join(words.subList(0, i+1), " "));
         }
     }
 
     public void combine() {
-        combineTree(suffixQueryRoot, false);
-        combineTree(prefixQueryRoot, true);
+        combineTree(suffixQueryRoot);
+        combineTree(prefixQueryRoot);
         combineRootWords();
     }
 
@@ -178,7 +150,7 @@ public class WordTree {
         }
     }
 
-    private void combineTree(WordNode curr, boolean isPrefix) {
+    private void combineTree(WordNode curr) {
         if (curr == null) {
             return;
         }
@@ -186,12 +158,12 @@ public class WordTree {
         if (curr.nChildren() == 1) {
             WordNode child = curr.getChildren().get(0);
             if (child.getCount() == curr.getCount()) {
-                curr.combine(child, isPrefix);
-                combineTree(curr, isPrefix);
+                curr.combine(child);
+                combineTree(curr);
             }
         }
         for(WordNode child : curr.getChildren()) {
-            combineTree(child, isPrefix);
+            combineTree(child);
         }
     }
 
@@ -249,11 +221,7 @@ public class WordTree {
         }
         g.writeEndArray();    */
 
-        g.writeArrayFieldStart(GROUP_QUERIES_KEY);
-        for(String groupQuery : curr.getGroupQueries()) {
-            g.writeString(groupQuery);
-        }
-        g.writeEndArray();
+        g.writeStringField(SENTENCE_KEY, curr.getSentence());
 
         if (curr.hasChildren()) {
             g.writeArrayFieldStart(CHILDREN_KEY);

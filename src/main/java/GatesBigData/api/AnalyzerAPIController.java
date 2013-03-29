@@ -5,6 +5,7 @@ import GatesBigData.utils.JsonParsingUtils;
 import GatesBigData.utils.SolrUtils;
 import GatesBigData.utils.Utils;
 import model.ExtendedSolrQuery;
+import model.SolrCollectionSchemaInfo;
 import model.WordTree;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
@@ -29,6 +30,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import service.SearchService;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;
@@ -112,11 +115,12 @@ public class AnalyzerAPIController extends APIController {
                     String snippet = group.getGroupValue();
                     if (Utils.nullOrEmpty(snippet)) continue;
 
-                    String firstWord = snippet.substring(0, snippet.indexOf(" ")).toLowerCase();
+                    int idx = snippet.indexOf(" ");
+                    String firstWord = (idx != -1 ? snippet.substring(0, idx) : snippet).toLowerCase();
                     SolrDocumentList docs = group.getResult();
 
                     WordTree wordTree = wordTrees.containsKey(firstWord) ? wordTrees.get(firstWord) : new WordTree(firstWord);
-                    wordTree.addGroupQuerySnippet(snippet, docs.getNumFound()); //, getIDtoTitleMap(docs));
+                    wordTree.addGroupQuerySnippet(snippet, docs.getNumFound());
                     wordTrees.put(firstWord, wordTree);
                 }
             }
@@ -138,12 +142,12 @@ public class AnalyzerAPIController extends APIController {
 
         for(SolrDocument doc : rsp.getResults()) {
             String id = (String) doc.getFieldValue(Constants.SOLR_ID_FIELD_NAME);
-            String title = (String) doc.getFieldValue(Constants.SOLR_TITLE_FIELD_NAME);
+            //String title = (String) doc.getFieldValue(Constants.SOLR_TITLE_FIELD_NAME);
 
             for(Map.Entry<String, List<String>> fieldNameToInstances : highlighting.get(id).entrySet()) {
                 String fieldName       = fieldNameToInstances.getKey();
                 List<String> instances = fieldNameToInstances.getValue();
-                wordTrees.get(fieldName).addSnippets(instances, id, title);
+                wordTrees.get(fieldName).addSnippets(instances);
             }
         }
 
@@ -190,8 +194,8 @@ public class AnalyzerAPIController extends APIController {
             String field                      = entry.getKey();
             HashMap<String, String> hlSnippet = entry.getValue();
 
-            WordTree wordTree = new WordTree(field, hlPre, hlPost, idToTitleMap);
-            wordTree.addSnippets(hlSnippet);
+            WordTree wordTree = new WordTree(field, hlPre, hlPost);
+            wordTree.addSnippets(new ArrayList<String>(hlSnippet.keySet()));
             wordTrees.add(wordTree);
         }
 
@@ -210,8 +214,11 @@ public class AnalyzerAPIController extends APIController {
                                              @RequestParam(value = PARAM_ROWS, required = true) int rows,
                                              @RequestParam(value = PARAM_FIELDS, required = true) String fields,
                                              @RequestParam(value = PARAM_ANALYSIS_FIELD, required = false) String analysisField,
-                                             @RequestParam(value = PARAM_HIGHLIGHTING, required = true) boolean useHighlighting)
+                                             @RequestParam(value = PARAM_HIGHLIGHTING, required = true) boolean useHighlighting,
+                                             HttpServletRequest request)
             throws IOException {
+
+        HttpSession session = request.getSession();
 
         Set<String> fieldSet = new HashSet<String>(Arrays.asList(fields.split(Constants.DEFAULT_DELIMETER)));
         fieldSet.addAll(Arrays.asList(Constants.SOLR_TITLE_FIELD_NAME, Constants.SOLR_ID_FIELD_NAME));
@@ -225,8 +232,9 @@ public class AnalyzerAPIController extends APIController {
             QueryResponse rsp = searchService.execQuery(query, coreName);
             wordTrees = getWordTreesFromSearchResults(rsp, fieldSet);
         } else {
+            SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, session);
             GroupResponse rsp = searchService.getGroupResponse(coreName, queryStr, fq, Constants.SOLR_ANALYSIS_ROWS_LIMIT,
-                    fields, analysisField, Constants.SOLR_ANALYSIS_GROUP_LIMIT);
+                    fields, schemaInfo.getCorrespondingFacetFieldIfExists(analysisField), Constants.SOLR_ANALYSIS_GROUP_LIMIT);
             wordTrees = getWordTreesFromGroupResults(rsp);
         }
 
@@ -241,7 +249,7 @@ public class AnalyzerAPIController extends APIController {
     @RequestMapping(value="/wordtreetest", method = RequestMethod.GET)
     public ResponseEntity<String> test() throws IOException {
 
-        WordTree tree = new WordTree("test", "<b>", "</b>", null);
+        WordTree tree = new WordTree("test", "<b>", "</b>");
 
         /*tree.addSnippet("here is a <b>test</b>ing one two three");
         tree.addSnippet("what is a <b>test</b>: one four five three");

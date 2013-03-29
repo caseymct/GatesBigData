@@ -12,8 +12,7 @@ var WORDTREE = {};
     var NAME_KEY              = "name",
         COUNT_KEY             = "count",
         CHILDREN_KEY          = "children",
-        SOLR_IDS_KEY          = "solr_ids",
-        GROUP_QUERIES_KEY     = "group_queries",
+        SENTENCE_KEY          = "sentence",
 
         FONT_MAX_SIZE         = 24,
         FONT_MIN_SIZE         = 10,
@@ -70,11 +69,11 @@ var WORDTREE = {};
         }
 
         nodeID++;
-        var name    = json[NAME_KEY];
-        var count   = json[COUNT_KEY];
-        var solrIds = json[SOLR_IDS_KEY];
-        var text    = name + " (" + count + ") ";
-        tree.add(nodeID, pid, text, size(count, level), solrIds == undefined ? [] : solrIds, null);
+        var name     = json[NAME_KEY];
+        var count    = json[COUNT_KEY];
+        var sentence = json[SENTENCE_KEY];
+        var text     = name + " (" + count + ") ";
+        tree.add(nodeID, pid, text, size(count, level), sentence);
 
         var children = json[CHILDREN_KEY];
         if (children != undefined) {

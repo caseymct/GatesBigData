@@ -27,6 +27,7 @@ public class SolrUtils {
     public static final String SOLR_SCHEMA_HDFSKEY              = "HDFSKey";
     public static final String SOLR_SCHEMA_HDFSSEGMENT          = "HDFSSegment";
     public static final String SOLR_SCHEMA_PREFIXFIELD_ENDSWITH = "Prefix";
+    public static final String SOLR_SCHEMA_FACETFIELD_ENDSWITH  = ".facet";
 
     public static final String[] SOLR_CHARS_TO_ENCODE   = {  "-", "\\+", "\\[", "\\]", "\\(", "\\)",   ":"};
     public static final String[] SOLR_CHARS_ENCODED_VAL = {"%96", "%2B", "%5B", "%5D", "%28", "%29", "%3A"};

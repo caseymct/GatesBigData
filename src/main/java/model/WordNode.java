@@ -1,40 +1,35 @@
 package model;
 
 import GatesBigData.utils.Utils;
+import org.apache.commons.lang.StringUtils;
+
 import java.util.*;
 
 public class WordNode {
     private long count;
     private String word;
-    private Set<String> groupQueries;
+    private String sentence;
+    private boolean isPrefix;
 
     private List<WordNode> children = new ArrayList<WordNode>();
 
-    public WordNode(String word, long count) {
-        this.word         = word;
-        this.count        = count;
-        this.groupQueries = new HashSet<String>();
+    public WordNode(String word, String sentence, long count, boolean isPrefix) {
+        this.word     = word;
+        this.count    = count;
+        this.sentence = sentence;
+        this.isPrefix = isPrefix;
     }
 
-    public WordNode(String word, long count, List<String> groupQueries) {
-        this(word, count);
-        this.groupQueries.addAll(groupQueries);
+    public WordNode(String word, long count, boolean isPrefix) {
+        this(word, word, count, isPrefix);
     }
 
-    public WordNode(String word, long count, String groupQuery) {
-        this(word, count, Arrays.asList(groupQuery));
+    public void setSentence(String sentence) {
+        this.sentence = sentence;
     }
 
-    public void addGroupQuery(String groupQuery) {
-        this.groupQueries.add(groupQuery);
-    }
-
-    public void addGroupQueries(List<String> groupQueries) {
-        this.groupQueries.addAll(groupQueries);
-    }
-
-    public Set<String> getGroupQueries() {
-        return this.groupQueries;
+    public String getSentence() {
+        return this.sentence;
     }
 
     public String getWord() {
@@ -69,33 +64,24 @@ public class WordNode {
         increment(1);
     }
 
-    public void combine(WordNode child, boolean isPrefix) {
-        this.word = isPrefix ? child.word + " " + this.word : this.word + " " + child.word;
+    public void combine(WordNode child) {
+        this.word = this.isPrefix ? child.word + " " + this.word : this.word + " " + child.word;
+        this.sentence = child.sentence;
         this.children = child.getChildren();
-        this.update(0, child.getGroupQueries());
     }
 
-    public void update(long count, List<String> groupQueries) {
+    public void update(long count) {
         this.increment(count);
-        this.addGroupQueries(groupQueries);
     }
 
-    public void update(long count, String groupQuery) {
-        update(count, Arrays.asList(groupQuery));
-    }
-
-    public void update(long count, Set<String> groupQueries) {
-        update(count, new ArrayList<String>(groupQueries));
-    }
-
-    public WordNode addChild(String word, long count, String groupQuery) {
+    public WordNode addChild(String word, long count, String sentence) {
         for(WordNode child : this.children) {
             if (child.getWord().equals(word)) {
-                child.update(count, groupQuery);
+                child.update(count);
                 return child;
             }
         }
-        WordNode child = new WordNode(word, count, groupQuery);
+        WordNode child = new WordNode(word, sentence, count, this.isPrefix);
         children.add(child);
         return child;
     }

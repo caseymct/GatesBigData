@@ -26,6 +26,7 @@ public class SolrCollectionSchemaInfo {
     private List<String> viewFieldNames = new ArrayList<String>();
     private List<String> dateFieldNames = new ArrayList<String>();
     private Map<String, String> prefixFieldToCopySourceMap = new HashMap<String, String>();
+    private Map<String, String> copySourceToFacetFieldMap = new HashMap<String, String>();
     private FacetFieldEntryList facetFieldEntryList = new FacetFieldEntryList();
     private String coreTitle;
     private boolean structuredData;
@@ -103,8 +104,12 @@ public class SolrCollectionSchemaInfo {
                 String src = el.getAttribute(COPYFIELD_SOURCE_KEY);
                 String dest = el.getAttribute(COPYFIELD_DEST_KEY);
 
-                if (!src.equals(Constants.SOLR_CONTENT_FIELD_NAME) && dest.endsWith(SolrUtils.SOLR_SCHEMA_PREFIXFIELD_ENDSWITH)) {
+                if (src.equals(Constants.SOLR_CONTENT_FIELD_NAME)) continue;
+
+                if(dest.endsWith(SolrUtils.SOLR_SCHEMA_PREFIXFIELD_ENDSWITH)) {
                     prefixFieldToCopySourceMap.put(dest, el.getAttribute(COPYFIELD_SOURCE_KEY));
+                } else if (dest.endsWith(SolrUtils.SOLR_SCHEMA_FACETFIELD_ENDSWITH)) {
+                    copySourceToFacetFieldMap.put(el.getAttribute(COPYFIELD_SOURCE_KEY), dest);
                 }
             }
         }
@@ -146,8 +151,8 @@ public class SolrCollectionSchemaInfo {
         return fieldInfoMap.get(fieldName);
     }
 
-    public String getFieldType(String fieldName) {
-        return getSchemaField(fieldName).getType();
+    public String getCorrespondingFacetFieldIfExists(String fieldName) {
+        return copySourceToFacetFieldMap.containsKey(fieldName) ? copySourceToFacetFieldMap.get(fieldName) : fieldName;
     }
 
     public boolean fieldTypeIsDate(String fieldName) {

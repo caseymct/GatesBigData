@@ -20,7 +20,9 @@ public class Constants {
     public static final String HTTP_PROTOCOL        = "http://";
     public static final String PRODUCTION_SERVER    = "denlx006.dn.gates.com";
     public static final String PRODUCTION_HOSTNAME  = "denlx006";
+    public static final String ERP_DB_HOSTNAME      = "erpdbadb.dn.gates.com";
 
+    public static final String ERP_DB_SID           = "ERPDBA";
     public static final String SMB_PROTOCOL_STRING  = "smb://";
     public static final String SMB_DOMAIN           = "NA";
     public static final String SMB_USERNAME         = "bigdatasvc";
@@ -28,6 +30,7 @@ public class Constants {
 
     public static final int SOLR_PORT               = 8984;
     public static final int ZOOKEEPER_PORT          = 2181;
+    public static final int ERP_DB_PORT             = 1591;
     public static final String SOLR_SERVER          = HTTP_PROTOCOL + PRODUCTION_SERVER + ":" + SOLR_PORT;
     public static final String ZOOKEEPER_SERVER     = PRODUCTION_SERVER + ":" + ZOOKEEPER_PORT;
     public static final int ZK_CLIENT_TIMEOUT       = 5000;

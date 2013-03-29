@@ -54,11 +54,11 @@ WordNode = function (conf) {
 
 WordNode.prototype._initRaphaelElementsObject = function() {
     this.raphaelElements = {};
-    this.raphaelElements[WordTree.COLLAPSE_IMG_KEY] = null;
-    this.raphaelElements[WordTree.TRANS_IMG_KEY]    = null;
-    this.raphaelElements[WordTree.BOUNDING_RECT]    = null;
-    this.raphaelElements[WordTree.SVG_ELS_KEY]      = [];
-    this.raphaelElements[WordTree.PATHS_KEY]        = [];
+    this.raphaelElements[WordTree.COLLAPSE_IMG_KEY]  = null;
+    this.raphaelElements[WordTree.TRANS_IMG_KEY]     = null;
+    this.raphaelElements[WordTree.BOUNDING_RECT_KEY] = null;
+    this.raphaelElements[WordTree.SVG_ELS_KEY]       = [];
+    this.raphaelElements[WordTree.PATHS_KEY]         = [];
 };
 
 WordNode.prototype._getLevel = function () {
@@ -438,6 +438,8 @@ WordTree.prototype.getNodeFromNodeId = function(nodeId) {
 };
 
 WordTree.prototype.unhighlightNode = function() {
+    if (this.iSelectedNode == -1) return;
+
     var node = this.nDatabaseNodes[this.iSelectedNode];
     node.isSelected = false;
     unhighlight(node.raphaelElements[WordTree.BOUNDING_RECT_KEY], node.borderColor);
@@ -451,12 +453,8 @@ WordTree.prototype.selectNode = function (nodeId) {
 
     node.isSelected = !node.isSelected;
 
-    if (this.oppositeTree.iSelectedNode != -1) {
-        this.oppositeTree.unhighlightNode();
-    }
-    if ((this.iSelectedNode == dbIndex && !node.isSelected) || this.iSelectedNode != -1) {
-        this.unhighlightNode();
-    }
+    this.oppositeTree.unhighlightNode();
+    this.unhighlightNode();
 
     if (node.isSelected) {
         highlight(bRect);
@@ -510,15 +508,12 @@ WordTree.prototype._drawTree = function () {
                 textY = node.YPosition + node.h/2;
 
             textAttrs[WordTree.FONT_SIZE_CSS_KEY] = node.size;
-            var els = this._addAnchorRect(this.paper, textX, textY, node.dsc, textAttrs, anchorData, anchorRectAttrs, onClickSelect);
+            var els = this._addAnchorRect(this.paper, textX, textY, node.dsc, textAttrs, anchorData, anchorRectAttrs, n == 0, onClickSelect);
             var text = els.text, aRect = els.anchor, bRect = els[WordTree.BOUNDING_RECT_KEY],
                 textBBox = text.getBBox(), rectBBox = aRect.getBBox();
 
             if (rectBBox.y < this.minY)  this.minY = rectBBox.y;
             if (rectBBox.y2 > this.maxY) this.maxY = rectBBox.y2;
-            if (n == 0) {
-                aRect.id = this.rootNodeRaphaelElementId;
-            }
 
             if (node.target) {
                 els.items.push(this._addTargetOverlays(node.target, textBBox));
@@ -560,7 +555,7 @@ WordTree.prototype._getText = function(paper, x, y, desc, textAttrs) {
 };
 
 WordTree.prototype._addAnchorRect = function(paper, x, y, desc, textAttrs, anchorData,
-                                             boundingRectAttrs, onClickHandler) {
+                                             boundingRectAttrs, setAnchorId, onClickHandler) {
     var RECT_PAD_X_DEFAULT = 2;
 
     var aRect = null, bRect = null,
@@ -590,12 +585,16 @@ WordTree.prototype._addAnchorRect = function(paper, x, y, desc, textAttrs, ancho
     aRect = this.paper.rect(bx, by, bw, bh, br)
                       .attr('opacity', 0).attr('fill', 'black').attr('cursor', 'pointer')
                       .data(WordTree.BOUNDING_RECT_KEY, bRect);
+    if (setAnchorId) {
+        aRect.id = anchorData['tree'].rootNodeRaphaelElementId;
+    }
     items.push(text, aRect);
 
     anchorData[WordTree.TEXT_KEY] = text;
     if (anchorData[WordTree.ELS_TO_REMOVE_KEY] != undefined) {
         anchorData[WordTree.ELS_TO_REMOVE_KEY] = anchorData[WordTree.ELS_TO_REMOVE_KEY].concat(items);
     }
+
     aRect = _setElementProperties(aRect, anchorData, 'data');
     aRect.mouseup(onClickHandler);
 
@@ -648,7 +647,7 @@ WordTree.prototype._addTargetOverlays = function (target, textBBox) {
             WordTree.setJustDraggedStatus(paper, false);
             return;
         }
-        debugger;
+
         var bbox = this.getBBox();
         var tgt  = this.data('target');
         var i, rectPadX = 10, rectPadY = 10, fontSize = 10, textPadY = 5, rectX = bbox.x, rectY = bbox.y;
@@ -663,7 +662,7 @@ WordTree.prototype._addTargetOverlays = function (target, textBBox) {
                 textX = rectX + rectPadX,
                 textY = rectY + rectPadY* 2,
                     w = header.getBBox().width + rectPadY;
-
+        /*
         for(i = 0; i < tgt.length; i++) {
             var desc = tgt[i]['title'],
                 anchorData = { id : tgt[i]['id'] };
@@ -675,20 +674,20 @@ WordTree.prototype._addTargetOverlays = function (target, textBBox) {
             links = links.concat(newEls.items);
 
             w = Math.max(newEls.anchor.getBBox().width, w);
-        }
+        }   */
 
         var y2 = links[links.length - 1].getBBox().y2 - rectY + rectPadY;
         var linksRect = paper.rect(rectX, rectY, w + rectPadX*2, y2, 8)
                              .attr('fill', 'white').attr('stroke', 'black');
 
-        anchorData = {};
-        anchorData[WordTree.FONT_SIZE_CSS_KEY]      = 12;
-        anchorData[WordTree.FONT_ORIG_SIZE_CSS_KEY] = 10;
-        anchorData[WordTree.FONT_WEIGHT_CSS_KEY]    = 'bold';
+        var anchorData = {};
+        anchorData[WordTree.FONT_SIZE_CSS_KEY]   = 12;
+        anchorData[WordTree.ORIG_FONT_SIZE_KEY]  = 10;
+        anchorData[WordTree.FONT_WEIGHT_CSS_KEY] = 'bold';
 
         anchorData[WordTree.ELS_TO_REMOVE_KEY] = links.concat(linksRect);
         var closeEls = tree._addAnchorRect(paper, rectX + rectPadX/2 + 3, rectY + rectPadY/2 + 8, "X", textAttrs,
-                                           anchorData, {}, closeAnchorClick);
+                                           anchorData, {}, false, closeAnchorClick);
         links.concat(closeEls.items).applyFn('toFront');
     }
 };
