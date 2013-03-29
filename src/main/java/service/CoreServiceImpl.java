@@ -14,6 +14,7 @@ import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CloudSolrServer;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
@@ -86,20 +87,6 @@ public class CoreServiceImpl implements CoreService {
 
     public boolean deleteIndex(String coreName) {
         return deleteByField(coreName, "*", "*");
-        /*
-        try {
-            SolrServer server = getSolrServer(coreName);
-            server.deleteByQuery("*:*");
-            solrService.solrServerCommit(server);
-            return true;
-
-        } catch (SolrServerException e) {
-            logger.error(e.getMessage());
-        } catch (IOException e) {
-            logger.error(e.getMessage());
-        }
-
-        return false; */
     }
 
     public boolean deleteById(String coreName, List<String> ids) {
@@ -160,11 +147,13 @@ public class CoreServiceImpl implements CoreService {
 
     public boolean addInfoFilesToSolr(String coreName, HashMap<String, String> hdfsInfoFileContents) {
         List<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
+        List<String> fieldsToDelete = new ArrayList<String>();
 
         for(Map.Entry<String, String> entry : hdfsInfoFileContents.entrySet()) {
-            String title = entry.getKey();
+            String title   = entry.getKey();
             String content = entry.getValue();
-            String id = UUID.randomUUID().toString();
+            String id      = UUID.randomUUID().toString();
+            fieldsToDelete.add(title);
 
             HashMap<String, String> params = new HashMap<String, String>();
             params.put(title, content);
@@ -174,7 +163,7 @@ public class CoreServiceImpl implements CoreService {
             docs.add(createSolrDocument(params));
         }
 
-        deleteByField(coreName, Constants.SOLR_TITLE_FIELD_NAME, Constants.SOLR_INFO_FILES_LIST);
+        deleteByField(coreName, Constants.SOLR_TITLE_FIELD_NAME, fieldsToDelete);
         return addDocumentsToSolrIndex(docs, coreName);
     }
 
@@ -291,57 +280,8 @@ public class CoreServiceImpl implements CoreService {
         return doc;
     }
 
-    private String getDateGapString(String startString, String endString, int buckets) {
-        try {
-            long msStart = DateField.parseDate(startString).getTime();
-            long msEnd   = DateField.parseDate(endString).getTime();
-            return DateUtils.getDateGapString((msEnd - msStart)/buckets);
-        } catch (ParseException e) {
-            logger.error(e.getMessage());
-        }
-        return "";
-    }
-
-    private String getSolrDate(SolrServer server, String field, String format, SolrQuery.ORDER order) {
-        SolrQuery query = new SolrQuery();
-        query.setQuery(field + ":*");
-        query.setStart(0);
-        query.setRows(1);
-        query.addSortField(field, order);
-        query.setFields(field);
-        query = SolrUtils.setResponseFormatAsJSON(query);
-
-        try {
-            QueryResponse rsp = server.query(query);
-            SolrDocumentList docs = rsp.getResults();
-            if (docs.size() > 0) {
-                SolrDocument doc = docs.get(0);
-                if (doc.containsKey(field)) {
-                    Object val = doc.getFieldValue(field);
-                    if (val instanceof Date) {
-                        String solrDate = DateUtils.getSolrDate(val.toString());
-                        return DateUtils.getFormattedDateStringFromSolrDate(solrDate, format);
-                    }
-                }
-            }
-        } catch (SolrServerException e) {
-            logger.error(e.getMessage());
-        }
-
-        return "";
-    }
-
-    public List<String> getSolrFieldDateRange(String coreName, String field, String format) {
-        List<String> dateRange = new ArrayList<String>();
-        int buckets = 10;
-        SolrServer server = getSolrServer(coreName);
-
-        dateRange.add(getSolrDate(server, field, format, SolrQuery.ORDER.asc));
-        dateRange.add(getSolrDate(server, field, format, SolrQuery.ORDER.desc));
-
-        if (format.equals(DateUtils.SOLR_DATE)) {
-            dateRange.add(getDateGapString(dateRange.get(0), dateRange.get(1), buckets));
-        }
-        return dateRange;
+    public JSONObject getCoreInfo(String coreName) {
+        CoreAdminResponse coreAdminResponse = solrService.getCores();
+        return JsonParsingUtils.constructJSONObjectFromNamedList(coreAdminResponse.getCoreStatus(coreName));
     }
 }

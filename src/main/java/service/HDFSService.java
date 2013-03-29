@@ -5,6 +5,7 @@ import model.FacetFieldEntryList;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.MapFile;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
@@ -18,6 +19,7 @@ import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public interface HDFSService {
 
@@ -29,11 +31,7 @@ public interface HDFSService {
 
     public Configuration getNutchConfiguration();
 
-    public List<String> getHDFSPreviewFields(String coreName);
-
     public HashMap<String, String> getInfoFilesContents(String coreName);
-
-    public String getInfoFileContents(String coreName, String type);
 
     public boolean addFile(String remoteFilePath, String localFilePath);
 
@@ -41,9 +39,9 @@ public interface HDFSService {
 
     public HashMap<String, MapFile.Reader[]> getSegmentToMapFileReaderMap(String coreName, String methodName);
 
-    public SequenceFile.Reader getSequenceFileReader(Path dir);
+    public HashMap<String, Long> getFetched(String coreName);
 
-    public long getFetched(String coreName);
+    public void writeFetched(String coreName, StringWriter writer);
 
     public boolean removeFile(String remoteFilePath);
 
@@ -63,13 +61,9 @@ public interface HDFSService {
 
     public <T> T getContents(String coreName, Path dataFile, Class<T> clazz, Class<T> returnClass) throws IOException;
 
-    public void generateThumbnails(String coreName) throws IOException;
-
-    public Path getHDFSThumbnailPathFromHDFSDocPath(String coreName, String segment, String hdfsPath);
-
-    public List<String> listFiles(Path hdfsDirectory, boolean recurse);
+    public List<String> listFiles(Path hdfsDirectory, boolean recurse, Pattern filter, FileSystem fs);
 
     public List<String> listSegments(String coreName);
 
-    public void listFilesInCrawlDirectory(String coreName, StringWriter writer);
+    public void listFilesInCrawlDirectory(String coreName, StringWriter writer, boolean includeContentAndParseInfo);
 }

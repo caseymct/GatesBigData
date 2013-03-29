@@ -1,0 +1,82 @@
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.y.axis path, .x.axis path {
+    stroke: #000;
+    stroke-width: 1.5px;
+}
+
+path {
+    stroke-width: 1;
+    fill: none;
+}
+
+.slider_text_label {
+    float : left;
+    width : 60px;
+}
+
+.slider_set_val_buttons {
+    padding: 2px 6px;
+    margin-right: 20px;
+}
+
+#graph_options {
+    margin-top: 20px;
+}
+
+#x_slider, #y_slider {
+    width : 300px;
+    margin-bottom : 10px;
+}
+
+#x_min_slider_val, #y_min_slider_val {
+    float : left;
+    width : 140px;
+}
+
+#x_max_slider_val, #y_max_slider_val {
+    float : left;
+}
+
+#x_slider_set_min_val, #y_slider_set_min_val, #x_slider_set_max_val, #y_slider_set_max_val {
+    width: 80px;
+    margin-right: 60px;
+    margin-top: 3px;
+}
+
+#n_found_container span {
+    float : left;
+}
+
+#n_found_container label {
+    float : left;
+    width : 380px;
+}
+
+#redraw {
+    margin-top: 30px;
+}
+
+#graph_options span {
+    float : left;
+    width : 80px;
+    margin-left : 5px;
+}
+
+#graph_options_series_options {
+    margin-top : 30px;
+}
+
+#graph_options_series_options input {
+    float : left;
+    margin-top : 2px;
+}
+
+#redraw_single_plot {
+    margin-left : 20px;
+}

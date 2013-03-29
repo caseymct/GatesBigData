@@ -57,6 +57,10 @@ public class SuggestionList implements Iterable<Suggestion> {
         return JsonParsingUtils.convertStringListToJSONArray(getSortedFormattedSuggestionList());
     }
 
+    public JSONArray getFormattedSuggestionJSONArray() {
+        return JsonParsingUtils.convertStringListToJSONArray(getFormattedSuggestionList());
+    }
+
     public int size() {
         return suggestions.size();
     }

@@ -1,9 +1,12 @@
 package GatesBigData.api;
 
 import GatesBigData.utils.Constants;
+import GatesBigData.utils.SolrUtils;
 import GatesBigData.utils.Utils;
-import service.solrReindexer.SolrRecord;
+import model.SolrCollectionSchemaInfo;
+import model.SolrRecord;
 import org.apache.log4j.Logger;
+import org.apache.solr.common.SolrDocument;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -15,8 +18,13 @@ import service.DocumentConversionService;
 import service.HDFSService;
 import service.SearchService;
 
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.util.Collections.singletonList;
 import static org.springframework.http.HttpStatus.OK;
@@ -49,26 +57,36 @@ public class DocumentAPIController extends APIController {
         this.searchService = searchService;
     }
 
-    public SolrRecord getSolrRecord(String coreName, String id, String segment) {
-        SolrRecord record;
-        if (Utils.nullOrEmpty(segment)) {
+    public SolrRecord getSolrRecord(String coreName, String id, String segment, boolean structuredData) {
+        SolrRecord record = null;
+        SolrDocument doc = searchService.getRecord(coreName, id);
+
+        if (!Utils.nullOrEmpty(doc)) {
             // then this is a Solr record. Get contents.
-            record = new SolrRecord(searchService.getRecord(coreName, id));
-        } else {
+            if (structuredData) {
+                record = new SolrRecord(doc, searchService.getFieldsToWrite(doc, coreName, Constants.VIEW_TYPE_FULLVIEW));
+            } else {
+                record = new SolrRecord(doc);
+            }
+        } else if (!Utils.nullOrEmpty(segment)) {
             record = new SolrRecord(hdfsService.getFileContents(coreName, segment, id), new File(id).getName());
         }
 
-        record.ifRecordIsJSONChangeToText();
-        return record;
+        if (record != null) {
+            record.ifRecordIsJSONChangeToText();
+            return record;
+        }
+        return null;
     }
 
     @RequestMapping(value = "/save", method = RequestMethod.GET)
     public HttpServletResponse saveFile(@RequestParam(value = PARAM_HDFSSEGMENT, required = false) String segment,
                                         @RequestParam(value = PARAM_ID, required = true) String id,
                                         @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
-                                        HttpServletResponse response) throws IOException {
+                                        HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        SolrRecord record = getSolrRecord(coreName, id, segment);
+        SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, request.getSession());
+        SolrRecord record = getSolrRecord(coreName, id, segment, schemaInfo.isStructuredData());
 
         response.setContentType(record.getContentType());
         response.setHeader("Content-Disposition", "attachment; fileName=" + record.getFileName());
@@ -122,15 +140,26 @@ public class DocumentAPIController extends APIController {
         return response;
     }
 
-    @RequestMapping(value = "/nutch/get", method = RequestMethod.GET)
-    public ResponseEntity<String> readNutchFileFromHDFS(@RequestParam(value = PARAM_HDFSSEGMENT, required = true) String segment,
-                                                        @RequestParam(value = PARAM_FILE_NAME, required = true) String key,
-                                                        @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
-                                                        @RequestParam(value = PARAM_VIEWTYPE, required = false) String viewType) throws IOException {
-        StringWriter writer = new StringWriter();
+    private String getViewType(String viewType) {
 
-        boolean preview = viewType != null && viewType.equals("preview");
-        searchService.printRecord(coreName, key, preview, writer);
+        if (viewType != null) {
+            Matcher m = Constants.VIEW_TYPE_PATTERN.matcher(viewType);
+            if (m.matches()) {
+                return viewType;
+            }
+        }
+        return Constants.VIEW_TYPE_PREVIEW;
+    }
+
+    @RequestMapping(value = "/content/get", method = RequestMethod.GET)
+    public ResponseEntity<String> getFileContents(@RequestParam(value = PARAM_ID, required = true) String key,
+                                                  @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
+                                                  @RequestParam(value = PARAM_VIEWTYPE, required = false) String viewType,
+                                                  HttpServletRequest request) throws IOException {
+        StringWriter writer = new StringWriter();
+        SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, request.getSession());
+
+        searchService.printRecord(coreName, key, getViewType(viewType), schemaInfo.isStructuredData(), writer);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
@@ -138,11 +167,15 @@ public class DocumentAPIController extends APIController {
     }
 
     @RequestMapping(value = "/writelocal", method = RequestMethod.GET)
-    public ResponseEntity<String> writeNutchFileFromHDFS(@RequestParam(value = PARAM_ID, required = true) String id,
-                                                         @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
-                                                         @RequestParam(value = PARAM_HDFSSEGMENT, required = false) String segment) throws IOException {
+    public ResponseEntity<String> writeLocalFile(@RequestParam(value = PARAM_ID, required = true) String id,
+                                                 @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
+                                                 @RequestParam(value = PARAM_HDFSSEGMENT, required = false) String segment,
+                                                 HttpServletRequest request) throws IOException {
+
+        SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, request.getSession());
         StringWriter writer = new StringWriter();
-        SolrRecord record = getSolrRecord(coreName, id, segment);
+
+        SolrRecord record = getSolrRecord(coreName, id, segment, schemaInfo.isStructuredData());
         documentConversionService.writeLocalCopy(record.getContent(), record.getFileName(), writer);
 
         HttpHeaders httpHeaders = new HttpHeaders();
@@ -152,10 +185,12 @@ public class DocumentAPIController extends APIController {
 
     @RequestMapping(value = "/thumbnail/get", method = RequestMethod.GET)
     public ResponseEntity<String> getThumbnail(@RequestParam(value = PARAM_ID, required = true) String id,
-                                               @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
+                                               @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
+                                               HttpServletRequest request) throws IOException {
 
+        SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, request.getSession());
         StringWriter writer = new StringWriter();
-        searchService.printRecord(coreName, id, true, writer);
+        searchService.printRecord(coreName, id, Constants.VIEW_TYPE_PREVIEW, schemaInfo.isStructuredData(), writer);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));

@@ -1,12 +1,21 @@
 package model;
 
 import GatesBigData.utils.Constants;
+import GatesBigData.utils.DateUtils;
+import GatesBigData.utils.SolrUtils;
 import GatesBigData.utils.Utils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.solr.client.solrj.SolrQuery;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class ExtendedSolrQuery extends SolrQuery {
-    
+
+    public static final int GROUP_UNLIMITED = -1;
+
     public ExtendedSolrQuery() {
         super();
         this.add(Constants.SOLR_WT_PARAM, Constants.SOLR_WT_DEFAULT);
@@ -15,6 +24,25 @@ public class ExtendedSolrQuery extends SolrQuery {
     public ExtendedSolrQuery(String queryString) {
         this();
         this.setQuery(queryString);
+    }
+
+    public ExtendedSolrQuery(HashMap<String, String> queryParams) {
+        this();
+        this.setQuery(constructQueryString(queryParams, Constants.SOLR_DEFAULT_BOOLEAN_OP));
+    }
+
+    public ExtendedSolrQuery(HashMap<String, String> queryParams, String op) {
+        this();
+        this.setQuery(constructQueryString(queryParams, op));
+    }
+
+    private String constructQueryString(HashMap<String, String> queryParams, String op) {
+        List<String> queryStringComponents = new ArrayList<String>();
+        for(Map.Entry<String, String> entry : queryParams.entrySet()) {
+            queryStringComponents.add(entry.getKey() + ":\"" + entry.getValue() + "\"");
+        }
+
+        return StringUtils.join(queryStringComponents, " " + op + " ");
     }
 
     public void setHighlightFields(String fields) {
@@ -45,6 +73,12 @@ public class ExtendedSolrQuery extends SolrQuery {
         }
     }
 
+    public void setFacetDefaults(int facetLimit) {
+        this.setFacet(true);
+        this.setFacetMissing(true);
+        this.setFacetLimit(facetLimit);
+    }
+
     public void setGroupField(String field) {
         this.add(Constants.SOLR_GROUP_FIELD_PARAM, field);
     }
@@ -55,6 +89,14 @@ public class ExtendedSolrQuery extends SolrQuery {
 
     public void setGroupSortDefault() {
         this.add(Constants.SOLR_GROUP_SORT_PARAM, Constants.SOLR_GROUP_SORT_DEFAULT);
+    }
+
+    public void setGroupLimit(int limit) {
+        this.add(Constants.SOLR_GROUP_LIMIT_PARAM, "" + limit);
+    }
+
+    public void setGroupLimitUnlimited() {
+        this.add(Constants.SOLR_GROUP_LIMIT_PARAM, Constants.SOLR_GROUP_LIMIT_UNLIMITED);
     }
 
     public void setGroup(boolean groupsOn) {

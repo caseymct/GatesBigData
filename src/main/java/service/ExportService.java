@@ -77,6 +77,8 @@ public abstract class ExportService {
 
     public abstract void exportHeaderData(long numDocs, String query, String fq, String coreName, Writer writer) throws IOException;
 
+    public abstract void exportHeaderRow(List<String> fields, Writer writer) throws IOException;
+
     public abstract void export(SolrDocumentList docs, List<String> fields, Writer writer) throws IOException;
 
     public abstract void writeEmptyResultSet(Writer writer) throws IOException;

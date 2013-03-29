@@ -1,4 +1,4 @@
-package service.solrReindexer;
+package model;
 
 import GatesBigData.utils.Constants;
 import GatesBigData.utils.SolrUtils;
@@ -25,22 +25,23 @@ public class SolrRecord {
         metadata = new Metadata();
     }
 
-    public SolrRecord(SolrDocument doc) {
-        List<String> fields = new ArrayList<String>(doc.getFieldNames());
+    public SolrRecord(SolrDocument doc, List<String> fields) {
 
-        //doc.toString();
         JSONObject jsonObject = new JSONObject();
-
         for(String s : fields) {
             if (doc.containsKey(s)) {
                 jsonObject.put(s, doc.get(s));
             }
         }
-
-        content = jsonObject.toString(3).getBytes();
+        String contentStr = jsonObject.toString(3).replaceAll("\n", Constants.DEFAULT_NEWLINE);
+        content = contentStr.getBytes();
         contentType = SolrUtils.getDocumentContentType(doc);
-        id = SolrUtils.getFieldValue(doc, Constants.SOLR_ID_FIELD_NAME, "not_found");
+        id  = SolrUtils.getFieldStringValue(doc, Constants.SOLR_ID_FIELD_NAME, "not_found");
         fileName = new File(id).getName();
+    }
+
+    public SolrRecord(SolrDocument doc) {
+        this(doc, new ArrayList<String>(doc.getFieldNames()));
     }
 
     public SolrRecord(Content recordContent) {

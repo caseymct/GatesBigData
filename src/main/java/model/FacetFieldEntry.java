@@ -1,15 +1,22 @@
 package model;
 
 
+import GatesBigData.utils.Constants;
+import GatesBigData.utils.SolrUtils;
+
 public class FacetFieldEntry {
     private String fieldName;
     private String fieldType;
     private boolean multiValued;
 
-    public FacetFieldEntry(String fieldName, String fieldType, String schema) {
+    public FacetFieldEntry(String fieldName, String fieldType, boolean multiValued) {
         this.fieldName = fieldName;
         this.fieldType = fieldType;
-        this.multiValued = (schema.charAt(3) == 77);
+        this.multiValued = multiValued;
+    }
+
+    public FacetFieldEntry(String fieldName, String fieldType, String schema) {
+        this(fieldName, fieldType, SolrUtils.schemaStringIndicatesMultiValued(schema));
     }
 
     public String getFieldName() {
@@ -28,9 +35,11 @@ public class FacetFieldEntry {
         this.fieldType = fieldType;
     }
 
+    public boolean fieldTypeIsDate() {
+        return fieldType.equals(Constants.SOLR_FIELD_TYPE_DATE);
+    }
+
     public boolean isMultiValued() {
         return this.multiValued;
     }
-
-
 }

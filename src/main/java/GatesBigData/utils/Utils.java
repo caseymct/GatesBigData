@@ -33,12 +33,40 @@ public class Utils {
         return localhost.equals(Constants.PRODUCTION_HOSTNAME);
     }
 
+    public static List<String> getTokens(String d) {
+        String delimiter = "~";
+        List<String> tokens = new ArrayList<String>();
+
+        StringTokenizer tk = new StringTokenizer(d, delimiter, true);
+        String token = "", prevToken = "";
+        int nTokens = tk.countTokens();
+        for(int i = 0; i < nTokens; i++) {
+            prevToken = token;
+            token = (String) tk.nextElement();
+            if (!token.equals(delimiter)) {
+                tokens.add(token);
+            } else {
+                if (prevToken.equals(delimiter)) {
+                    tokens.add("");
+                }
+                if (i == nTokens - 1) {
+                    tokens.add("");
+                }
+            }
+        }
+        return tokens;
+    }
+
     public static Object getLastElement(List l) {
         return l.get(l.size() - 1);
     }
 
     public static String escapeQuotes(String s) {
         return s.replaceAll("\"", "\\\"");
+    }
+
+    public static <T> Object getObjectIfExists(HashMap<String, T> map, String key, T defaultValue) {
+        return map.containsKey(key) ? map.get(key) : defaultValue;
     }
 
     public static String replaceHTMLAmpersands(String s) {

@@ -24,9 +24,9 @@ FACET.util = {};
         responseFacetKey            = "response",
         solrResponseFacetKey        = "facet_counts";
 
-    function makeVisible(el) {
-        Dom.setStyle(el, "visibility", "visible");
-    }
+    function getFacetOptionDivId(nodeIndex)     { return "treeNodeDiv" + nodeIndex; }
+    function getFacetOptionAnchorId(nodeIndex)  { return "treeNode" + nodeIndex; }
+    function makeVisible(el)                    { Dom.setStyle(el, "visibility", "visible"); }
 
     makeVisible(facetContainerDivElName);
 
@@ -132,46 +132,46 @@ FACET.util = {};
 
         facetTreeView.subscribe("clickEvent", function(e) {
             Event.stopEvent(e);
-            if (facetTreeView.getRoot() == e.node.parent) {
-                return;
-            }
+            if (facetTreeView.getRoot() == e.node.parent) return;
 
             var node = e.node;
             var anchorText = (!(node.parent.parent instanceof RootNode) ? node.parent.parent.label + "." : "")
                 + node.parent.label + " : " + node.label.substring(0, node.label.lastIndexOf("(") - 1);
 
-            if (Dom.inDocument("treeNode" + node.index) == false) {
-                var anchor = UI.addDomElementChild("a", Dom.get(facetOptionsDivElName),
-                    { id: ("treeNode" + node.index) }, { margin: "2px", "class" : "button delete" });
+            var facetOptionDivId = getFacetOptionDivId(node.index);
+            var facetOptionAnchorId = getFacetOptionAnchorId(node.index);
+
+            if (Dom.inDocument(facetOptionDivId) == false) {
+                var anchorDiv = UI.addDomElementChild("div", Dom.get(facetOptionsDivElName),
+                    { id : facetOptionDivId }, { float : "left" });
+                var anchor = UI.addDomElementChild("a", anchorDiv,
+                    { id: facetOptionAnchorId }, { margin: "2px", "class" : "button delete" });
                 anchor.appendChild(document.createTextNode(anchorText));
 
-                Event.addListener("treeNode" + node.index, "click", function(e) {
-                    UI.removeElement("treeNode" + node.index);
+                Event.addListener(facetOptionDivId, "click", function(e) {
+                    UI.removeElement(facetOptionDivId);
                 });
             }
         });
     };
 
     FACET.util.getFacetFilterQueryString = function() {
-        var i, facetOptions = {}, domFacets = Dom.get(facetOptionsDivElName).children;
+        var i, t, o, facetOptions = {},
+            domFacets = Dom.get(facetOptionsDivElName).getElementsByTagName('a');
+
         for (i = 0; i < domFacets.length; i++) {
-            if (!Dom.hasClass(domFacets[i], "clearboth")) {
-                var t = domFacets[i].innerHTML.split(" : ");
-                var o = "\"" + t[1] + "\"";
-                facetOptions[t[0]] = facetOptions.hasOwnProperty(t[0]) ? facetOptions[t[0]] + " " + o: o;
-            }
+            t = domFacets[i].innerHTML.split(" : ");
+            o = "\"" + t[1] + "\"";
+            facetOptions[t[0]] = facetOptions.hasOwnProperty(t[0]) ? facetOptions[t[0]] + " " + o: o;
         }
 
         var fqStr = "";
-        if (Object.keys(facetOptions).length > 0) {
-            for (var key in facetOptions) {
-                fqStr += "%2B" + key + ":(" + facetOptions[key].encodeForRequest() + ")";
-            }
+        var keys = Object.keys(facetOptions);
+        for (i = 0; i < keys.length; i++) {
+            fqStr += "%2B" + keys[i] + ":(" + facetOptions[keys[i]].encodeForRequest() + ")";
         }
 
         return fqStr;
     };
-
-
 
 })();

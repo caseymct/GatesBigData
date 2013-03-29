@@ -1,151 +1,158 @@
 package model;
 
 import GatesBigData.utils.Constants;
-import GatesBigData.utils.JsonParsingUtils;
+import GatesBigData.utils.HttpClientUtils;
 import GatesBigData.utils.SolrUtils;
-import net.sf.json.JSONObject;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.request.LukeRequest;
-import org.apache.solr.client.solrj.response.LukeResponse;
-import org.apache.solr.common.util.NamedList;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
-import java.io.IOException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import java.util.*;
-import java.util.regex.Matcher;
-
 
 public class SolrCollectionSchemaInfo {
-    static final String LUKE_COPYSOURCES_KEY = "copySources";
-    static final String LUKE_SCHEMA_KEY      = "schema";
-    static final String LUKE_FIELDS_KEY      = "fields";
-    static final String LUKE_DATE_TYPE_KEY   = "date";
+    static final String COPYFIELD_SOURCE_KEY = "source";
+    static final String COPYFIELD_DEST_KEY   = "dest";
+    static final String SCHEMA_FIELD_KEY     = "field";
+    static final String SCHEMA_COPYFIELD_KEY = "copyField";
 
-    private String collectionName;
-    private Map<String, LukeResponse.FieldInfo> fieldInfoMap;
+    private Map<String, SchemaField> fieldInfoMap = new HashMap<String, SchemaField>();
     private List<String> fieldNames;
     private List<String> viewFieldNames = new ArrayList<String>();
-    private Map<String, Object> indexInfoMap = new HashMap<String, Object>();
+    private List<String> dateFieldNames = new ArrayList<String>();
     private Map<String, String> prefixFieldToCopySourceMap = new HashMap<String, String>();
     private FacetFieldEntryList facetFieldEntryList = new FacetFieldEntryList();
-    private NamedList<Object> indexInfo;
+    private String coreTitle;
+    private boolean structuredData;
+    private String suggestionCore;
 
     private static Logger logger = Logger.getLogger(SolrCollectionSchemaInfo.class);
 
-    public SolrCollectionSchemaInfo(String collectionName, SolrServer server) {
-        this.collectionName = collectionName;
-        init(server);
+    public SolrCollectionSchemaInfo(String collectionName) {
+        readSchema(collectionName);
     }
 
-    private void init(SolrServer server) {
-        LukeRequest luke = new LukeRequest();
-        LukeResponse rsp;
-
+    public void readSchema(String coreName) {
         try {
-            rsp = luke.process(server);
+            String schema = HttpClientUtils.httpGetRequest(SolrUtils.getSolrSchemaURI(coreName));
+            DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
+            Document doc = docBuilder.parse(IOUtils.toInputStream(schema));
+            doc.getDocumentElement().normalize();
 
-            initFieldInfoVars(rsp);
-            initIndexInfoVars(rsp);
-            initFacetFieldEntryList();
+            populateFieldInfo(doc.getElementsByTagName(SCHEMA_FIELD_KEY));
+            populateCopyFieldInfo(doc.getElementsByTagName(SCHEMA_COPYFIELD_KEY));
 
-            luke.setShowSchema(true);
-            rsp = luke.process(server);
-            initPrefixFieldToCopySourceMap(rsp);
-
-        } catch (SolrServerException e) {
-            logger.error(e.getMessage());
-        } catch (IOException e) {
-            logger.error(e.getMessage());
+        } catch (Exception e) {
+            System.err.println(e.getMessage() + "-- " + e.getLocalizedMessage());
         }
     }
 
-    private void initFieldInfoVars(LukeResponse rsp) {
-        fieldInfoMap = rsp.getFieldInfo();
-        fieldNames = new ArrayList<String>(fieldInfoMap.keySet());
-        Collections.sort(fieldNames);
+    public void populateFieldInfo(NodeList fields) {
+        for(int s = 0; s < fields.getLength() ; s++){
+            Node field = fields.item(s);
+            if (field.getNodeType() != Node.ELEMENT_NODE) {
+                continue;
+            }
 
-        for(String field : fieldNames) {
-            Matcher m = Constants.VIEW_FIELD_NAMES_PATTERN.matcher(field);
-            if (!m.matches()) {
-                viewFieldNames.add(field);
+            SchemaField schemaField = new SchemaField(field.getAttributes());
+            String fieldName = schemaField.getName();
+            fieldInfoMap.put(fieldName, schemaField);
+
+            if (schemaField.isCoreTitleField()) {
+                coreTitle = schemaField.getDefaultValue();
+            }
+
+            if (schemaField.isStructuredDataField()) {
+                structuredData = schemaField.getDefaultValue().equals("true");
+            }
+
+            if (schemaField.isSuggestionCoreField()) {
+                suggestionCore = schemaField.getDefaultValue();
+            }
+
+            if (SolrUtils.validFieldName(fieldName, true)) {
+                facetFieldEntryList.add(fieldName, schemaField.getType(), schemaField.isMultiValued());
+            }
+
+            if (!SolrUtils.ignoreFieldName(fieldName)) {
+                viewFieldNames.add(fieldName);
+            }
+
+            if (schemaField.getType().equals(Constants.SOLR_FIELD_TYPE_DATE)) {
+                dateFieldNames.add(fieldName);
             }
         }
-    }
 
-    private void initIndexInfoVars(LukeResponse rsp) {
-        indexInfo = rsp.getIndexInfo();
-        for(Map.Entry<String, Object> entry : indexInfo) {
-            indexInfoMap.put(entry.getKey(), entry.getValue());
+        if (fieldInfoMap != null) {
+            fieldNames = new ArrayList<String>(fieldInfoMap.keySet());
+            Collections.sort(fieldNames);
         }
     }
 
-    private void initPrefixFieldToCopySourceMap(LukeResponse rsp) {
-        NamedList schema = (NamedList) rsp.getResponse().get(LUKE_SCHEMA_KEY);
-        NamedList fields = (NamedList) schema.get(LUKE_FIELDS_KEY);
+    public void populateCopyFieldInfo(NodeList copyFields) {
+        for(int s = 0; s < copyFields.getLength() ; s++){
+            Node field = copyFields.item(s);
+            if (field.getNodeType() == Node.ELEMENT_NODE){
+                Element el = (Element) field;
+                String src = el.getAttribute(COPYFIELD_SOURCE_KEY);
+                String dest = el.getAttribute(COPYFIELD_DEST_KEY);
 
-        for(int i = 0; i < fields.size(); i++) {
-            String fieldName = fields.getName(i);
-            if (!fieldName.startsWith(Constants.SOLR_CONTENT_FIELD_NAME)
-                    && fieldName.endsWith(SolrUtils.SOLR_SCHEMA_PREFIXFIELD_ENDSWITH)) {
-                NamedList properties = (NamedList) fields.getVal(i);
-                List<String> copyFields = (ArrayList<String>) properties.get(LUKE_COPYSOURCES_KEY);
-                if (copyFields.size() > 0) {
-                    Matcher m = Constants.COPYSOURCE_PATTERN.matcher(copyFields.get(0));
-                    if (m.matches()) {
-                        prefixFieldToCopySourceMap.put(fieldName, m.group(1));
-                    }
+                if (!src.equals(Constants.SOLR_CONTENT_FIELD_NAME) && dest.endsWith(SolrUtils.SOLR_SCHEMA_PREFIXFIELD_ENDSWITH)) {
+                    prefixFieldToCopySourceMap.put(dest, el.getAttribute(COPYFIELD_SOURCE_KEY));
                 }
             }
         }
     }
 
-
-    private void initFacetFieldEntryList() {
-        for(Map.Entry<String, LukeResponse.FieldInfo> entry : fieldInfoMap.entrySet()) {
-            String fieldName = entry.getKey();
-            LukeResponse.FieldInfo fieldInfo = entry.getValue();
-
-            if (SolrUtils.validFieldName(fieldName, true)) {
-                facetFieldEntryList.add(fieldName, fieldInfo.getType(), fieldInfo.getSchema());
-            }
-        }
-    }
-
-    public JSONObject getIndexInfoAsJSON() {
-        return JsonParsingUtils.constructJSONObjectFromNamedList(indexInfo);
-    }
     public boolean isFieldMultiValued(String fieldName) {
-        LukeResponse.FieldInfo fieldInfo = fieldInfoMap.get(fieldName);
-        return fieldInfo != null && fieldInfo.getSchema().charAt(3) == 77;
+        return fieldInfoMap.get(fieldName).isMultiValued();
     }
 
-    public boolean fieldExists(String fieldName) {
-        return fieldInfoMap.containsKey(fieldName);
+    public boolean isStructuredData() {
+        return structuredData;
+    }
+
+    public String getCoreTitle() {
+        return coreTitle;
+    }
+
+    public boolean hasSuggestionCore() {
+        return this.suggestionCore != null;
+    }
+
+    public String getSuggestionCore() {
+        return suggestionCore;
     }
 
     public List<String> getFieldNamesByType(String type) {
         List<String> fieldsByType = new ArrayList<String>();
 
-        for(Map.Entry<String, LukeResponse.FieldInfo> entry : fieldInfoMap.entrySet()) {
-            String fieldName = entry.getKey();
-            LukeResponse.FieldInfo fieldInfo = entry.getValue();
-
-            if (fieldInfo.getType().equals(type)) {
-                fieldsByType.add(fieldName);
+        for(SchemaField field : fieldInfoMap.values()) {
+            if (field.getType().equals(type)) {
+                fieldsByType.add(field.getName());
             }
         }
         Collections.sort(fieldsByType);
         return fieldsByType;
     }
 
-    public List<String> getDateFields() {
-        return getFieldNamesByType(LUKE_DATE_TYPE_KEY);
+    public SchemaField getSchemaField(String fieldName) {
+        return fieldInfoMap.get(fieldName);
     }
 
-    public List<String> getFieldNames() {
-        return fieldNames;
+    public String getFieldType(String fieldName) {
+        return getSchemaField(fieldName).getType();
+    }
+
+    public boolean fieldTypeIsDate(String fieldName) {
+        SchemaField schemaField = getSchemaField(fieldName);
+        return schemaField != null && schemaField.getType().equals(Constants.SOLR_FIELD_TYPE_DATE);
     }
 
     public List<String> getViewFieldNames() {
@@ -158,6 +165,10 @@ public class SolrCollectionSchemaInfo {
 
     public Map<String, String> getPrefixFieldMap() {
         return prefixFieldToCopySourceMap;
+    }
+
+    public List<String> getDateFieldNames() {
+        return dateFieldNames;
     }
 
     public List<String> getFacetFieldNames() {

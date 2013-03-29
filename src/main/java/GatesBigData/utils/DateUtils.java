@@ -27,6 +27,9 @@ public class DateUtils {
     private static List<SimpleDateFormat> formatOptions      = Arrays.asList(shortDateFormat, shortDateFormat2, longDateFormat,
                                                                              solrDateFormat, solrDateFormatNoTimeZone);
 
+    public static SimpleDateFormat DAY_FORMAT               = new SimpleDateFormat("dd-MMM-yy");
+    public static SimpleDateFormat MONTH_FORMAT             = new SimpleDateFormat("MMM yyyy");
+
     public static String SOLR_DATE  = "solrdate";
     public static String SHORT_DATE = "shortdate";
     public static String LONG_DATE  = "longdate";
@@ -55,6 +58,17 @@ public class DateUtils {
             return "+" + sec + "SECONDS";
         }
         return "+" + ms + "MILLISECONDS";
+    }
+
+    public static String getDateGapString(String startString, String endString, int buckets) {
+        try {
+            long msStart = DateField.parseDate(startString).getTime();
+            long msEnd   = DateField.parseDate(endString).getTime();
+            return getDateGapString((msEnd - msStart)/buckets);
+        } catch (ParseException e) {
+            logger.error(e.getMessage());
+        }
+        return "";
     }
 
   /*  private static String addDateMillisecondsIfMissing(String date) {
@@ -109,6 +123,22 @@ public class DateUtils {
         }
         return 0;
     }
+
+    public static String getFormattedDateString(String dateString, SimpleDateFormat format) {
+        Date date = getDateFromDateString(dateString);
+        return date != null ? format.format(date) : dateString;
+    }
+
+    public static Date getDateFromDateString(String dateString) {
+        for(SimpleDateFormat format : formatOptions) {
+            try {
+                return format.parse(dateString);
+            } catch (ParseException e) {
+            }
+        }
+        return null;
+    }
+
     public static String getSolrDate(String dateString) {
         if (!Utils.nullOrEmpty(dateString)) {
             String newDateString = getFullSolrDate(dateString);
@@ -127,13 +157,9 @@ public class DateUtils {
                 return DateField.formatExternal(calendar.getTime());
             }
 
-            for(SimpleDateFormat format : formatOptions) {
-                try {
-                    Date date = format.parse(dateString);
-                    return DateField.formatExternal(date);
-                } catch (ParseException e) {
-                    //logger.error(e.getMessage());
-                }
+            Date date = getDateFromDateString(dateString);
+            if (date != null) {
+                return DateField.formatExternal(date);
             }
         }
         return dateString;

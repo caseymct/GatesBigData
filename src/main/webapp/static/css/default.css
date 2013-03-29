@@ -173,14 +173,14 @@ form div.form-buttons {
     position:absolute;
 }
 #content_container {
-    margin:30px auto 10px auto;
+    margin:30px auto 10px 40px;
     width:980px;
     background:#fff;
     color:#666666;
     position:relative;
 }
 #content {
-    margin-left:140px;
+    margin-left:/*140*/ 240px;
     padding:25px 30px;
     background:#fff;
     color:#666666;
@@ -259,8 +259,8 @@ form div.form-buttons {
 #facet_container {
     float: left;
     position: relative;
-    top: 90px;
-    left: -180px;
+    top: 95px;
+    /*left: -180px;*/
     z-index: 4;
     visibility: hidden;
 }

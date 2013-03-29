@@ -25,5 +25,7 @@ public interface SolrService {
 
     public List<String> getCoreNames();
 
+    public boolean coreNameExists(String coreName);
+
     public JSONArray getAllCoreData();
 }

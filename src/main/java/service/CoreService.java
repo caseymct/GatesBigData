@@ -1,5 +1,6 @@
 package service;
 
+import net.sf.json.JSONObject;
 import org.apache.nutch.parse.ParseData;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.common.SolrInputDocument;
@@ -39,5 +40,5 @@ public interface CoreService {
 
     public boolean deleteByField(String coreName, String field, List<String> values);
 
-    public List<String> getSolrFieldDateRange(String coreName, String field, String format);
+    public JSONObject getCoreInfo(String coreName);
 }

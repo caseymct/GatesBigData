@@ -6,7 +6,7 @@ UI.SEARCH = {};
 UI.FACET = {};
 
 (function() {
-    var Dom = YAHOO.util.Dom;
+    var Dom = YAHOO.util.Dom, Event = YAHOO.util.Event, Connect = YAHOO.util.Connect, Json = YAHOO.lang.JSON;
 
     // Define universal URL keys
     UI.URLS_KEY                     = 'urls';
@@ -15,6 +15,8 @@ UI.FACET = {};
     UI.LOADING_IMG_URL_KEY          = 'loadingImgUrl';
     UI.THUMBNAIL_URL_KEY            = 'thumbnailUrl';
     UI.FIELD_NAMES_URL_KEY          = 'fieldNamesUrl';
+    UI.TABLE_FIELD_NAMES_URL_KEY    = 'tableFieldNamesUrl';
+    UI.AUDIT_FIELD_NAMES_URL_KEY    = 'auditFieldNamesUrl';
     UI.FACET_URL_KEY                = 'facetUrl';
     UI.SEARCH_URL_KEY               = 'searchUrl';
     UI.SEARCH_BASE_URL_KEY          = 'searchBaseUrl';
@@ -22,27 +24,34 @@ UI.FACET = {};
     UI.DATE_PICKER_URL_KEY          = 'datePickerUrl';
     UI.EXPORT_URL_KEY               = 'exportUrl';
     UI.JSP_EXPORT_URL_KEY           = 'jspExportUrl';
+    UI.ANALYZE_URL_KEY              = 'analyzeUrl';
 
     // Define element name keys
-    UI.TAB_LIST_EL_NAME_KEY         = 'tabListElName';
-    UI.TAB_CONTENT_EL_NAME_KEY      = 'tabContentElName';
-    UI.SNIPPET_DATA_INPUT_EL_NAME   = 'snippetData';
-    UI.QUERY_DATA_INPUT_EL_NAME     = 'queryData';
-    UI.VIEW_DOC_URL_INPUT_EL_NAME   = 'viewDocUrlData';
-    UI.CONTENT_EL_NAME              = 'content';
+    UI.TAB_LIST_EL_NAME_KEY           = 'tabListElName';
+    UI.TAB_CONTENT_EL_NAME_KEY        = 'tabContentElName';
+    UI.SNIPPET_DATA_INPUT_EL_NAME     = 'snippetData';
+    UI.QUERY_DATA_INPUT_EL_NAME       = 'queryData';
+    UI.VIEW_DOC_URL_INPUT_EL_NAME     = 'viewDocUrlData';
+    UI.VIEW_FIELDS_DATA_INPUT_EL_NAME = 'viewFieldsData';
+    UI.DATA_TYPE_DATA_INPUT_EL_NAME   = 'dataTypeData';
+    UI.CONTENT_EL_NAME                = 'content';
 
     // Define keys
     UI.SELECTED_CORE_KEY            = 'selectedCore';
     UI.CORE_NAMES_KEY               = 'coreNames';
     UI.TAB_DISPLAY_NAMES_KEY        = 'tabDisplayNames';
     UI.DISPLAY_NAME_KEY             = 'displayName';
+    UI.DISPLAY_NAMES_KEY            = 'displayNames';
     UI.BUILD_CORE_TAB_HTML_FN_KEY   = 'buildCoreTabHtmlFn';
     UI.DATE_FIELD_KEY               = 'dateField';
     UI.DATA_TYPE_KEY                = 'dataType';
     UI.DATA_TYPE_STRUCTURED         = 'structured';
     UI.DATA_TYPE_UNSTRUCTURED       = 'unstructured';
+    UI.THUMBNAIL_KEY                = 'thumbnail';
+    UI.THUMBNAIL_TYPE_KEY           = 'thumbnailType';
 
     UI.FACET.INSERT_FACET_HTML_AFTER_EL_NAME_KEY        = 'insertFacetHtmlAfterElName';
+    UI.FACET.UPDATE_FACET_FN                            = 'updateFacetFn';
 
     UI.SEARCH.GET_SEARCH_REQ_PARAMS_FN_KEY              = 'searchRequestParamsFn';
     UI.SEARCH.SELECT_DATA_COLUMN_DEFS_KEY               = 'selectDataColumnDefs';
@@ -70,7 +79,153 @@ UI.FACET = {};
     UI.EXPORT.EXPORT_BUTTON_EL_ID_KEY                   = 'exportButtonElId';
     UI.EXPORT.HTML_SIBLING_NAME_KEY                     = 'htmlSiblingElName';
 
+    UI.STRUCTURED_DATA_EL_ID_KEY                        = 'structured';
+    UI.UNSTRUCTURED_DATA_EL_ID_KEY                      = 'unstructured';
+    UI.INFO_FIELDS_TABLE_FIELDS_KEY                     = 'TABLEFIELDS';
+    UI.INFO_FIELDS_WORD_TREE_FIELDS_KEY                 = 'WORDTREEFIELDS';
+    UI.INFO_FIELDS_X_AXIS_FIELDS_KEY                    = 'XAXIS';
+    UI.INFO_FIELDS_Y_AXIS_FIELDS_KEY                    = 'YAXIS';
+    UI.INFO_FIELDS_SERIES_FIELDS_KEY                    = 'SERIES';
+
+    UI.MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
     /* UI and Dom functionality */
+    UI.getSolrCoreData = function() {
+        var dataTypes = [UI.STRUCTURED_DATA_EL_ID_KEY, UI.UNSTRUCTURED_DATA_EL_ID_KEY];
+        var i, j, els, href, cores = {};
+
+        for(j = 0; j < dataTypes.length; j++) {
+            var dataType = dataTypes[j];
+            els = Dom.get(dataType).getElementsByTagName('a');
+            cores[dataType] = {};
+            cores[dataType][UI.CORE_NAMES_KEY]     = [];
+            cores[dataType][UI.DISPLAY_NAMES_KEY]  = [];
+
+            for(i = 0; i < els.length; i++) {
+                href = els[i].href.split("/");
+                cores[dataType][UI.CORE_NAMES_KEY].push(href[href.length - 1]);
+                cores[dataType][UI.DISPLAY_NAMES_KEY].push(els[i].innerHTML);
+            }
+        }
+        return cores;
+    };
+
+    UI.getSolrCoresOfSimilarType = function(coreName) {
+        var coreData = UI.getSolrCoreData();
+        var structured = coreData[UI.STRUCTURED_DATA_EL_ID_KEY][UI.CORE_NAMES_KEY].indexOf(coreName) > -1;
+        var ret = {};
+        ret[UI.DATA_TYPE_KEY]  = structured ? UI.DATA_TYPE_STRUCTURED : UI.DATA_TYPE_UNSTRUCTURED;
+        ret[UI.CORE_NAMES_KEY] = structured ? coreData[UI.STRUCTURED_DATA_EL_ID_KEY] : coreData[UI.UNSTRUCTURED_DATA_EL_ID_KEY];
+
+        return ret;
+    };
+
+    UI.defineURLSObject = function(baseUrl, coreName, dateField, structured) {
+        var urls = {};
+        urls[UI.SEARCH_BASE_URL_KEY]        = baseUrl + 'search/';
+        urls[UI.FACET_URL_KEY]              = urls[UI.SEARCH_BASE_URL_KEY] + 'solrfacets?core=' + coreName;
+        urls[UI.SEARCH_URL_KEY]             = urls[UI.SEARCH_BASE_URL_KEY] + 'solrquery';
+        urls[UI.SUGGEST_URL_KEY]            = urls[UI.SEARCH_BASE_URL_KEY] + 'suggest?core=' + coreName;
+        urls[UI.QUERY_BUILDER_AC_URL_KEY]   = urls[UI.SEARCH_BASE_URL_KEY] + 'fields/all?core=' + coreName;
+        urls[UI.TABLE_FIELD_NAMES_URL_KEY]  = urls[UI.SEARCH_BASE_URL_KEY] + 'infofields?core=' + coreName + '&infofield=' + UI.INFO_FIELDS_TABLE_FIELDS_KEY;
+        urls[UI.ANALYZE_URL_KEY]            = urls[UI.SEARCH_BASE_URL_KEY] + 'analyze';
+        urls[UI.DATE_PICKER_URL_KEY]        = baseUrl + 'core/field/daterange?core=' + coreName + '&field=' + dateField;
+        urls[UI.EXPORT_URL_KEY]             = baseUrl + 'core/export/structured';
+        urls[UI.VIEW_DOC_URL_KEY]           = baseUrl + 'core/document/' + (structured ? 'view' : 'prizmview');
+        urls[UI.LOADING_IMG_URL_KEY]        = baseUrl + 'static/images/loading.png';
+        urls[UI.THUMBNAIL_URL_KEY]          = baseUrl + 'document/thumbnail/get';
+
+        return urls;
+    };
+
+    UI.getDataTabViewParams = function(baseUrl, coreName, dateField, columnDefs, dataSourceFields) {
+        var coreData   = UI.getSolrCoresOfSimilarType(coreName),
+            structured = (coreData[UI.DATA_TYPE_KEY] == UI.DATA_TYPE_STRUCTURED);
+
+        var params = {};
+        params[UI.SELECTED_CORE_KEY]                    = coreName;
+        params[UI.URLS_KEY]                             = UI.defineURLSObject(baseUrl, coreName, dateField, structured);
+        params[UI.DATE_FIELD_KEY]                       = dateField;
+        params[UI.SEARCH.SELECT_DATA_COLUMN_DEFS_KEY]   = columnDefs;
+        params[UI.SEARCH.DATA_SOURCE_FIELDS_KEY]        = dataSourceFields;
+        params[UI.EXPORT.OPEN_SEPARATE_EXPORT_PAGE_KEY] = structured;
+        params[UI.DATA_TYPE_KEY]                        = coreData[UI.DATA_TYPE_KEY];
+        params[UI.CORE_NAMES_KEY]                       = coreData[UI.CORE_NAMES_KEY][UI.CORE_NAMES_KEY];
+        params[UI.TAB_DISPLAY_NAMES_KEY]                = coreData[UI.CORE_NAMES_KEY][UI.DISPLAY_NAMES_KEY];
+
+        return params;
+    };
+
+    UI.returnKey = function(key) { return key; };
+    UI.splitOnUnderscoreAndCamelCase = function(key) {
+        return key.replace(/_/g, " ")
+                  .replace(/\s(.)/g, function($1) { return $1.toUpperCase(); })
+                  .replace(/^(.)/, function($1) { return $1.toUpperCase(); })
+    };
+
+    UI.removePrefix = function(key) {
+        return key.substring(key.indexOf(".")+1)
+                  .replace(/([A-Z])/g, ' $1')
+                  .replace(/^./, function(str) { return str.toUpperCase(); }).trim();
+    };
+
+    UI.constructColumnDefs = function(keys, labelFormatterFn) {
+        var i, columnDefObj, key, label;
+        var columnDefs = [], dataSourceFields = [];
+
+        for(i = 0; i < keys.length; i++) {
+            key = keys[i].split(":");
+            label = labelFormatterFn(key[0]);
+            columnDefObj = { key : key[0], label : label, sortable : true, formatter: SEARCH.ui.formatLink };
+            switch (key[1]) {
+                case 'L' : columnDefObj.width = SEARCH.ui.longStringWidth;  break;
+                case 'S' : columnDefObj.width = SEARCH.ui.shortStringWidth; break;
+                default  : columnDefObj.width = label.length * 9; break;
+            }
+
+            columnDefs.push(columnDefObj);
+            dataSourceFields.push( { key : key[0], parser : 'text' });
+        }
+
+        columnDefs.push({ key : UI.THUMBNAIL_KEY,      label : UI.THUMBNAIL_KEY,      hidden: true });
+        columnDefs.push({ key : UI.THUMBNAIL_TYPE_KEY, label : UI.THUMBNAIL_TYPE_KEY, hidden: true });
+
+        dataSourceFields.push({ key: 'id',  parser:'text' });
+        dataSourceFields.push({ key: 'url', parser:'text' });
+
+        return { columnDefs : columnDefs, dataSourceFields : dataSourceFields };
+    };
+
+    UI.initialize = function(coreName, dateField, baseUrl, labelFormatterFn) {
+        Event.onContentReady(UI.STRUCTURED_DATA_EL_ID_KEY, function () {
+            var coreData   = UI.getSolrCoresOfSimilarType(SEARCH.ui.coreName),
+                structured = (coreData[UI.DATA_TYPE_KEY] == UI.DATA_TYPE_STRUCTURED),
+                urls       = UI.defineURLSObject(baseUrl, SEARCH.ui.coreName, dateField, structured);
+
+            Connect.asyncRequest('GET', urls[UI.TABLE_FIELD_NAMES_URL_KEY], {
+                success: function(o) {
+                    var response = Json.parse(o.responseText);
+                    var tableData = UI.constructColumnDefs(response[UI.INFO_FIELDS_TABLE_FIELDS_KEY], labelFormatterFn);
+
+                    DATA_TABVIEW.init(UI.getDataTabViewParams(baseUrl, SEARCH.ui.coreName, dateField,
+                        tableData.columnDefs, tableData.dataSourceFields));
+                },
+                failure: function(e) {
+                    alert('Could not retrieve table names.');
+                }
+            });
+        });
+    };
+
+    UI.getExportOptionsParams = function(baseUrl) {
+        var params = {};
+        params[UI.URLS_KEY] = {};
+        params[UI.URLS_KEY][UI.EXPORT_URL_KEY]            = baseUrl + 'export';
+        params[UI.URLS_KEY][UI.FIELD_NAMES_URL_KEY]       = baseUrl + 'core/fieldnames';
+        params[UI.URLS_KEY][UI.AUDIT_FIELD_NAMES_URL_KEY] = baseUrl + 'search/infofields?infofield=auditFields&core=';
+        return params;
+    };
+
     UI.removeDivChildNodes = function(divName) {
         var div = Dom.get(divName);
 
@@ -236,22 +391,61 @@ UI.FACET = {};
         }
     };
 
-    UI.buildTreeRecurse = function(doc, keyname, parentNode) {
-        var key, isObject = Object.prototype.toString.call(doc).match("Object") != null;
-        var name = isObject ? keyname : keyname + ": <b>" + doc + "</b>";
+    UI.returnLongestStringLength = function(keys) {
+        var maxchars = -1;
+        for(var i = 0; i < keys.length; i++) {
+            maxchars = Math.max(keys[i].length, maxchars);
+        }
+        return maxchars;
+    };
+
+    UI.returnDivLengthBasedOnLongestStringLength = function(keys) {
+        return UI.returnLongestStringLength(keys) * 10;
+    };
+
+    function getTreeDivEntry(width, key, val, level) {
+        var color, fontWeight = "normal", fontStyle = "normal", fieldExists = (val.match('Field does not exist') == null);
+
+        if (fieldExists) {
+            switch (level) {
+                case 0:  color = "#2F4F4F"; break;
+                case 1:  color = "#708090"; break;
+                case 2:  color = "#528B8B"; break;
+                default: color = "#C1CDCD";
+            }
+            fontWeight = "bold";
+        } else {
+            color = "red";
+            fontStyle = "italic";
+        }
+
+        function style(name, val) { return name + ':' + val + ';' }
+
+        var div1style = style('float', 'left') + style('color', color) + style('width', width + 'px'),
+            div2style = style('float', 'left') + style('color', color) + style('width', '600px') +
+                        style('font-weight', fontWeight) + style('font-style', fontStyle);
+
+        return "<div style='" + div1style + "'>" + key + "</div>" +
+               "<div style='" + div2style + "'>" + val + "</div>";
+    }
+
+    UI.buildTreeRecurse = function(doc, keyname, parentNode, maxlength, level) {
+        var j, isObject = Object.prototype.toString.call(doc).match("Object") != null;
+        var name = getTreeDivEntry(maxlength, keyname, isObject ? "" : doc, level);
         var nameNode = new YAHOO.widget.HTMLNode(name, parentNode, false);
 
         if (!isObject) {
             nameNode.isLeaf = true;
         } else {
-            for(key in doc) {
-                UI.buildTreeRecurse(doc[key], key, nameNode);
+            var keys = Object.keys(doc), maxwidth = UI.returnDivLengthBasedOnLongestStringLength(keys);
+            for(j = 0; j < keys.length; j++) {
+                UI.buildTreeRecurse(doc[keys[j]], keys[j], nameNode, maxwidth, level + 1);
             }
         }
     };
 
     UI.buildTreeViewFromJson = function(docs, treeView) {
-        var i, j, key, parent, root = treeView.getRoot();
+        var i, j, parent, root = treeView.getRoot();
         treeView.removeChildren(root);
 
         if (!(docs instanceof Array)) {
@@ -260,8 +454,9 @@ UI.FACET = {};
 
         for(i = 0; i < docs.length; i++) {
             parent = (docs[i].hasOwnProperty("name")) ? new YAHOO.widget.TextNode(docs[i].name, root, false) : root;
-            for(key in docs[i]) {
-                UI.buildTreeRecurse(docs[i][key], key, parent);
+            var keys = Object.keys(docs[i]), maxwidth = UI.returnDivLengthBasedOnLongestStringLength(keys);
+            for(j = 0; j < keys.length; j++) {
+                UI.buildTreeRecurse(docs[i][keys[j]], keys[j], parent, maxwidth, 0);
             }
         }
         treeView.render();
@@ -309,6 +504,39 @@ UI.FACET = {};
     /* Utility functions */
     UI.util.stripBrackets = function(s) {
         return (typeof s == "string") ? s.replace(/^\[|\]$/g, '') : s;
+    };
+
+    UI.util.getRequestParameters = function() {
+        var href = window.location.href;
+        var params = href.substring(href.indexOf("?")+1).split("&");
+        var i, s, r = {};
+
+        for(i = 0; i < params.length; i++) {
+            s = params[i].split("=")[0];
+            r[s] = YAHOO.deconcept.util.getRequestParameter(s);
+        }
+        return r;
+    };
+
+    UI.util.constructRequestString = function(requestParams, requestParamKeys, extraParams) {
+        var i, rp, rk, p = [];
+        if (requestParamKeys == undefined || requestParamKeys.length == 0) {
+            requestParamKeys = Object.keys(requestParams);
+        }
+        for(i = 0; i < requestParamKeys.length; i++) {
+            rk = requestParamKeys[i];
+            rp = requestParams[rk];
+
+            if (rp == undefined) continue;
+            p.push(rk + "=" + rp);
+        }
+
+        if (extraParams != undefined) {
+            for(i = 0; i < extraParams.length; i++) {
+                p.push(extraParams[i]['key'] + "=" + extraParams[i]['value']);
+            }
+        }
+        return "?" + p.join("&");
     };
 
     UI.util.isValidJSON = function(json) {
@@ -491,7 +719,38 @@ UI.FACET = {};
         return l;
     };
 
+    UI.util.lengthOfLongestStringInArray = function(arr) {
+        return arr.sort(function(a, b) { return b.length - a.length; })[0].length;
+    };
 
+    UI.util.clone = function(obj) {
+        // Handle the 3 simple types, and null or undefined
+        if (obj == null || "object" != typeof obj) return obj;
+
+        if (obj instanceof Date) {
+            var dateCopy = new Date();
+            dateCopy.setTime(obj.getTime());
+            return dateCopy;
+        }
+
+        if (obj instanceof Array) {
+            var arrCopy = [];
+            for (var i = 0, len = obj.length; i < len; i++) {
+                arrCopy[i] = UI.util.clone(obj[i]);
+            }
+            return arrCopy;
+        }
+
+        if (obj instanceof Object) {
+            var copy = {};
+            for (var attr in obj) {
+                if (obj.hasOwnProperty(attr)) copy[attr] = UI.util.clone(obj[attr]);
+            }
+            return copy;
+        }
+
+        throw new Error("Unable to copy obj! Its type isn't supported.");
+    };
 
 })();
    

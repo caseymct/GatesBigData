@@ -35,25 +35,21 @@ import static org.springframework.http.HttpStatus.OK;
 public class CoreAPIController extends APIController {
 
     private CoreService coreService;
-    private SolrReindexService solrReindexService;
-    private HDFSService hdfsService;
     private SearchService searchService;
+    private HDFSService hdfsService;
 
     @Autowired
-    public CoreAPIController(CoreService coreService, SolrReindexService solrReindexService,
-                             HDFSService hdfsService, SearchService searchService) {
+    public CoreAPIController(CoreService coreService, SearchService searchService, HDFSService hdfsService) {
         this.coreService = coreService;
-        this.solrReindexService = solrReindexService;
-        this.hdfsService = hdfsService;
         this.searchService = searchService;
+        this.hdfsService = hdfsService;
     }
 
     @RequestMapping(value="/fieldnames", method = RequestMethod.GET)
     public ResponseEntity<String> getFieldNames(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
                                                 HttpServletRequest request) throws IOException {
 
-        SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreService.getSolrServer(coreName),
-                coreName, request.getSession());
+        SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, request.getSession());
         StringWriter writer = new StringWriter();
         JsonFactory f = new JsonFactory();
         JsonGenerator g = f.createJsonGenerator(writer);
@@ -75,16 +71,11 @@ public class CoreAPIController extends APIController {
     }
 
     @RequestMapping(value="/info", method = RequestMethod.GET)
-    public ResponseEntity<String> coreInfo(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
-                                           HttpServletRequest request)
-            throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
-
-        SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreService.getSolrServer(coreName),
-                coreName, request.getSession());
+    public ResponseEntity<String> coreInfo(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) {
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>(schemaInfo.getIndexInfoAsJSON().toString(), httpHeaders, OK);
+        return new ResponseEntity<String>(coreService.getCoreInfo(coreName).toString(), httpHeaders, OK);
     }
 
     @RequestMapping(value="/empty", method = RequestMethod.GET)
@@ -177,32 +168,11 @@ public class CoreAPIController extends APIController {
         return new ResponseEntity<String>(result, httpHeaders, OK);
     }
 
-
-
-    @RequestMapping(value="/reindex", method = RequestMethod.GET)
-    public ResponseEntity<String> repopulateCoreFromHDFS(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
-                                                         @RequestParam(value = PARAM_N_THREADS, required = false) Integer nThreads,
-                                                         @RequestParam(value = PARAM_N_FILES, required = false) Integer nFiles) {
-        JSONObject response = new JSONObject();
-
-        //boolean deleted = coreService.deleteIndex(coreName);
-        //if (!deleted) {
-        //    response.put("Error", "Could not delete index for core " + coreName);
-        //} else {
-            solrReindexService.reindexSolrCoreFromHDFS(coreName, (nThreads == null) ? -1 : nThreads, (nFiles == null) ? -1 : nFiles);
-            response.put("Success", "Successfully reindexed " + coreName);
-        //}
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>(response.toString(), httpHeaders, OK);
-    }
-
     @RequestMapping(value="/field/daterange", method = RequestMethod.GET)
     public ResponseEntity<String> dateRange(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
                                             @RequestParam(value = PARAM_FIELD_NAME, required = true) String field) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
 
-        List<String> dateRange = coreService.getSolrFieldDateRange(coreName, field, DateUtils.SHORT_DATE);
+        List<String> dateRange = searchService.getSolrFieldDateRange(coreName, field, DateUtils.SHORT_DATE);
         String dateString = dateRange.get(0) + " to " + dateRange.get(1);
 
         HttpHeaders httpHeaders = new HttpHeaders();

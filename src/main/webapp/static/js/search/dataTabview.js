@@ -76,6 +76,7 @@ var DATA_TABVIEW = {};
         searchParams[UI.SEARCH.INSERT_SORT_BUTTONS_AFTER_EL_NAME_KEY] = insertSortButtonsAfterElName;
         searchParams[UI.SEARCH.INSERT_SEARCH_BUTTONS_AFTER_EL_NAME_KEY] = insertSearchButtonsAfterElName;
         searchParams[UI.DISPLAY_NAME_KEY] = getDisplayNameFromCoreName(selectedCore);
+        searchParams[UI.FACET.UPDATE_FACET_FN] = FACET.ui.buildFacetTree;
         SEARCH.ui.init(searchParams);
 
         var facetParams = {};
@@ -114,9 +115,7 @@ var DATA_TABVIEW = {};
     }
 
     function search() {
-        if (SEARCH.ui.search() > 0) {
-            FACET.ui.buildFacetTree(SEARCH.ui.facetsFromLastSearch);
-        }
+        SEARCH.ui.search();
     }
 
     function getSearchInputEls() {

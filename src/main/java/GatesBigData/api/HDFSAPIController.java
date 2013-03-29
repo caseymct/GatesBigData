@@ -16,6 +16,7 @@ import service.HDFSService;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.HashMap;
 import java.util.List;
 
 import static java.util.Collections.singletonList;
@@ -25,10 +26,10 @@ import static org.springframework.http.HttpStatus.OK;
 @RequestMapping("/data")
 public class HDFSAPIController extends APIController {
 
-    private static final String PARAM_LOCALFILENAME = "localfile";
+    private static final String PARAM_LOCALFILENAME  = "localfile";
     private static final String PARAM_REMOTEFILENAME = "remotefile";
-    private static final String PARAM_LOCALDIR = "localdir";
-    private static final String PARAM_REMOTEDIR = "remotedir";
+    private static final String PARAM_LOCALDIR       = "localdir";
+    private static final String PARAM_REMOTEDIR      = "remotedir";
 
     private HDFSService hdfsService;
     private static final Logger logger = Logger.getLogger(HDFSAPIController.class);
@@ -67,7 +68,7 @@ public class HDFSAPIController extends APIController {
     @RequestMapping(value = "/listfiles", method = RequestMethod.GET)
     public ResponseEntity<String> listFiles(@RequestParam(value = PARAM_HDFS, required = true) String hdfsDir) {
 
-        List<String> files = hdfsService.listFiles(new Path(hdfsDir), true);
+        List<String> files = hdfsService.listFiles(new Path(hdfsDir), true, null, null);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
@@ -75,10 +76,24 @@ public class HDFSAPIController extends APIController {
     }
 
     @RequestMapping(value = "/nutch/listincrawl", method = RequestMethod.GET)
-    public ResponseEntity<String> listInCrawl(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
+    public ResponseEntity<String> listInCrawl(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
+                                              @RequestParam(value = PARAM_INC_PARSE_INFO, required = false) boolean includeParseInfo)
+                    throws IOException {
         StringWriter writer = new StringWriter();
 
-        hdfsService.listFilesInCrawlDirectory(coreName, writer);
+        hdfsService.listFilesInCrawlDirectory(coreName, writer, includeParseInfo);
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
+        return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
+    }
+
+    @RequestMapping(value = "/nutch/listfetched", method = RequestMethod.GET)
+    public ResponseEntity<String> listFetched(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName)
+            throws IOException {
+        StringWriter writer = new StringWriter();
+
+        hdfsService.writeFetched(coreName, writer);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
@@ -100,15 +115,6 @@ public class HDFSAPIController extends APIController {
     @RequestMapping(value = "/test", method = RequestMethod.GET)
     public ResponseEntity<String> test(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
         hdfsService.testCrawlData(coreName, "");
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>("", httpHeaders, OK);
-    }
-
-    @RequestMapping(value = "/thumbnails", method = RequestMethod.GET)
-    public ResponseEntity<String> generateThumbnails(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) throws IOException {
-        hdfsService.generateThumbnails(coreName);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));

@@ -107,6 +107,18 @@ public class SolrServiceImpl implements SolrService {
         return coreList;
     }
 
+    public boolean coreNameExists(String coreName) {
+        CoreAdminResponse cores = getCores();
+        if (cores != null) {
+            for (int i = 0; i < cores.getCoreStatus().size(); i++) {
+                if (coreName.equals(cores.getCoreStatus().getName(i))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     public JSONArray getAllCoreData() {
         JSONArray coreInfo = new JSONArray();
 

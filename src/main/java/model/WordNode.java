@@ -4,29 +4,37 @@ import GatesBigData.utils.Utils;
 import java.util.*;
 
 public class WordNode {
-    private int count;
+    private long count;
     private String word;
-    private Set<String> solrIds;
+    private Set<String> groupQueries;
 
     private List<WordNode> children = new ArrayList<WordNode>();
 
-    public WordNode(String word) {
-        this.word = word;
-        this.count = 1;
-        this.solrIds = new HashSet<String>();
+    public WordNode(String word, long count) {
+        this.word         = word;
+        this.count        = count;
+        this.groupQueries = new HashSet<String>();
     }
 
-    public WordNode(String query, String solrId) {
-        this(query);
-        addSolrId(solrId);
+    public WordNode(String word, long count, List<String> groupQueries) {
+        this(word, count);
+        this.groupQueries.addAll(groupQueries);
     }
 
-    public void addSolrId(String solrId) {
-        this.solrIds.add(solrId);
+    public WordNode(String word, long count, String groupQuery) {
+        this(word, count, Arrays.asList(groupQuery));
     }
 
-    public Set<String> getSolrIds() {
-        return this.solrIds;
+    public void addGroupQuery(String groupQuery) {
+        this.groupQueries.add(groupQuery);
+    }
+
+    public void addGroupQueries(List<String> groupQueries) {
+        this.groupQueries.addAll(groupQueries);
+    }
+
+    public Set<String> getGroupQueries() {
+        return this.groupQueries;
     }
 
     public String getWord() {
@@ -37,7 +45,7 @@ public class WordNode {
         this.word = word;
     }
 
-    public int getCount() {
+    public long getCount() {
         return count;
     }
 
@@ -53,24 +61,41 @@ public class WordNode {
         return this.children.size();
     }
 
+    public void increment(long count) {
+        this.count += count;
+    }
+
     public void increment() {
-        this.count++;
+        increment(1);
     }
 
     public void combine(WordNode child, boolean isPrefix) {
         this.word = isPrefix ? child.word + " " + this.word : this.word + " " + child.word;
-        this.children = child.children;
-        this.solrIds.addAll(child.solrIds);
+        this.children = child.getChildren();
+        this.update(0, child.getGroupQueries());
     }
 
-    public WordNode addChild(String word) {
+    public void update(long count, List<String> groupQueries) {
+        this.increment(count);
+        this.addGroupQueries(groupQueries);
+    }
+
+    public void update(long count, String groupQuery) {
+        update(count, Arrays.asList(groupQuery));
+    }
+
+    public void update(long count, Set<String> groupQueries) {
+        update(count, new ArrayList<String>(groupQueries));
+    }
+
+    public WordNode addChild(String word, long count, String groupQuery) {
         for(WordNode child : this.children) {
             if (child.getWord().equals(word)) {
-                child.increment();
+                child.update(count, groupQuery);
                 return child;
             }
         }
-        WordNode child = new WordNode(word);
+        WordNode child = new WordNode(word, count, groupQuery);
         children.add(child);
         return child;
     }

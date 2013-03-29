@@ -4,119 +4,96 @@ SEARCH.util = {};
 
 (function() {
 
-    var Event = YAHOO.util.Event,           Tooltip = YAHOO.widget.Tooltip,
-          Dom = YAHOO.util.Dom,              Button = YAHOO.widget.Button,
-         Json = YAHOO.lang.JSON,          Paginator = YAHOO.widget.Paginator,
-      TabView = YAHOO.widget.TabView,   ButtonGroup = YAHOO.widget.ButtonGroup,
-      Connect = YAHOO.util.Connect,         LocalDS = YAHOO.util.LocalDataSource,
-      ScrollingDataTable = YAHOO.widget.ScrollingDataTable;
+    /* Set core name and header for this search file */
+    var url = window.location.href.split('/');
+    SEARCH.ui.coreName = url[url.length - 1];
 
-    SEARCH.ui.longStringWidth        = 210;
-    SEARCH.ui.shortStringWidth       = 80;
-    SEARCH.ui.urlSearchParams        = "";
-    SEARCH.ui.facetsFromLastSearch   = null;
+    SEARCH.ui.longStringWidth  = 210;
+    SEARCH.ui.shortStringWidth = 80;
 
-    var highlightSnippets            = "",
-        highlightIdToTitleMapJsonKey = "idToTitleMap";
+    var Event   = YAHOO.util.Event,     Tooltip     = YAHOO.widget.Tooltip,
+        Dom     = YAHOO.util.Dom,       DataTable   = YAHOO.widget.ScrollingDataTable,
+        Json    = YAHOO.lang.JSON,      Paginator   = YAHOO.widget.Paginator,
+        TabView = YAHOO.widget.TabView, ButtonGroup = YAHOO.widget.ButtonGroup,
+        Connect = YAHOO.util.Connect,   LocalDS     = YAHOO.util.LocalDataSource,
+        Button  = YAHOO.widget.Button,  Panel       = YAHOO.widget.Panel;
 
-    var colStringMaxChars     = 20,
-        colDateStringMaxChars = 30;
+    var colStringMaxChars     = 20,                  colDateStringMaxChars       = 30,
+        rowsPerPage           = 10,                  queryDefaultValue           = "*:*",
 
-    var searchInputEls       = [],
-        queryDefaultValue    = "*:*",
-        dataSourceFields     = [],
-        tooltip              = null,
-        thumbnailData        = {},
-        rowsPerPage          = 10,
-        initialSelectIndex   = 0;
+        // button IDs
+        submitButtonElId      = "submit",            resetButtonElId             = "reset",
+        exportButtonElId      = "export",            analyzeButtonElId           = "analyze",
+        analyzeFormElId       = "analyzeForm",
 
-    var loadingImgUrl        = "",
-        thumbnailUrl         = "",
-        viewDocUrl           = "",
-        searchUrl            = "";
+        // other DOM IDs
+		previewDataId         = "preview_image",     showQueryElId               = "show_query",
+        paginatorElId         = "pag",               searchResultContainerElId   = "search_result_container",
+        numFoundElId          = "num_found",         sortOrderButtonGroupElId    = "sort_ascdesc_buttongroup",
+        sortByDivElId         = "sort_by_div",       searchResultsElId           = "search_results",
+        previewContainerElId  = "preview_container", sortBySelectElId            = "sort_date_label",
+        showQueryElIdBody     = "show_query_text",   showQueryButtonElId         = "show_query_button",
+        showQueryCloseElId    = "show_query_close",
 
-    var previewDataName                 = "preview_image",
-        displayName                     = "",
+        // solr
+        solrResponseKey       = "response",          solrResponseFacetKey        = "facet_counts",
+        solrResponseDocsKey   = "docs",              solrResponseNumFoundKey     = "num_found",
+        solrDocIdFieldName    = "id",                solrResponseHighlightingKey = "highlighting",
+        solrDocContentsKey    = "content",           solrResponseViewFieldsKey   = "fl",
+        thumbnailKey          = "thumbnail",         solrDocHDFSSegmentFieldName = "HDFSSegment",
+        thumbnailTypeKey      = "thumbnail_type",    solrDocHDFSKeyFieldName     = "HDFSKey",
+        solrDocContentTypeKey = "content_type",      solrDocImageContentType     = "image/png",
+        solrDocTxtContentType = "text/html",         solrDocJSONContentType      = "application/json",
+        //request
+        numFoundRequestParam  = "numfound",
 
-        submitButtonElId                = "submit",
-        resetButtonElId                 = "reset",
-        exportButtonElId                = "export",
-        analyzeButtonElId               = "analyze",
-        analyzeFormElId                 = "analyzeForm",
+        //preview
+        noPreviewText         = "No preview available",
 
-        unstructuredData                = false,
+        // CSS variables
+        searchResultElWidthStructured   = "56%",    searchResultSubheadingCSSClass  = "search_subheading",
+        searchResultElWidthUnstructured = "100%",   searchResultDivCSSClass         = "search_result_div",
+                                                    previewDivCSSClass              = 'preview_result_div';
 
-        showQueryElName                 = "show_query",
-        showQueryEl                     = null,
+    var searchInputEls                  = [],       dataSourceFields                = [],
+        thumbnailData                   = {},       initialSelectIndex              = 0,
+        highlightSnippets               = "",       highlightIdToTitleMapJsonKey    = "idToTitleMap",
+        viewFields                      = "",       facetsFromLastSearch            = null,
+        docsFromLastSearch              = null,     numFound                        = 0,
+        urlSearchParams                 = "",
 
-        paginatorElName                 = "pag",
-        paginator                       = null,
+        // URLs
+        loadingImgUrl = "", thumbnailUrl  = "", analyzeUrl = "",
+        viewDocUrl    = "", searchUrl     = "",
 
-        searchResultContainerElName     = "search_result_container",
-        searchResultContainerElWidth    = "56%",
-        searchResultSubheadingCSSClass  = "search_subheading",
+        // set in init
+        unstructuredData                = false,    displayName                     = "",
+        searchTabElId                   = "",       searchHeaderElName              = "",
+        insertSearchResultsAfterElName  = "",       insertSortButtonsAfterElName    = "",
+        insertSearchButtonsAfterElName  = "",       selectData                      = [],
+        selectDataColumnDefs            = [],       selectDataRegexIgnore           = "",
+        searchResultContainerElWidth    = "",       showQueryPanel                  = null,
 
-        numFoundElName                  = "num_found",
-        numFoundEl                      = null,
-        numFound                        = 0,
+        // widgets
+        paginator                       = null,     currPreviewContainerEl          = null,
+        searchTab                       = null,     sortBySelect                    = null,
+        sortOrderButtonGroup            = null,     tooltip                         = null,
 
-        searchResultsElName             = "search_results",
-        searchResultsEl                 = null,
-        searchResultDivCSSClass         = "search_result_div",
-        previewDivCSSClass              = 'preview_result_div',
-
-        previewContainerElName          = "preview_container",
-        previewContainerEl              = null,
-        currPreviewContainerEl          = null,
-
-        searchTabElName                 = "",
-        searchTab                       = null,
-        searchHeaderElName              = "",
-
-        sortByDivElName                 = "sort_by_div",
-        sortBySelectElName              = "sort_date_label",
-        sortBySelect                    = null,
-
-        selectData                      = [],
-        selectDataColumnDefs            = [],
-        selectDataRegexIgnore           = "",
-
-        sortOrderButtonGroupElName      = "sort_ascdesc_buttongroup",
-        sortOrderButtonGroup            = null,
-
-        insertSearchResultsAfterElName  = "",
-        insertSortButtonsAfterElName    = "",
-        insertSearchButtonsAfterElName  = "",
-
+        // functions
         buildSearchResultHtmlFn         = buildSearchResultDataTableHtml,
         submitFn                        = null,
         resetFn                         = null,
         getFilterQueryFn                = null,
+        updateFacetFn                   = null,
         formatSearchResultFn            = function(a) { return a;};
 
-    var solrResponseKey             = "response",
-        solrResponseFacetKey        = "facet_counts",
-        solrResponseNumFoundKey     = "num_found",
-        solrResponseDocsKey         = "docs",
-        solrResponseHighlightingKey = "highlighting",
-        solrDocIdFieldName          = "id",
-        solrDocHDFSSegmentFieldName = "HDFSSegment",
-        solrDocHDFSKeyFieldName     = "HDFSKey",
-        thumbnailKey                = "thumbnail",
-        thumbnailTypeKey            = "thumbnail_type",
-        solrDocContentsKey          = "content",
-        solrDocContentTypeKey       = "content_type";
-
-    /* Set core name and header for this search file */
-    var url = window.location.href.split('/');
-    SEARCH.ui.coreName = url[url.length - 1];
 
     SEARCH.ui.init = function(names) {
         displayName           = names[UI.DISPLAY_NAME_KEY];
         dataSourceFields      = names[UI.SEARCH.DATA_SOURCE_FIELDS_KEY];
         selectDataColumnDefs  = names[UI.SEARCH.SELECT_DATA_COLUMN_DEFS_KEY];
         selectDataRegexIgnore = names[UI.SEARCH.SELECT_DATA_REGEX_IGNORE_KEY];
-        searchTabElName       = names[UI.SEARCH.SEARCH_TAB_EL_NAME_KEY];
+        searchTabElId         = names[UI.SEARCH.SEARCH_TAB_EL_NAME_KEY];
         searchHeaderElName    = names[UI.SEARCH.SEARCH_HEADER_EL_NAME_KEY];
         searchInputEls        = names[UI.SEARCH.SEARCH_INPUT_ELS_KEY];
 
@@ -127,6 +104,7 @@ SEARCH.util = {};
         submitFn             = names[UI.SEARCH.SUBMIT_FN_KEY];
         resetFn              = names[UI.SEARCH.RESET_FN_KEY];
         getFilterQueryFn     = names[UI.SEARCH.GET_FILTER_QUERY_FN_KEY];
+        updateFacetFn        = names[UI.FACET.UPDATE_FACET_FN];
         formatSearchResultFn = UI.util.returnIfDefined(formatSearchResultFn, names[UI.SEARCH.FORMAT_SEARCH_RESULT_FN_KEY]);
 
         var urls      = names[UI.URLS_KEY];
@@ -134,6 +112,7 @@ SEARCH.util = {};
         loadingImgUrl = urls[UI.LOADING_IMG_URL_KEY];
         thumbnailUrl  = urls[UI.THUMBNAIL_URL_KEY];
         searchUrl     = urls[UI.SEARCH_URL_KEY];
+        analyzeUrl    = urls[UI.ANALYZE_URL_KEY];
 
         initialSelectIndex = UI.util.returnIfDefined(initialSelectIndex, names[UI.SEARCH.INITIAL_SELECT_INDEX_KEY]);
         if (names[UI.SEARCH.TOOLTIP_EL_NAME_KEY] !== undefined) {
@@ -141,9 +120,9 @@ SEARCH.util = {};
         }
 
         unstructuredData = (names[UI.DATA_TYPE_KEY] == UI.DATA_TYPE_UNSTRUCTURED);
+        searchResultContainerElWidth = unstructuredData ? searchResultElWidthUnstructured : searchResultElWidthStructured;
         if (unstructuredData) {
             buildSearchResultHtmlFn = buildSearchResultList;
-            searchResultContainerElWidth = "100%";
         }
 
         buildHTML();
@@ -152,10 +131,10 @@ SEARCH.util = {};
     function buildHTML() {
         // sort order buttongroup code
         var sortButtonsInsertAfterEl = Dom.get(insertSortButtonsAfterElName);
-        var el = UI.insertDomElementAfter('div', sortButtonsInsertAfterEl, { id: sortByDivElName }, { "class" :  "row" });
+        var el = UI.insertDomElementAfter('div', sortButtonsInsertAfterEl, { id: sortByDivElId }, { "class" :  "row" });
         var div = UI.addDomElementChild('div', el);
-        UI.addDomElementChild('label', div, { id: sortBySelectElName, innerHTML: "Order by: " });
-        div = UI.addDomElementChild('div', el, { id: sortOrderButtonGroupElName }, { "class" :  "yui-buttongroup search-button-style" });
+        UI.addDomElementChild('label', div, { id: sortBySelectElId, innerHTML: "Order by: " });
+        div = UI.addDomElementChild('div', el, { id: sortOrderButtonGroupElId }, { "class" :  "yui-buttongroup search-button-style" });
         UI.addDomElementChild('input', div, { type: "radio", name: "sorttype", value: "asc", id: "sort_asc"});
         UI.addDomElementChild('input', div, { type: "radio", name: "sorttype", value: "desc", id: "sort_desc", checked: "checked"});
         UI.addDomElementChild('div', el, null, { "class" :  "clearboth" });
@@ -163,13 +142,22 @@ SEARCH.util = {};
         // Search result HTML
         var searchResultsInsertAfterEl = Dom.get(insertSearchResultsAfterElName);
         el = UI.insertDomElementAfter('div', searchResultsInsertAfterEl);
-        div = UI.addDomElementChild('div', el, { id : searchResultContainerElName }, { width: searchResultContainerElWidth } );
-        UI.addDomElementChild('div', div, { id : showQueryElName });
-        UI.addDomElementChild('div', div, { id : numFoundElName });
-        UI.addDomElementChild('div', div, { id : searchResultsElName });
-        UI.addDomElementChild('div', el,  { id : previewContainerElName });
+        div = UI.addDomElementChild('div', el, { id : searchResultContainerElId }, { width: searchResultContainerElWidth } );
+
+        UI.addDomElementChild('div', div, { id : numFoundElId });
+        UI.addDomElementChild('div', div, { id : searchResultsElId });
+        UI.addDomElementChild('div', el,  { id : previewContainerElId });
         UI.addClearBothDiv(el);
-        UI.insertDomElementAfter('div', searchResultsInsertAfterEl, { id: paginatorElName });
+
+        UI.insertDomElementAfter('div', searchResultsInsertAfterEl, { id: paginatorElId });
+
+        // Show solr query
+        var showQueryButton = UI.insertDomElementAfter('a', searchResultsInsertAfterEl,
+            { id : showQueryButtonElId, innerHTML: "Show Solr Query" },
+            { "class" : "button small", padding: "3px 8px 3px 8px", visibility : "hidden" } );
+        var showQueryEl = UI.addDomElementChild('div', Dom.get("collections_tab_content"), { id : showQueryElId });
+        UI.addDomElementChild('div', showQueryEl, { innerHTML: "Query submitted to Solr"}, { "class" : "hd", "font-size" : "12px"} );
+        UI.addDomElementChild('div', showQueryEl, { id : showQueryElIdBody }, { "class" : "bd", "font-size" : "12px" } );
 
         // Build buttons
         var searchButtonsInsertAfterEl = Dom.get(insertSearchButtonsAfterElName);
@@ -177,24 +165,20 @@ SEARCH.util = {};
         UI.addDomElementChild('a', el, { id: submitButtonElId, innerHTML: "Search", href: "#"}, { "class" :  "button small"});
         UI.addDomElementChild('a', el, { id: resetButtonElId,  innerHTML: "Reset",  href: "#"}, { "class" :  "button small"});
         UI.addDomElementChild('a', el, { id: exportButtonElId, innerHTML: "Export", href: "#"}, { "class" :  "button small"});
-        if (unstructuredData) {
-            UI.addDomElementChild('a', el, { id: analyzeButtonElId, innerHTML: "Analyze", href: "#"}, { "class" :  "button small"});
-            var f = UI.addDomElementChild('form', el, { id : analyzeFormElId, method: "POST", target : "_blank", action: "analyze"});
-            UI.addDomElementChild('input', f, { id: UI.SNIPPET_DATA_INPUT_EL_NAME, name: UI.SNIPPET_DATA_INPUT_EL_NAME, type: "text" },
-                { visibility: "hidden"});
-            UI.addDomElementChild('input', f, { id: UI.QUERY_DATA_INPUT_EL_NAME, name: UI.QUERY_DATA_INPUT_EL_NAME, type: "text" },
-                { visibility: "hidden"});
-            UI.addDomElementChild('input', f, { id: UI.VIEW_DOC_URL_INPUT_EL_NAME, name: UI.VIEW_DOC_URL_INPUT_EL_NAME, type: "text" },
-                { visibility: "hidden"});
-        }
+
+        // Add analyze hidden form data
+        UI.addDomElementChild('a', el, { id: analyzeButtonElId, innerHTML: "Analyze", href: "#"}, { "class" :  "button small"});
+        var f = UI.addDomElementChild('form', el, { id : analyzeFormElId, method: "POST", target : "_blank", action: "analyze"}, { height: "0px" });
+        UI.addDomElementChild('input', f, { id: UI.SNIPPET_DATA_INPUT_EL_NAME, name: UI.SNIPPET_DATA_INPUT_EL_NAME, type: "text" }, { visibility: "hidden"});
+        UI.addDomElementChild('input', f, { id: UI.QUERY_DATA_INPUT_EL_NAME, name: UI.QUERY_DATA_INPUT_EL_NAME, type: "text" }, { visibility: "hidden"});
+        UI.addDomElementChild('input', f, { id: UI.VIEW_DOC_URL_INPUT_EL_NAME, name: UI.VIEW_DOC_URL_INPUT_EL_NAME, type: "text" }, { visibility: "hidden"});
+        UI.addDomElementChild('input', f, { id: UI.VIEW_FIELDS_DATA_INPUT_EL_NAME, name: UI.VIEW_FIELDS_DATA_INPUT_EL_NAME, type: "text" }, { visibility: "hidden"});
+        UI.addDomElementChild('input', f, { id: UI.DATA_TYPE_DATA_INPUT_EL_NAME, name: UI.DATA_TYPE_DATA_INPUT_EL_NAME,
+                                            type: "text", value: unstructuredData }, { visibility: "hidden"});
 
         UI.insertDomElementAfter('div', el, null, { "class" :  "row" });
 
-        previewContainerEl      = Dom.get(previewContainerElName);
-        currPreviewContainerEl  = previewContainerEl;
-        numFoundEl              = Dom.get(numFoundElName);
-        showQueryEl             = Dom.get(showQueryElName);
-        searchResultsEl         = Dom.get(searchResultsElName);
+        currPreviewContainerEl = Dom.get(previewContainerElId);
 
         setSearchHeader();
         initSearchTab();
@@ -203,10 +187,11 @@ SEARCH.util = {};
         initControlButtonListeners();
         initPaginator();
         initSortOrderButtonGroup();
+        initShowQueryPanel();
     }
 
     SEARCH.ui.getUrlSearchParams = function() {
-        return SEARCH.ui.urlSearchParams;
+        return urlSearchParams;
     };
 
     SEARCH.ui.getExportButtonElId = function() {
@@ -235,47 +220,70 @@ SEARCH.util = {};
         el.innerHTML = '<a href="#">' + data + '</a>';
     };
 
-    function updateAnalysisData(highlighting, docs) {
+    function updateAnalysisData(response) {
+        var highlighting = response[solrResponseHighlightingKey],
+                    docs = response[solrResponseDocsKey];
+
         highlighting[highlightIdToTitleMapJsonKey] = {};
         for(var i = 0; i < docs.length; i++) {
             highlighting[highlightIdToTitleMapJsonKey][docs[i]['id']] = docs[i]['title'];
         }
+
+        // set the global variables
         highlightSnippets = Json.stringify(highlighting);
+        viewFields = unstructuredData ? response[solrResponseViewFieldsKey] : "Account.AccountName";
     }
+
+    function updateDocsFromLastSearch(docs) {
+        var i, docId, doc;
+        docsFromLastSearch = {};
+        for(i = 0; i < docs.length; i++) {
+            doc = docs[i];
+            docId = doc.id;
+            delete doc.id;
+            delete doc.url;
+            docsFromLastSearch[docId] = doc;
+        }
+    }
+
+    var searchSuccessCallback = function(o) {
+        UI.hideWait();
+
+        var result = Json.parse(o.responseText);
+        facetsFromLastSearch = result[solrResponseKey][solrResponseFacetKey];
+        buildSearchResultHtmlFn(result);
+
+        updateDocsFromLastSearch(result[solrResponseKey][solrResponseDocsKey]);
+        updateAnalysisData(result[solrResponseKey]);
+        updateNumFound(result[solrResponseKey][solrResponseNumFoundKey], 1);
+        updatePaginatorAfterSearch();
+
+        if (numFound > 0 && updateFacetFn != null) {
+            updateFacetFn(facetsFromLastSearch);
+        }
+    };
+
+    var searchFailureCallback = function() {
+        alert("Could not connect to Solr");
+    };
 
     SEARCH.ui.search = function() {
         UI.showWait();
 
         var fq = getFilterQueryFn();
         var queryTerms = getQueryTerms();
-        SEARCH.ui.urlSearchParams = constructUrlSearchParams(queryTerms, fq, 0);
-        updateSolrQueryDiv(queryTerms, fq);
+        urlSearchParams = constructUrlSearchParams(queryTerms, fq, 0);
+        updateSolrQueryDiv(searchUrl + urlSearchParams);
         clearPreviewContainerImage();
 
-        Connect.asyncRequest('GET', searchUrl + SEARCH.ui.urlSearchParams, {
-            success : function(o) {
-                UI.hideWait();
-
-                var result = Json.parse(o.responseText);
-                SEARCH.ui.facetsFromLastSearch = result[solrResponseKey][solrResponseFacetKey];
-                //SEARCH.ui.snippetsFromLastSearch = result[solrResponseKey][solrResponseHighlightingKey];
-                buildSearchResultHtmlFn(result);
-
-                updateAnalysisData(result[solrResponseKey][solrResponseHighlightingKey], result[solrResponseKey][solrResponseDocsKey]);
-                updateNumFound(result[solrResponseKey][solrResponseNumFoundKey], 1);
-                updatePaginatorAfterSearch();
-
-                return numFound;
-            },
-            failure : function(o) {
-                alert("Could not connect.");
-            }
+        Connect.asyncRequest('GET', searchUrl + urlSearchParams, {
+            success : searchSuccessCallback,
+            failure : searchFailureCallback
         });
-        return -1;
     };
 
     SEARCH.ui.getUrlSearchParams = function() {
-        return (SEARCH.ui.urlSearchParams == "") ? "" : SEARCH.ui.urlSearchParams + "&numfound=" + numFound;
+        return (urlSearchParams == "") ? "" : urlSearchParams + "&" + numFoundRequestParam + "=" + numFound;
     };
 
     function initControlButtonListeners() {
@@ -289,19 +297,29 @@ SEARCH.util = {};
             submitFn();
         });
 
-        if (unstructuredData) {
-            Event.addListener(analyzeButtonElId, "click", function (e) {
-                Event.stopEvent(e);
-                Dom.get(UI.SNIPPET_DATA_INPUT_EL_NAME).value = highlightSnippets; //Json.stringify(SEARCH.ui.snippetsFromLastSearch);
-                Dom.get(UI.QUERY_DATA_INPUT_EL_NAME).value   = SEARCH.ui.getUrlSearchParams();
-                Dom.get(UI.VIEW_DOC_URL_INPUT_EL_NAME).value = viewDocUrl + "?view=preview&core=" + SEARCH.ui.coreName;
-                document.forms[analyzeFormElId].submit();
-            });
-        }
+        Event.addListener(analyzeButtonElId, "click", function (e) {
+            Event.stopEvent(e);
+            var urlParams = SEARCH.ui.getUrlSearchParams() + "&structured=" + unstructuredData + "&fl=" + viewFields;
+            window.open(analyzeUrl + urlParams, "_blank");
+
+            /*Dom.get(UI.SNIPPET_DATA_INPUT_EL_NAME).value     = highlightSnippets; //Json.stringify(SEARCH.ui.snippetsFromLastSearch);
+            Dom.get(UI.QUERY_DATA_INPUT_EL_NAME).value       = SEARCH.ui.getUrlSearchParams();
+            Dom.get(UI.VIEW_DOC_URL_INPUT_EL_NAME).value     = viewDocUrl + "?view=preview&core=" + SEARCH.ui.coreName;
+            Dom.get(UI.VIEW_FIELDS_DATA_INPUT_EL_NAME).value = viewFields;
+            //Dom.get(UI.DATA_TYPE_DATA_INPUT_EL_NAME).value   = unstructuredData;
+            document.forms[analyzeFormElId].submit();*/
+        });
+    }
+
+    function initShowQueryPanel() {
+        showQueryPanel = new Panel(showQueryElId, { width : "500px", visible : false, constraintoviewport: true } );
+        showQueryPanel.render();
+
+        Event.addListener(showQueryButtonElId, "click", function(o) { showQueryPanel.show(); });
     }
 
     function initSearchTab() {
-        searchTab = new TabView(searchTabElName);
+        searchTab = new TabView(searchTabElId);
     }
 
     function initToolTip(tooltipElName) {
@@ -309,12 +327,12 @@ SEARCH.util = {};
     }
     
     function initSortOrderButtonGroup() {
-        sortOrderButtonGroup = new ButtonGroup(sortOrderButtonGroupElName);
+        sortOrderButtonGroup = new ButtonGroup(sortOrderButtonGroupElId);
         sortOrderButtonGroup.check(1);
     }
 
     function initPaginator() {
-        paginator = new Paginator( { rowsPerPage : rowsPerPage, containers : [ paginatorElName ] });
+        paginator = new Paginator( { rowsPerPage : rowsPerPage, containers : [ paginatorElId ] });
         paginator.subscribe('changeRequest', handlePagination);
     }
 
@@ -328,7 +346,7 @@ SEARCH.util = {};
         if (numFound > 0) {
             s += ", showing items " + start + " through " + Math.min(start + rowsPerPage - 1, numFound);
         }
-        numFoundEl.innerHTML = s;
+        Dom.get(numFoundElId).innerHTML = s;
     }
 
     /* Paginator code */
@@ -349,42 +367,50 @@ SEARCH.util = {};
 
     function setPreviewContainerImageData(title, dataStr) {
         var htmlStr = getPreviewHtmlTitleString(title);
-        htmlStr += "<img src='" + dataStr + "' height='400px' width='400px' id='" + previewDataName + "'>";
+        htmlStr += "<img src='" + dataStr + "' height='400px' width='400px' id='" + previewDataId + "'>";
         currPreviewContainerEl.innerHTML = htmlStr;
 
-        Dom.setStyle(previewDataName, 'zoom', 2);
+        Dom.setStyle(previewDataId, 'zoom', 2);
         Event.addListener('previewzoomin', 'click', function(e) {
-            Dom.setStyle(previewDataName, 'zoom', parseInt(Dom.getStyle(previewDataName, 'zoom')) + 1);
+            Dom.setStyle(previewDataId, 'zoom', parseInt(Dom.getStyle(previewDataId, 'zoom')) + 1);
         });
 
         Event.addListener('previewzoomout', 'click', function(e) {
-            var zoom = parseInt(Dom.getStyle(previewDataName, 'zoom'));
-            Dom.setStyle(previewDataName, 'zoom', (zoom > 1) ? zoom - 1 : zoom);
+            var zoom = parseInt(Dom.getStyle(previewDataId, 'zoom'));
+            Dom.setStyle(previewDataId, 'zoom', (zoom > 1) ? zoom - 1 : zoom);
         });
     }
 
     function setPreviewContainerTextData(title, dataStr) {
         var htmlStr = getPreviewHtmlTitleString(title);
-        htmlStr += "<div id='" + previewDataName + "'>" + UI.util.jsonSyntaxHighlight(dataStr) + "</div>";
+        var dispStr = (dataStr != noPreviewText) ? UI.util.jsonSyntaxHighlight(dataStr) :
+            "<span style='font-weight: bold; font-size: 12px; margin-left: 10px'>" + dataStr + "</span>";
+        htmlStr += "<div id='" + previewDataId + "'>" + dispStr + "</div>";
         currPreviewContainerEl.innerHTML = htmlStr;
 
-        Dom.setStyle(previewDataName, 'font-size', '10px');
+        Dom.setStyle(previewDataId, 'font-size', '10px');
         Event.addListener('previewzoomin', 'click', function(e) {
-            var px = UI.util.getNPixels(Dom.getStyle(previewDataName, 'font-size'));
-            Dom.setStyle(previewDataName, 'font-size', (px + 1) + 'px');
+            var px = UI.util.getNPixels(Dom.getStyle(previewDataId, 'font-size'));
+            Dom.setStyle(previewDataId, 'font-size', (px + 1) + 'px');
         });
 
         Event.addListener('previewzoomout', 'click', function(e) {
-            var px = UI.util.getNPixels(Dom.getStyle(previewDataName, 'font-size'));
-            Dom.setStyle(previewDataName, 'font-size', (px - 1) + 'px');
+            var px = UI.util.getNPixels(Dom.getStyle(previewDataId, 'font-size'));
+            Dom.setStyle(previewDataId, 'font-size', (px - 1) + 'px');
         });
     }
 
-    function setPreviewContainerData(title, dataStr, dataType, i) {
+    function setPreviewContainerData(title, dataStr, dataType) {
         Dom.setStyle(currPreviewContainerEl, "border", "1px solid gray");
         Dom.setStyle(currPreviewContainerEl, "background-image", "none");
 
-        if (dataType == "image") {
+        if (dataStr == "" || dataStr == undefined) {
+            dataType = "text";
+            dataStr  = noPreviewText;
+        }
+
+        if (dataType == solrDocImageContentType) {
+            //console.log(arguments.callee.caller.toString());
             setPreviewContainerImageData(title, dataStr);
         } else {
             setPreviewContainerTextData(title, dataStr);
@@ -459,7 +485,7 @@ SEARCH.util = {};
             type        : "menu",
             lazyloadmenu: false,
             menu        : selectData,
-            container   : sortBySelectElName
+            container   : sortBySelectElId
         });
 
         var sortBySelectMenu = sortBySelect.getMenu();
@@ -475,23 +501,27 @@ SEARCH.util = {};
     function handlePagination(newState) {
         UI.showWait();
         var newStart = newState.records[0], newStartStr = "&start=" + newStart;
-        var match = SEARCH.ui.urlSearchParams.match(/(&start=[0-9]+)/);
-
-        SEARCH.ui.urlSearchParams = (match == null) ? SEARCH.ui.urlSearchParams + newStartStr :
-                                     SEARCH.ui.urlSearchParams.replace(match[1], newStartStr);
         updateNumFound(numFound, newStart);
-        Connect.asyncRequest('GET', searchUrl + SEARCH.ui.urlSearchParams, {
+
+        var match = urlSearchParams.match(/(&start=[0-9]+)/);
+        urlSearchParams = (match == null) ? urlSearchParams + newStartStr : urlSearchParams.replace(match[1], newStartStr);
+
+        Connect.asyncRequest('GET', searchUrl + urlSearchParams, {
             success: function(o) {
                 UI.hideWait();
-                buildSearchResultHtmlFn(Json.parse(o.responseText));
+
+                var result = Json.parse(o.responseText);
+                buildSearchResultHtmlFn(result);
+                updateDocsFromLastSearch(result[solrResponseKey][solrResponseDocsKey]);
             }
         });
 
         paginator.setState(newState);
     }
 
-    function updateSolrQueryDiv (queryTerms, fq) {
-        showQueryEl.innerHTML = "Submitting to solr with<br>q: " + queryTerms + "<br>fq: " + decodeURIComponent(fq);
+    function updateSolrQueryDiv (searchString) {
+        Dom.setStyle(Dom.get(showQueryButtonElId), "visibility", "visible");
+        Dom.get(showQueryElIdBody).innerHTML = decodeURIComponent(searchString);
     }
 
     function constructUrlSearchParams(queryTerms, fq, start) {
@@ -514,13 +544,10 @@ SEARCH.util = {};
     function dataTableCellMouseoverEvent(e, dataTable) {
         var target = e.target;
         var record = dataTable.getRecord(target),
-            data = record.getData();
+              data = record.getData(),
+            dataId = UI.util.returnEmptyIfUndefined(data.id);
 
-        var urlParams = "?core=" + SEARCH.ui.coreName + "&id=" + UI.util.returnEmptyIfUndefined(data.id);
-       /* if (data[solrDocHDFSSegmentFieldName] != undefined) {
-            urlParams += "&segment=" + data[solrDocHDFSSegmentFieldName];
-        }*/
-
+        /*var urlParams = "?core=" + SEARCH.ui.coreName + "&id=" + data.id;
         var callback = {
             success: function(o) {
                 var response = Json.parse(o.responseText);
@@ -529,14 +556,14 @@ SEARCH.util = {};
                 setPreviewContainerData(record.getData().title, response[solrDocContentsKey], response[solrDocContentTypeKey]);
             },
             argument: { table: dataTable, record: record}
-        };
+        };  */
 
         if (data[thumbnailKey] == undefined) {
-            setPreviewContainerLoadingImage();
-            Connect.asyncRequest('GET', thumbnailUrl + urlParams, callback);
-        } else {
-            setPreviewContainerData(data.title, data[thumbnailKey], data[thumbnailTypeKey]);
+            dataTable.updateCell(record, thumbnailKey, docsFromLastSearch[dataId]);
+            dataTable.updateCell(record, thumbnailTypeKey, solrDocJSONContentType);
         }
+
+        setPreviewContainerData(data.title, data[thumbnailKey], data[thumbnailTypeKey]);
     }
 
 
@@ -548,7 +575,7 @@ SEARCH.util = {};
             }
         });
 
-        var dataTable = new ScrollingDataTable(searchResultsElName, selectDataColumnDefs, dataSource, { width:"100%" });
+        var dataTable = new DataTable(searchResultsElId, selectDataColumnDefs, dataSource, { width:"100%" });
 
         dataTable.subscribe("sortedByChange", function(e) {
             var sortField = e.newValue.column.key;
@@ -569,9 +596,6 @@ SEARCH.util = {};
             var data = this.getRecord(e.target).getData();
 
             var urlParams = "?core=" + SEARCH.ui.coreName + "&id=" + data.id + "&view=preview";
-            if (data['HDFSSegment'] != undefined) {
-                urlParams += "&segment=" + data['HDFSSegment'];
-            }
             window.open(viewDocUrl + urlParams, "_blank");
         });
 
@@ -581,6 +605,7 @@ SEARCH.util = {};
     }
 
     function buildSearchResultList(result) {
+        var searchResultsEl = Dom.get(searchResultsElId);
         searchResultsEl.innerHTML = "";
 
         function getIndexFromSearchResultDivId(id)  { return id.match("searchResult([0-9]+)")[1]; }
@@ -602,8 +627,10 @@ SEARCH.util = {};
                 previewDivId = constructPreviewDivId(i);
             i = i + 1;
 
-            var div   = UI.addDomElementChild("div", searchResultsEl, { id: searchResultDivId },
-                { "class" :  searchResultDivCSSClass, width: "56%" });
+            var pdiv   = UI.addDomElementChild("div", searchResultsEl);
+
+            var div   = UI.addDomElementChild("div", pdiv, { id: searchResultDivId },
+                { "class" :  searchResultDivCSSClass, width: "56%", float: "left" });
             var title = UI.addDomElementChild("div", div);
             UI.addDomElementChild("a", title, { id: titleId, href: titleHref, innerHTML: doc['title'] }, { color: "blue" });
             UI.addDomElementChild("div", div, { innerHTML: "Author: <b>" + doc['author'] + "</b>"},
@@ -614,24 +641,24 @@ SEARCH.util = {};
                                                            "Last Modified: <i>" + doc['last_modified'] + "</i>"},
                                               { "class" :  searchResultSubheadingCSSClass});
 
-            var highlightObj = highlight[doc[solrDocHDFSKeyFieldName]];
+            var highlightObj = highlight[doc[solrDocIdFieldName]];
             Object.keys(highlightObj).forEach(function(key) {
                 UI.addDomElementChild("div", div, { innerHTML: "Field <b>" + key + "</b>"},
                                                   { "class" :  searchResultSubheadingCSSClass, color: "darkgreen"});
                 highlightObj[key].forEach(function(s) {
-                    UI.addDomElementChild("div", div, { innerHTML: "... " + s + "... "}, { "class" :  "search_result"});
+                    UI.addDomElementChild("div", div, { innerHTML: "... " + s + "... "}, { "class" : "search_result"});
                 })
             });
 
-            UI.addDomElementChild("div", searchResultsEl, { id: previewDivId }, { "class" :  previewDivCSSClass, top: div.offsetTop + "px" });
-            UI.addClearBothDiv(div);
+            UI.addDomElementChild("div", pdiv, { id: previewDivId }, { "class" :  previewDivCSSClass, float: "left" });
+            UI.addClearBothDiv(pdiv);
 
             Event.addListener(titleId, "click", function(e) {
                 Event.stopEvent(e);
                 window.open(this.href, "_blank");
             });
 
-            Event.addListener(searchResultDivId, "mouseover", function(e) {
+            Event.addListener(searchResultDivId, "mouseenter", function(e) {
                 clearPreviewContainerImage();
 
                 var idx     = getIndexFromSearchResultDivId(this.id);
@@ -645,6 +672,7 @@ SEARCH.util = {};
                 if (thumbnailData[file] == undefined) {
                     setPreviewContainerLoadingImage();
                     var urlParams = "?core=" + SEARCH.ui.coreName + "&segment=" + segment + "&id=" + file;
+
                     Connect.asyncRequest('GET', thumbnailUrl + urlParams, {
                         success: function(o) {
                             var response = Json.parse(o.responseText);
@@ -652,12 +680,12 @@ SEARCH.util = {};
                             thumbnailData[file][solrDocContentsKey]    = response[solrDocContentsKey];
                             thumbnailData[file][solrDocContentTypeKey] = response[solrDocContentTypeKey];
 
-                            setPreviewContainerData(title, response[solrDocContentsKey], response[solrDocContentTypeKey], idx);
+                            setPreviewContainerData(title, response[solrDocContentsKey], response[solrDocContentTypeKey]);
                         }
                     });
 
                 } else {
-                    setPreviewContainerData(title, thumbnailData[file][solrDocContentsKey], thumbnailData[file][solrDocContentTypeKey], idx);
+                    setPreviewContainerData(title, thumbnailData[file][solrDocContentsKey], thumbnailData[file][solrDocContentTypeKey]);
                 }
             });
         });

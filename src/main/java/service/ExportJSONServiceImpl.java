@@ -67,14 +67,5 @@ public class ExportJSONServiceImpl extends ExportService {
         g.writeEndArray();
     }
 
-    /*for(SolrDocument doc : docs) {
-       g.writeStartObject();
-
-       for(String field : fields) {
-           Object val = doc.get(field);
-           g.writeStringField(field, StringEscapeUtils.escapeCsv(val != null ? new String(val.toString().getBytes(), Charset.forName("UTF-8")) : ""));
-       }
-
-       g.writeEndObject();
-   } */
+    public void exportHeaderRow(List<String> fields, final Writer writer) throws IOException {}
 }

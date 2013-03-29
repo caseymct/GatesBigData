@@ -11,55 +11,41 @@
         }
     </style>
 
-    <h1>Document view</h1>
-    <div id = "view_buttongroup" class = "yui-buttongroup search-button-style">
-        <input id="preview" type="radio" name="view" value="preview" >
-        <input id="fullview" type="radio" name="view" value="fullview">
-    </div>
-    <div class="clearboth"></div>
-
-    <!--<div id="tree_view"></div>-->
-    <div id="doc_view"></div>
-
-    <script type="text/javascript" src="<c:url value="/static/js/search/search.js" />"></script>
-
     <script type="text/javascript">
     (function() {
 
-        var Dom = YAHOO.util.Dom,
-            Event = YAHOO.util.Event,
-            Connect = YAHOO.util.Connect,
-            TreeView = YAHOO.widget.TreeView,
-            ButtonGroup = YAHOO.widget.ButtonGroup,
-            Json = YAHOO.lang.JSON;
+        var Dom     = YAHOO.util.Dom,       Event       = YAHOO.util.Event,
+            Connect = YAHOO.util.Connect,   TreeView    = YAHOO.widget.TreeView,
+            Json    = YAHOO.lang.JSON,      ButtonGroup = YAHOO.widget.ButtonGroup;
 
-        SEARCH.ui.changeShowOverlayButtonVisibility(false);
+        var docViewElId        = "doc_view",            contentEl              = Dom.get(UI.CONTENT_EL_NAME),
+            viewButtonGrpDivId = "view_buttongroup",    viewButtonGrpCSSClass  = "yui-buttongroup search-button-style",
+            previewButtonId    = "preview",             previewButtonIdValue   = "preview",
+            fullviewButtonId   = "fullview",            fullviewButtonIdValue  = "fullview",
+            auditviewButtonId  = "auditview",           auditviewButtonIdValue = "auditview",
+            viewButtonGrpName  = "view",                saveButtonElId         = "save",
+            saveButtonCSSClass = "button save";
 
-        var remoteSeg = YAHOO.deconcept.util.getRequestParameter("segment");
-        var remoteFile = YAHOO.deconcept.util.getRequestParameter("file");
-        var coreName = YAHOO.deconcept.util.getRequestParameter("core");
-        var viewType = YAHOO.deconcept.util.getRequestParameter("view");
-        var urlParams = "?core=" + coreName + "&segment=" + remoteSeg + "&file=" + remoteFile + "&view=" + viewType;
+        var id              = YAHOO.deconcept.util.getRequestParameter("id"),
+            coreName        = YAHOO.deconcept.util.getRequestParameter("core"),
+            viewType        = YAHOO.deconcept.util.getRequestParameter("view"),
+            urlParams       = "?core=" + coreName + "&id=" + id + "&view=" + viewType,
+            saveDoc         = '<c:url value="/document/save"/>' + urlParams;
 
-        var viewButtonGroup = new ButtonGroup("view_buttongroup");
-        viewButtonGroup.check(+(viewType == "fullview"));
-        viewButtonGroup.on("checkedButtonChange", function (o) {
-            urlParams = urlParams.replace(/view=.*view/, "view=" + o.newValue.get("value"));
-            window.open('<c:url value="/core/document/view" />' + urlParams, "_self");
-        });
+        buildHtml();
 
         UI.initWait();
         UI.showWait();
 
-        Connect.asyncRequest('GET', '<c:url value="/document/nutch/get" />' + urlParams, {
+        Connect.asyncRequest('GET', '<c:url value="/document/content/get" />' + urlParams, {
             success : function(o) {
                 var result = o.responseText;
                 UI.hideWait();
 
                 if (UI.util.isValidJSON(result)) {
-                    UI.buildTreeViewFromJson(Json.parse(result), new TreeView("doc_view"));
+                    UI.buildTreeViewFromJson(Json.parse(result), new TreeView(docViewElId));
                 } else {
-                    Dom.get("doc_view").innerHTML = o.responseText;
+                    Dom.get(docViewElId).innerHTML = o.responseText;
                 }
             },
             failure : function(o) {
@@ -67,6 +53,36 @@
             }
         });
 
+        function buildHtml() {
+            UI.addDomElementChild('h2', contentEl, { innerHTML : 'Document view' });
+
+            var bg = UI.addDomElementChild('div', contentEl, { id : viewButtonGrpDivId }, { "class" : viewButtonGrpCSSClass });
+            UI.addDomElementChild('input', bg, { id : previewButtonId,  "type" : "radio",  name : viewButtonGrpName, value : previewButtonIdValue });
+            UI.addDomElementChild('input', bg, { id : fullviewButtonId, "type" : "radio",  name : viewButtonGrpName, value : fullviewButtonIdValue });
+            UI.addDomElementChild('input', bg, { id : auditviewButtonId, "type" : "radio", name : viewButtonGrpName, value : auditviewButtonIdValue });
+
+            UI.addDomElementChild('a', contentEl, { id : saveButtonElId },
+                    { "class" : saveButtonCSSClass, float : "left", "margin-top" : "9px", "margin-left" : "10px" });
+
+            UI.addClearBothDiv(contentEl);
+            UI.addDomElementChild('div', contentEl, { id : docViewElId }, { "padding-top" : "10px" });
+
+            var viewButtonGroup   = new ButtonGroup(viewButtonGrpDivId);
+            switch (viewType) {
+                case fullviewButtonIdValue  : viewButtonGroup.check(1); break;
+                case auditviewButtonIdValue : viewButtonGroup.check(2); break;
+                default                     : viewButtonGroup.check(0); break;
+            }
+
+            viewButtonGroup.on("checkedButtonChange", function (o) {
+                urlParams = urlParams.replace(/view=.*view/, "view=" + o.newValue.get("value"));
+                window.open('<c:url value="/core/document/view" />' + urlParams, "_self");
+            });
+
+            Event.addListener(saveButtonElId, "click", function(e) {
+                window.open(saveDoc);
+            });
+        }
     })();
     </script>
 </layout:main>

@@ -63,6 +63,6 @@ EXPORT.util = {};
         UI.addDomElementChild('div', exportDiv, null, { "class" : "hd"});
         var bd = UI.addDomElementChild('div', exportDiv, null, { "class" : "bd"});
         UI.addDomElementChild('label', bd, { "for" : exportInputFileElName, innerHTML: "File Name: "});
-        UI.addDomElementChild('input', bd, {id : exportInputFileElName, type: "text", value: "test"}, { width: "100%"});
+        UI.addDomElementChild('input', bd, { id : exportInputFileElName, type: "text", value: "test"}, { width: "100%"});
     }
 })();

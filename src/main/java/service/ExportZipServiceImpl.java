@@ -48,13 +48,13 @@ public class ExportZipServiceImpl extends ExportService {
         HashMap<String, String> docsWithNullContent = new HashMap<String, String>();
 
         for(SolrDocument doc : docs) {
-            String contentStr = SolrUtils.getFieldValue(doc, Constants.SOLR_CONTENT_FIELD_NAME, "");
-            String title = SolrUtils.getFieldValue(doc, Constants.SOLR_TITLE_FIELD_NAME, "No title");
+            String contentStr = SolrUtils.getFieldStringValue(doc, Constants.SOLR_CONTENT_FIELD_NAME, "");
+            String title      = SolrUtils.getFieldStringValue(doc, Constants.SOLR_TITLE_FIELD_NAME, "No title");
 
             if (!Utils.nullOrEmpty(contentStr)) {
                 writeToZipOutputStream(contentStr.getBytes(), title);
             } else {
-                docsWithNullContent.put(SolrUtils.getFieldValue(doc, Constants.SOLR_ID_FIELD_NAME, ""), title);
+                docsWithNullContent.put(SolrUtils.getFieldStringValue(doc, Constants.SOLR_ID_FIELD_NAME, ""), title);
             }
         }
 
@@ -159,4 +159,5 @@ public class ExportZipServiceImpl extends ExportService {
     public void beginDocWrite(final Writer writer) throws IOException {}
     public void endDocWrite(final Writer writer) throws IOException {}
     public void write(String field, String value, boolean lastField, Writer writer) throws IOException {}
+    public void exportHeaderRow(List<String> fields, final Writer writer) throws IOException {}
 }

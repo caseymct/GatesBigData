@@ -9,10 +9,11 @@ var WORDTREE = {};
         graphElHeight   = 0,
         graphElToIdxMap = {};
 
-    var NAME_KEY        = "name",
-        COUNT_KEY       = "count",
-        CHILDREN_KEY    = "children",
-        SOLR_IDS_KEY    = "solrIds",
+    var NAME_KEY              = "name",
+        COUNT_KEY             = "count",
+        CHILDREN_KEY          = "children",
+        SOLR_IDS_KEY          = "solr_ids",
+        GROUP_QUERIES_KEY     = "group_queries",
 
         FONT_MAX_SIZE         = 24,
         FONT_MIN_SIZE         = 10,
@@ -28,7 +29,7 @@ var WORDTREE = {};
     }
 
     function addAltQueries(paper, altQueries) {
-        if (altQueries == undefined) return [];
+        if (altQueries == undefined || altQueries.length == 0) return [];
 
         var i, descText = "";
         for(i = 0; i < altQueries.length; i++) {
@@ -210,6 +211,12 @@ var WORDTREE = {};
             ltree : ltree,
             altQueryRaphaelElements : addAltQueries(paper, altQueries)
         });
+    };
+
+    WORDTREE.selectNode = function(whichTree, nodeId, index) {
+        var tree = whichTree == 'R' ? WORDTREE.treeObj[index].rtree : WORDTREE.treeObj[index].ltree;
+        tree.unhighlightNode();
+        tree.selectNode(nodeId);
     };
 
     WORDTREE.search = function(searchStr, searchFromSel, index) {

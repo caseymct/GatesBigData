@@ -294,8 +294,7 @@ form div.fieldset_row_button_div {
 }
 
 #show_query {
-    font-size: 10px;
-    padding: 5px 0px 5px 0px;
+    font-size: 12px;
     word-wrap: break-word;
 }
 
@@ -325,17 +324,18 @@ form div.fieldset_row_button_div {
     visibility: visible;
     z-index: 5;
     background-color: white;
-    border: 1px solid #CCC;
-    padding: 5px;
-    max-width: 300px;
-    min-width: 193px;
+    /*border: 1px solid #CCC;*/
+    padding-top: 8px;
+    max-width: 200px;
+    min-width: 200px;
 }
 
 #num_found {
     font-weight: bold;
 }
 
-#tree_view, #doc_view {
+/*#tree_view,*/
+#doc_view {
     margin: 5px 0 0 5px;
 }
 
@@ -364,7 +364,7 @@ form div.fieldset_row_button_div {
     overflow: hidden;
     float: right;
     width: 400px;
-    height: 400px;
+    /*height: 400px;*/
 }
 
 #constrain_by_date {

@@ -1,5 +1,7 @@
 package model;
 
+import GatesBigData.utils.SolrUtils;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -15,14 +17,19 @@ public class FacetFieldEntryList implements Iterable<FacetFieldEntry> {
         this.facetFieldList = new ArrayList<FacetFieldEntry>();
     }
 
-    public void add(String name, String type, String schema) {
+    public void add(String name, String type, boolean multiValued) {
         if (names.contains(name)) {
             return;
         }
 
-        facetFieldList.add(new FacetFieldEntry(name, type, schema));
+        facetFieldList.add(new FacetFieldEntry(name, type, multiValued));
         names.add(name);
     }
+
+    public void add(String name, String type, String schema) {
+        add(name, type, SolrUtils.schemaStringIndicatesMultiValued(schema));
+    }
+
 
     public void add(FacetFieldEntry entry) {
         facetFieldList.add(entry);
@@ -44,7 +51,8 @@ public class FacetFieldEntryList implements Iterable<FacetFieldEntry> {
     }
 
     public FacetFieldEntry get(String name) {
-        return facetFieldList.get(names.indexOf(name));
+        int idx = names.indexOf(name);
+        return idx > -1 ? facetFieldList.get(idx) : null;
     }
 
     public FacetFieldEntry get(int index) {

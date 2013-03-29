@@ -20,13 +20,6 @@ function unhighlight(el, color) {
     el.attr(WordTree.STROKE_CSS_KEY, color);
 }
 
-function unhighlightNode(tree) {
-    var node = tree.nDatabaseNodes[tree.iSelectedNode];
-    node.isSelected = false;
-    unhighlight(node.raphaelElements[WordTree.BOUNDING_RECT_KEY], node.borderColor);
-    tree.iSelectedNode = -1;
-}
-
 WordNode = function (conf) {
     this.id     = conf['id'];
 	this.pid    = conf['pid'];
@@ -160,7 +153,7 @@ WordNode.prototype.changeRaphaelElementVisibility = function(hide) {
 };
 
 function setConfig(configOptions) {
-    var IMG_PATH = '../static/images/wordtree/';
+    var IMG_PATH = '/GatesBigData/static/images/wordtree/';
 
     var config =  {
         iMaxDepth : 100,
@@ -444,18 +437,25 @@ WordTree.prototype.getNodeFromNodeId = function(nodeId) {
     return this.nDatabaseNodes[this.mapIDs[nodeId]];
 };
 
-WordTree.prototype.selectNode = function (nodeId, rect) {
-    var bRect   = rect.data(WordTree.BOUNDING_RECT_KEY);
+WordTree.prototype.unhighlightNode = function() {
+    var node = this.nDatabaseNodes[this.iSelectedNode];
+    node.isSelected = false;
+    unhighlight(node.raphaelElements[WordTree.BOUNDING_RECT_KEY], node.borderColor);
+    this.iSelectedNode = -1;
+};
+
+WordTree.prototype.selectNode = function (nodeId) {
     var dbIndex = this.mapIDs[nodeId];
     var node    = this.nDatabaseNodes[dbIndex];
+    var bRect   = node.raphaelElements.boundingRect;
 
     node.isSelected = !node.isSelected;
 
     if (this.oppositeTree.iSelectedNode != -1) {
-        unhighlightNode(this.oppositeTree);
+        this.oppositeTree.unhighlightNode();
     }
     if ((this.iSelectedNode == dbIndex && !node.isSelected) || this.iSelectedNode != -1) {
-        unhighlightNode(this);
+        this.unhighlightNode();
     }
 
     if (node.isSelected) {
@@ -475,14 +475,14 @@ WordTree.prototype.collapseAboveLevel = function() {
 };
 
 WordTree.prototype._drawTree = function () {
-    const nodeRectRadius = 8, nodePadX = 10, nodePadY = 12, nodeHOffset = 12, nodeWOffset = 7, expandImgWidth = 15;
+    var nodeRectRadius = 8, nodePadX = 10, nodePadY = 12, nodeHOffset = 12, nodeWOffset = 7, expandImgWidth = 15;
     var node = null;
 
     function onClickSelect() {
         var tree = this.data('tree');
         var node = this.data('node');
         if (tree == undefined || node == undefined) return;
-        tree.selectNode(node.id, this);
+        tree.selectNode(node.id);
     }
 
     function onClickCollapse() {
@@ -561,7 +561,7 @@ WordTree.prototype._getText = function(paper, x, y, desc, textAttrs) {
 
 WordTree.prototype._addAnchorRect = function(paper, x, y, desc, textAttrs, anchorData,
                                              boundingRectAttrs, onClickHandler) {
-    const RECT_PAD_X_DEFAULT = 2;
+    var RECT_PAD_X_DEFAULT = 2;
 
     var aRect = null, bRect = null,
         text  = this._getText(paper, x, y, desc, textAttrs),
@@ -623,7 +623,7 @@ WordTree.prototype._addAnchorRect = function(paper, x, y, desc, textAttrs, ancho
 };
 
 WordTree.prototype._addTargetOverlays = function (target, textBBox) {
-    const imgSize = 15, imgX = textBBox.x2 + 5, imgY = textBBox.y + (textBBox.height - imgSize)/2;
+    var imgSize = 15, imgX = textBBox.x2 + 5, imgY = textBBox.y + (textBBox.height - imgSize)/2;
 
     var viewDocUrl = this.viewDocUrl,
               tree = this;
@@ -648,7 +648,7 @@ WordTree.prototype._addTargetOverlays = function (target, textBBox) {
             WordTree.setJustDraggedStatus(paper, false);
             return;
         }
-
+        debugger;
         var bbox = this.getBBox();
         var tgt  = this.data('target');
         var i, rectPadX = 10, rectPadY = 10, fontSize = 10, textPadY = 5, rectX = bbox.x, rectY = bbox.y;
@@ -772,7 +772,7 @@ WordTree.prototype.searchChildren = function(str, fromSel, nodeId, nodesFound) {
     var node = this.nDatabaseNodes[this.mapIDs[nodeId]];
     var nodeChildren = node.nodeChildren;
 
-    if (node.dsc.match(str)) {
+    if (node.dsc.match(eval('/' + str + '/i'))) {
         nodesFound.push(node);
     }
     for (var i = 0; i < nodeChildren.length; i++) {

@@ -44,6 +44,7 @@
                             </ul>
                         </div>
                     </div>
+                    <div class="clearboth"></div>
                 </div>
                 <div class="clearboth"></div>
                 <div id="facet_container">
@@ -70,29 +71,59 @@
 
         <script type="text/javascript">
         (function() {
-            var Menu = YAHOO.widget.Menu, Connect = YAHOO.util.Connect, Json = YAHOO.lang.JSON;
+            var Menu = YAHOO.widget.Menu, Connect = YAHOO.util.Connect, Json = YAHOO.lang.JSON,
+                Dom  = YAHOO.util.Dom;
 
-            var itemData = [];
+            var structuredElId              = "structured",
+                unstructuredElId            = "unstructured",
+                structuredDataResponseKey   = "structuredData",
+                titleResponseKey            = "title",
+                nameResponseKey             = "core",
+                coresResponseKey            = "cores";
+
+            var itemData = {
+                id      : "search",
+                itemdata: [
+                    { text: "Structured",   submenu: { id : structuredElId,   itemdata: [] } },
+                    { text: "Unstructured", submenu: { id : unstructuredElId, itemdata: [] } }
+                ]
+            };
+
             var navMenu = new Menu("nav", {
                 position: "static",
                 hidedelay:  750,
-                lazyload: false });
+                lazyload: false
+            });
 
             Connect.asyncRequest('GET', '<c:url value="/solr/corenames" />' , {
                 success : function(o) {
-                    var response = Json.parse(o.responseText);
-                    var cores = response['cores'];
+                    var entry, i,
+                        response = Json.parse(o.responseText),
+                        cores    = response[coresResponseKey],
+                        structuredItemDataSubMenu   = [],
+                        unstructuredItemDataSubMenu = [];
 
-                    for(var i = 0; i < cores.length; i++) {
-                        itemData.push( {text: cores[i]['title'], url: "<c:url value="/search/" />" + cores[i]['name'] });
+                    for(i = 0; i < cores.length; i++) {
+                        entry = { text: cores[i][titleResponseKey],
+                                  url: "<c:url value="/search/" />" + cores[i][nameResponseKey] };
+
+                        if (cores[i]['structuredData'] == 'true') {
+                            structuredItemDataSubMenu.push(entry);
+                        } else {
+                            unstructuredItemDataSubMenu.push(entry);
+                        }
                     }
+                    itemData.itemdata[0].submenu.itemdata = structuredItemDataSubMenu;
+                    itemData.itemdata[1].submenu.itemdata = unstructuredItemDataSubMenu;
 
                     navMenu.subscribe("beforeRender", function () {
                         if (this.getRoot() == this) {
-                            this.getItem(1).cfg.setProperty("submenu", { id: "search", itemdata: itemData });
+                            this.getItem(1).cfg.setProperty("submenu", itemData);
                         }
                     });
                     navMenu.render();
+
+                    Dom.setStyle(Dom.get("search"), "z-index", 10);
                 },
                 failure : function (o) {
                     alert("Could not retrieve core information.");

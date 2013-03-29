@@ -37,6 +37,15 @@ public class JsonParsingUtils {
         return s;
     }
 
+    public static HashMap<String, String> convertJSONObjectToHashMap(JSONObject jsonObject) {
+        HashMap<String, String> s = new HashMap<String, String>();
+
+        for(Object nameObject : jsonObject.names()) {
+            s.put(nameObject.toString(), jsonObject.getString(nameObject.toString()));
+        }
+        return s;
+    }
+
     public static Object extractJSONProperty(JSONObject jsonObject, List<String> fields, Class expectedReturnClass,
                                              Object defaultReturnValue) {
         Object currObject = jsonObject;

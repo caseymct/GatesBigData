@@ -1,0 +1,45 @@
+.search_label_container_div {
+    float : left;
+    width : 100%;
+    padding : 3px 0;
+}
+
+.search_label_div {
+    float : left;
+    width : 350px;
+    padding: 3px 0;
+}
+
+.search_header_label {
+    float : left;
+    font-weight : bold;
+    padding-right : 10px;
+}
+
+.only_sel_label {
+    vertical-align : middle;
+    float : left;
+    padding: 3px 0 10px 0;
+}
+
+.search_img {
+    vertical-align : middle;
+    height : 20px;
+    width : 20px;
+}
+
+#content {
+    width : 3000px;
+}
+
+#query_info div {
+    float : left;
+}
+
+#query_info span {
+    float : left;
+    text-align : right;
+    width : 100px;
+    padding-right : 10px;
+    font-weight : bold;
+}

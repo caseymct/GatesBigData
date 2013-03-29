@@ -21,8 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.IOException;
 import java.util.*;
 
-public class SolrReindexServiceImpl extends Configured implements SolrReindexService, Mapper<Text, Writable, Text, NutchWritable>,
-        Reducer<Text, NutchWritable, Text, SolrIndexAction> {
+public class SolrReindexServiceImpl extends Configured implements SolrReindexService {
 
     private HDFSService hdfsService;
     private CoreService coreService;
@@ -51,14 +50,14 @@ public class SolrReindexServiceImpl extends Configured implements SolrReindexSer
         setConf(job);
     }
 
-    public void reindexSolrCoreFromHDFSOLD(String coreName, Integer nThreads, Integer nFiles) {
+    public void reindexSolrCoreFromHDFS(String coreName, Integer nThreads, Integer nFiles) {
         nThreads = (nThreads == null || nThreads < 1) ? N_THREADS : nThreads;
         nFiles   = (nFiles == null || nFiles < 1) ? N_FILES : nFiles;
 
         List<String> segments = hdfsService.listSegments(coreName);
         HDFSNutchCoreFileIterator iter = new HDFSNutchCoreFileIterator(segments,
                                                         hdfsService.getNutchConfiguration(), hdfsService.getHDFSFileSystem(),
-                                                        HDFSUtils.getHDFSCrawlFetchDataFile(true, coreName, "00000"));
+                                                        new Path(""));
 
         HashMap<String, MapFile.Reader[]> parseDataReaders = hdfsService.getSegmentToMapFileReaderMap(coreName, HDFS_PARSE_DATA_DIR_FN);
         HashMap<String, MapFile.Reader[]> parseTextReaders = hdfsService.getSegmentToMapFileReaderMap(coreName, HDFS_PARSE_TEXT_DIR_FN);
@@ -76,74 +75,6 @@ public class SolrReindexServiceImpl extends Configured implements SolrReindexSer
         }
     }
 
-    public void reindexSolrCoreFromHDFS(String coreName, Integer nThreads, Integer nFiles) {
-        try {
-            setupMRJob(coreName);
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
-    public void map(Text key, Writable value, OutputCollector<Text, NutchWritable> output, Reporter reporter) throws IOException {
-        System.out.println("Mapping key " + key.toString());
-        output.collect(key, new NutchWritable(value));
-    }
-
-    public void reduce(Text key, Iterator<NutchWritable> values, OutputCollector<Text, SolrIndexAction> output, Reporter reporter) throws IOException {
-        System.out.println("Reducing key " + key.toString());
-    }
-
-
-    public void setupMRJob(String coreName) throws IOException {
-        long start = System.currentTimeMillis();
-
-        Path tmp = new Path("/tmp_" + System.currentTimeMillis() + "-" + new Random().nextInt());
-
-        //JobConf job = new JobConf(hdfsService.getHDFSConfiguration(), SolrReindexServiceImpl.class);
-        /*JobConf job = new JobConf(SolrReindexServiceImpl.class);
-
-        for (String segment : hdfsService.listSegments(coreName)) {
-            FileInputFormat.addInputPath(job, HDFSUtils.getHDFSCrawlFetchDir(true, coreName, segment));
-            FileInputFormat.addInputPath(job, HDFSUtils.getHDFSCrawlParseDir(true, coreName, segment));
-            FileInputFormat.addInputPath(job, HDFSUtils.getHDFSParseDataDir(true, coreName, segment));
-            FileInputFormat.addInputPath(job, HDFSUtils.getHDFSParseTextDir(true, coreName, segment));
-        }
-
-        job.setInputFormat(SequenceFileInputFormat.class);
-        //job.set(SolrConstants.SERVER_URL, SolrUtils.getSolrServerURI(coreName));
-        job.setJarByClass(SolrReindexServiceImpl.class);
-        job.setJobName("Reindex core " + coreName);
-        //FileInputFormat.addInputPath(job, HDFSUtils.getHDFSCrawlDBCurrentDir(true, coreName));
-
-        job.setMapperClass(SolrReindexServiceImpl.class);
-        job.setReducerClass(SolrReindexServiceImpl.class);
-        job.setOutputKeyClass(Text.class);
-        job.setOutputFormat(IndexerOutputFormat.class);
-        job.setMapOutputValueClass(NutchWritable.class);
-        job.setOutputValueClass(NutchWritable.class);
-
-        //job.set(SolrConstants.PARAMS, solrParams);
-        //NutchIndexWriterFactory.addClassToConf(job, SolrWriter.class);
-        //job.setReduceSpeculativeExecution(false);
-
-        Path tmp = new Path("C:/tmp_" + System.currentTimeMillis() + "-" + new Random().nextInt());
-        FileOutputFormat.setOutputPath(job, tmp);
-
-        try {
-            JobClient.runJob(job);
-            // do the commits once and for all the reducers in one go
-            //SolrServer solr =  SolrUtils.getHttpSolrServer(job);
-            //solr.commit();
-
-            long end = System.currentTimeMillis();
-            logger.info("SolrIndexer: elapsed: " + TimingUtil.elapsedTime(start, end));
-        }
-        catch (Exception e){
-            logger.error(e.toString());
-        } finally {
-           // FileSystem.get(job).delete(tmp, true);
-        }  */
-    }
 
     public void close() throws IOException { }
 

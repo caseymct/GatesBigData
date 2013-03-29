@@ -1,0 +1,54 @@
+.yui-skin-sam .yui-ac-input {
+    position       : static;
+    width          : 20em;
+    vertical-align : top;
+    height         : 1.8em;
+    padding-left   : 5px;
+}
+
+.yui-skin-sam .yui-ac-container {
+    width:20em;
+    left:0;
+}
+
+.toggle {
+    margin-left: 5px;
+}
+
+.toggle_label {
+    float : left;
+    margin-right : 10px;
+    margin-top : 10px;
+}
+
+.explain_span {
+    color: red;
+    float: left;
+    width: 300px;
+}
+/* needed for stacked instances for ie & sf z-index bug of absolute inside relative els */
+/*#x_axis_autocomplete { z-index:9001; }
+#y_axis_autocomplete { z-index:9000; }
+
+
+.yui-ac .open .yui-button button {
+    padding-bottom: 0;
+    padding-right: 10px;
+    background: url(/GatesBigData/static/images/collapse.png) no-repeat #F3F3F3;
+    background-size: 23px;
+    min-height: 0;
+    line-height: 1.5;
+}
+ */
+
+.yui-ac .yui-button button {
+    padding: 0 6px 0 6px;
+    min-height: 1.5em;
+}
+.info_div {
+    float : left;
+    text-align : right;
+    width : 100px;
+    padding-right : 10px;
+    font-weight : bold;
+}
