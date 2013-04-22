@@ -35,67 +35,68 @@ var DATA_TABVIEW = {};
         urls                            = {},
         buildCoreTabHtmlFn              = buildCoreTabHTML;
 
-    DATA_TABVIEW.init = function(names) {
-        urls = names[UI.URLS_KEY];
-        displayNames = names[UI.TAB_DISPLAY_NAMES_KEY];
-        coreNames = names[UI.CORE_NAMES_KEY];
-        selectedCore = names[UI.SELECTED_CORE_KEY];
+    DATA_TABVIEW.init = function(vars) {
+        urls         = vars[UI.URLS_KEY];
+        displayNames = vars[UI.TAB_DISPLAY_NAMES_KEY];
+        coreNames    = vars[UI.CORE_NAMES_KEY];
+        selectedCore = vars[UI.SELECTED_CORE_KEY];
 
-        buildCoreTabHtmlFn = UI.util.returnIfDefined(buildCoreTabHtmlFn, names[UI.BUILD_CORE_TAB_HTML_FN_KEY]);
+        buildCoreTabHtmlFn = UI.util.returnIfDefined(buildCoreTabHtmlFn, vars[UI.BUILD_CORE_TAB_HTML_FN_KEY]);
 
         buildHTML();
 
         var searchAutoCompleteParams = {};
-        searchAutoCompleteParams[UI.SUGGEST_URL_KEY] = urls[UI.SUGGEST_URL_KEY];
-        searchAutoCompleteParams[UI.SEARCH.SEARCH_FN_KEY] = search;
-        searchAutoCompleteParams[UI.SEARCH.ACKEYUP_FN_KEY] = acKeyup;
-        searchAutoCompleteParams[UI.TAB_LIST_EL_NAME_KEY] = searchTabListElName;
+        searchAutoCompleteParams[UI.SUGGEST_URL_KEY]         = urls[UI.SUGGEST_URL_KEY];
+        searchAutoCompleteParams[UI.SEARCH.SEARCH_FN_KEY]    = search;
+        searchAutoCompleteParams[UI.SEARCH.ACKEYUP_FN_KEY]   = acKeyup;
+        searchAutoCompleteParams[UI.TAB_LIST_EL_NAME_KEY]    = searchTabListElName;
         searchAutoCompleteParams[UI.TAB_CONTENT_EL_NAME_KEY] = searchTabContentElName;
         SEARCHAUTOCOMPLETE.ui.init(searchAutoCompleteParams);
 
         var queryBuilderParams = {};
         queryBuilderParams[UI.QUERY_BUILDER_AC_URL_KEY] = urls[UI.QUERY_BUILDER_AC_URL_KEY];
-        queryBuilderParams[UI.TAB_LIST_EL_NAME_KEY] = searchTabListElName;
-        queryBuilderParams[UI.TAB_CONTENT_EL_NAME_KEY] = searchTabContentElName;
+        queryBuilderParams[UI.TAB_LIST_EL_NAME_KEY]     = searchTabListElName;
+        queryBuilderParams[UI.TAB_CONTENT_EL_NAME_KEY]  = searchTabContentElName;
         QUERYBUILDER.ui.init(queryBuilderParams);
 
         var searchParams = {};
-        searchParams[UI.SEARCH.SELECT_DATA_COLUMN_DEFS_KEY] = names[UI.SEARCH.SELECT_DATA_COLUMN_DEFS_KEY];
-        searchParams[UI.SEARCH.DATA_SOURCE_FIELDS_KEY] = names[UI.SEARCH.DATA_SOURCE_FIELDS_KEY];
-        searchParams[UI.SEARCH.SELECT_DATA_REGEX_IGNORE_KEY] =  UI.util.specifyReturnValueIfUndefined(names[UI.SEARCH.SELECT_DATA_REGEX_IGNORE_KEY], 'thumbnail');
-        searchParams[UI.SEARCH.SUBMIT_FN_KEY] = search;
-        searchParams[UI.SEARCH.RESET_FN_KEY] = reset;
-        searchParams[UI.SEARCH.FORMAT_SEARCH_RESULT_FN_KEY] = names[UI.SEARCH.FORMAT_SEARCH_RESULT_FN_KEY];
-        searchParams[UI.DATA_TYPE_KEY] = UI.util.specifyReturnValueIfUndefined(names[UI.DATA_TYPE_KEY], UI.DATA_TYPE_STRUCTURED);
-        searchParams[UI.SEARCH.GET_FILTER_QUERY_FN_KEY] = getFilterQueryString;
-        searchParams[UI.URLS_KEY] = urls;
-        searchParams[UI.SEARCH.SEARCH_TAB_EL_NAME_KEY] = searchTabElName;
-        searchParams[UI.SEARCH.SEARCH_HEADER_EL_NAME_KEY] = searchHeaderElName;
-        searchParams[UI.SEARCH.SEARCH_INPUT_ELS_KEY] = getSearchInputEls();
+        searchParams[UI.SEARCH.SELECT_DATA_COLUMN_DEFS_KEY]  = vars[UI.SEARCH.SELECT_DATA_COLUMN_DEFS_KEY];
+        searchParams[UI.SEARCH.DATA_SOURCE_FIELDS_KEY]       = vars[UI.SEARCH.DATA_SOURCE_FIELDS_KEY];
+        searchParams[UI.SEARCH.SELECT_DATA_REGEX_IGNORE_KEY] = UI.util.specifyReturnValueIfUndefined(vars[UI.SEARCH.SELECT_DATA_REGEX_IGNORE_KEY], UI.THUMBNAIL_KEY);
+        searchParams[UI.SEARCH.SUBMIT_FN_KEY]                = search;
+        searchParams[UI.SEARCH.RESET_FN_KEY]                 = reset;
+        searchParams[UI.SEARCH.FORMAT_SEARCH_RESULT_FN_KEY]  = vars[UI.SEARCH.FORMAT_SEARCH_RESULT_FN_KEY];
+        searchParams[UI.DATA_TYPE_KEY]                       = UI.util.specifyReturnValueIfUndefined(vars[UI.DATA_TYPE_KEY], UI.DATA_TYPE_STRUCTURED);
+        searchParams[UI.SEARCH.GET_FILTER_QUERY_FN_KEY]      = getFilterQueryString;
+        searchParams[UI.URLS_KEY]                            = urls;
+        searchParams[UI.SEARCH.SEARCH_TAB_EL_NAME_KEY]       = searchTabElName;
+        searchParams[UI.SEARCH.SEARCH_HEADER_EL_NAME_KEY]    = searchHeaderElName;
+        searchParams[UI.SEARCH.SEARCH_INPUT_ELS_KEY]         = getSearchInputEls();
+        searchParams[UI.DISPLAY_NAME_KEY]                    = getDisplayNameFromCoreName(selectedCore);
+        searchParams[UI.FACET.UPDATE_FACET_FN]               = FACET.ui.buildFacetTree;
         searchParams[UI.SEARCH.INSERT_SEARCH_RESULTS_AFTER_EL_NAME_KEY] = searchFormElName;
-        searchParams[UI.SEARCH.INSERT_SORT_BUTTONS_AFTER_EL_NAME_KEY] = insertSortButtonsAfterElName;
+        searchParams[UI.SEARCH.INSERT_SORT_BUTTONS_AFTER_EL_NAME_KEY]   = insertSortButtonsAfterElName;
         searchParams[UI.SEARCH.INSERT_SEARCH_BUTTONS_AFTER_EL_NAME_KEY] = insertSearchButtonsAfterElName;
-        searchParams[UI.DISPLAY_NAME_KEY] = getDisplayNameFromCoreName(selectedCore);
-        searchParams[UI.FACET.UPDATE_FACET_FN] = FACET.ui.buildFacetTree;
+
         SEARCH.ui.init(searchParams);
 
         var facetParams = {};
-        facetParams[UI.FACET_URL_KEY] = urls[UI.FACET_URL_KEY];
+        facetParams[UI.FACET_URL_KEY]                             = urls[UI.FACET_URL_KEY];
         facetParams[UI.FACET.INSERT_FACET_HTML_AFTER_EL_NAME_KEY] = insertFacetsAfterElName;
         FACET.ui.init(facetParams);
 
         var datePickParams = {};
-        datePickParams[UI.DATEPICK.DATE_FIELD_KEY] = names[UI.DATEPICK.DATE_FIELD_KEY];
-        datePickParams[UI.DATE_PICKER_URL_KEY] = urls[UI.DATE_PICKER_URL_KEY];
+        datePickParams[UI.DATEPICK.DATE_FIELD_KEY]        = vars[UI.DATEPICK.DATE_FIELD_KEY];
+        datePickParams[UI.DATE_PICKER_URL_KEY]            = urls[UI.DATE_PICKER_URL_KEY];
         datePickParams[UI.DATEPICK.DATE_PICK_EL_NAME_KEY] = constrainByDateElName;
         DATEPICK.ui.init(datePickParams);
 
         var exportParams = {};
-        exportParams[UI.EXPORT_URL_KEY] = UI.util.specifyReturnValueIfUndefined(urls[UI.EXPORT_URL_KEY], urls[UI.JSP_EXPORT_URL_KEY]);
-        exportParams[UI.EXPORT.OPEN_SEPARATE_EXPORT_PAGE_KEY] = UI.util.specifyReturnValueIfUndefined(names[UI.EXPORT.OPEN_SEPARATE_EXPORT_PAGE_KEY], true);
-        exportParams[UI.EXPORT.EXPORT_BUTTON_EL_ID_KEY] = SEARCH.ui.getExportButtonElId();
-        exportParams[UI.SEARCH.GET_SEARCH_REQ_PARAMS_FN_KEY] = SEARCH.ui.getUrlSearchParams;
-        exportParams[UI.EXPORT.HTML_SIBLING_NAME_KEY] = searchFormElName;
+        exportParams[UI.EXPORT_URL_KEY]                       = UI.util.specifyReturnValueIfUndefined(urls[UI.EXPORT_URL_KEY], urls[UI.JSP_EXPORT_URL_KEY]);
+        exportParams[UI.EXPORT.OPEN_SEPARATE_EXPORT_PAGE_KEY] = UI.util.specifyReturnValueIfUndefined(vars[UI.EXPORT.OPEN_SEPARATE_EXPORT_PAGE_KEY], true);
+        exportParams[UI.EXPORT.EXPORT_BUTTON_EL_ID_KEY]       = SEARCH.ui.getExportButtonElId();
+        exportParams[UI.SEARCH.GET_SEARCH_REQ_PARAMS_FN_KEY]  = SEARCH.ui.getUrlSearchParams;
+        exportParams[UI.EXPORT.HTML_SIBLING_NAME_KEY]         = searchFormElName;
         EXPORT.ui.init(exportParams);
     };
 

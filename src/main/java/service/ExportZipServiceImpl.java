@@ -35,9 +35,9 @@ public class ExportZipServiceImpl extends ExportService {
 
             for(Map.Entry<String, String> entry : docsWithNullContent.entrySet()) {
                 headerStringBuilder.append("\t");
-                headerStringBuilder.append(Constants.SOLR_TITLE_FIELD_NAME).append(" : ").append(entry.getValue());
+                headerStringBuilder.append(Constants.SOLR_FIELD_NAME_TITLE).append(" : ").append(entry.getValue());
                 headerStringBuilder.append(Constants.DEFAULT_DELIMETER).append(" ");
-                headerStringBuilder.append(Constants.SOLR_ID_FIELD_NAME).append(" : ").append(entry.getKey());
+                headerStringBuilder.append(Constants.SOLR_FIELD_NAME_ID).append(" : ").append(entry.getKey());
                 headerStringBuilder.append(Constants.DEFAULT_NEWLINE);
             }
         }
@@ -48,13 +48,13 @@ public class ExportZipServiceImpl extends ExportService {
         HashMap<String, String> docsWithNullContent = new HashMap<String, String>();
 
         for(SolrDocument doc : docs) {
-            String contentStr = SolrUtils.getFieldStringValue(doc, Constants.SOLR_CONTENT_FIELD_NAME, "");
-            String title      = SolrUtils.getFieldStringValue(doc, Constants.SOLR_TITLE_FIELD_NAME, "No title");
+            String contentStr = SolrUtils.getFieldStringValue(doc, Constants.SOLR_FIELD_NAME_CONTENT, "");
+            String title      = SolrUtils.getFieldStringValue(doc, Constants.SOLR_FIELD_NAME_TITLE, "No title");
 
             if (!Utils.nullOrEmpty(contentStr)) {
                 writeToZipOutputStream(contentStr.getBytes(), title);
             } else {
-                docsWithNullContent.put(SolrUtils.getFieldStringValue(doc, Constants.SOLR_ID_FIELD_NAME, ""), title);
+                docsWithNullContent.put(SolrUtils.getFieldStringValue(doc, Constants.SOLR_FIELD_NAME_ID, ""), title);
             }
         }
 

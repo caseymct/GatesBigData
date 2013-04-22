@@ -20,6 +20,8 @@
     vertical-align : middle;
     float : left;
     padding: 3px 0 10px 0;
+    margin-left: 8px;
+    margin-top: 5px;
 }
 
 .search_img {
@@ -42,4 +44,77 @@
     width : 100px;
     padding-right : 10px;
     font-weight : bold;
+}
+
+#info fieldset {
+    border: 1px solid gray;
+    padding: 10px 0 20px 20px;
+    width: 600px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+#info legend {
+    padding: 0 10px;
+}
+
+#select_word_tree_div label, select {
+    float: left;
+    margin-top: 3px;
+    margin-left: 8px;
+}
+
+#select_word_tree_div input {
+    float: left;
+    padding: 3px 6px;
+}
+
+#graph_content fieldset {
+    border: 1px solid gray;
+    padding: 10px 0 20px 20px;
+    margin-top: 30px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+#graph_content legend {
+    padding: 0 10px;
+}
+
+#recenter, #reset {
+    float: left;
+    padding: 3px 6px;
+    margin-bottom: 15px;
+}
+
+#search_onlysel {
+    vertical-align: middle;
+    margin-top: 10px;
+    margin-left: 56px;
+    float:left;
+}
+
+#search_input {
+    margin-right: 20px;
+    padding: 2px;
+}
+
+#search_click {
+    padding: 3px 6px;
+    vertical-align: top;
+}
+
+#search_results_lbl {
+    float: left;
+    margin-top: 3px;
+    background: -webkit-gradient(linear,0% 40%,0% 70%,from(#F5F5F5),to(#F1F1F1));
+    background: -moz-linear-gradient(linear,0% 40%,0% 70%,from(#F5F5F5),to(#F1F1F1));
+    background: #f3f3f3;
+    color: #6e6e6e;
+    font: bold 12px Helvetica, Arial, sans-serif;
+    text-shadow: 0 1px 0 #fff;
+    border: solid 1px #dcdcdc;
+    border-radius: 2px;
+    -webkit-border-radius: 2px;
+    padding: 3px 6px;
 }

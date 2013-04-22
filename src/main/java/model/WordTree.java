@@ -122,29 +122,41 @@ public class WordTree {
         combineRootWords();
     }
 
+    private String combineSentences(String prefix, String suffix) {
+        List<String> prefixWords = Arrays.asList(prefix.split(" "));
+        List<String> suffixWords = Arrays.asList(suffix.split(" "));
+
+        int pEnd = prefixWords.size() - 1, sEnd = suffixWords.size();
+        String lastPrefixWord  = prefixWords.get(pEnd);
+        String firstSuffixWord = suffixWords.get(0);
+
+        List<String> combined = new ArrayList<String>();
+        if (pEnd >= 0) {
+            combined.addAll(prefixWords.subList(0, pEnd));
+        }
+
+        if (lastPrefixWord.toLowerCase().equals(firstSuffixWord.toLowerCase())) {
+            combined.addAll(suffixWords);
+        } else {
+            combined.add(lastPrefixWord.equals("") ? firstSuffixWord : "(" + lastPrefixWord + "/" + firstSuffixWord + ")");
+            if (sEnd > 1) {
+                combined.addAll(suffixWords.subList(1, sEnd));
+            }
+        }
+        return StringUtils.join(combined, " ");
+    }
+
     private void combineRootWords() {
         if (suffixQueryRoot == null || prefixQueryRoot == null) {
             return;
         }
 
         if (suffixQueryRoot.getCount() == prefixQueryRoot.getCount()) {
-            List<String> combinedPrefixWords = Arrays.asList(prefixQueryRoot.getWord().split(" "));
-            List<String> combinedSuffixWords = Arrays.asList(suffixQueryRoot.getWord().split(" "));
-            int pEnd = combinedPrefixWords.size() - 1, sEnd = combinedSuffixWords.size() - 1;
+            String combinedWord = combineSentences(prefixQueryRoot.getWord(), suffixQueryRoot.getWord());
+            String combinedSentence = combineSentences(prefixQueryRoot.getSentence(), suffixQueryRoot.getSentence());
 
-            String lastPrefixWord  = combinedPrefixWords.get(pEnd);
-            String firstSuffixWord = combinedSuffixWords.get(0);
-
-            String combinedWord = (pEnd >= 0) ? StringUtils.join(combinedPrefixWords.subList(0, pEnd), " ") : "";
-            if (lastPrefixWord.toLowerCase().equals(firstSuffixWord.toLowerCase())) {
-                combinedWord += " " + suffixQueryRoot.getWord();
-            } else {
-                combinedWord += " (" + lastPrefixWord + "/" + firstSuffixWord + ") ";
-                if (sEnd > 1) {
-                    combinedWord += StringUtils.join(combinedSuffixWords.subList(1, sEnd), " ");
-                }
-            }
-
+            suffixQueryRoot.setSentence(combinedSentence);
+            prefixQueryRoot.setSentence(combinedSentence);
             suffixQueryRoot.setWord(combinedWord);
             prefixQueryRoot.setWord(combinedWord);
         }
@@ -215,8 +227,8 @@ public class WordTree {
         g.writeArrayFieldStart(SOLR_IDS_KEY);
         for(String solrId : curr.getSolrIds()) {
             g.writeStartObject();
-            Utils.writeValueByType(Constants.SOLR_ID_FIELD_NAME, solrId, g);
-            Utils.writeValueByType(Constants.SOLR_TITLE_FIELD_NAME, Utils.getObjectIfExists(solrIDToTitleMap, solrId, ""), g);
+            Utils.writeValueByType(Constants.SOLR_FIELD_NAME_ID, solrId, g);
+            Utils.writeValueByType(Constants.SOLR_FIELD_NAME_TITLE, Utils.getObjectIfExists(solrIDToTitleMap, solrId, ""), g);
             g.writeEndObject();
         }
         g.writeEndArray();    */

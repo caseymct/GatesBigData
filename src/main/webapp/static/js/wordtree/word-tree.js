@@ -1,26 +1,22 @@
 var WORDTREE = {};
 
 (function() {
-    WORDTREE.treeObj = [];
+    WORDTREE.treeObj = { paper : null, rtree : null, ltree : null, altQueryRaphaelElements: [] };
 
-    var nodeID          = -1,
-        viewDocUrl      = "",
-        maxLevel        = 0,
-        graphElHeight   = 0,
-        graphElToIdxMap = {};
+    var nodeID    = -1,
+        searchUrl = "",
+        maxLevel  = 0;
 
-    var NAME_KEY              = "name",
-        COUNT_KEY             = "count",
-        CHILDREN_KEY          = "children",
-        SENTENCE_KEY          = "sentence",
-
-        FONT_MAX_SIZE         = 24,
-        FONT_MIN_SIZE         = 10,
-        TOP_X_ADJUST_DEFAULT  = 100,
-        TOP_Y_ADJUST_DEFAULT  = 500,
-        TEXT_X_PADDING        = 5,
-        TEXT_Y_PADDING        = 8,
-        DESC_TEXT_FONT_SIZE   = 14;
+    var NAME_KEY             = 'name',           COUNT_KEY            = 'count',
+        CHILDREN_KEY         = 'children',       SENTENCE_KEY         = 'sentence',
+        PAPER_KEY            = 'paper',          PREFIXES_KEY         = 'prefixes',
+        SUFFIXES_KEY         = 'suffixes',       ALT_QUERIES_KEY      = 'altQueries',
+        SEARCH_URL_KEY       = 'searchUrl',
+    
+        FONT_MAX_SIZE        = 24,               FONT_MIN_SIZE        = 10,
+        TOP_X_ADJUST_DEFAULT = 0,                TOP_Y_ADJUST_DEFAULT = 0,
+        TEXT_X_PADDING       = 5,                TEXT_Y_PADDING       = 8,
+        DESC_TEXT_FONT_SIZE  = 14;
 
 
     function size(count, level){
@@ -56,14 +52,14 @@ var WORDTREE = {};
         var rectH = (altQueriesEl.getBBox().y2 - descTextBBox.y) + TEXT_Y_PADDING;
 
         var rect = paper.rect(Math.min(altQueriesBBox.x, descTextBBox.x) - TEXT_X_PADDING, y, rectW, rectH, 8).attr({
-            fill : 'none',
+            fill : 'white',
             stroke : 'lightgray'
         });
 
         return [descTextEl, altQueriesEl, rect];
     }
 
-    function add(json, pid, tree, level) {
+    function add(json, pid, tree, level, altQueries) {
         if (level > maxLevel) {
             maxLevel = level;
         }
@@ -71,15 +67,15 @@ var WORDTREE = {};
         nodeID++;
         var name     = json[NAME_KEY];
         var count    = json[COUNT_KEY];
-        var sentence = json[SENTENCE_KEY];
         var text     = name + " (" + count + ") ";
-        tree.add(nodeID, pid, text, size(count, level), sentence);
+        var tgt      = (nodeID == 0 && altQueries.length > 0) ? JSON.stringify(altQueries) : json[SENTENCE_KEY];
+        tree.add(nodeID, pid, text, size(count, level), tgt);
 
         var children = json[CHILDREN_KEY];
         if (children != undefined) {
             var parentID = nodeID;
             for(var i = 0; i < children.length; i++) {
-                add(children[i], parentID, tree, level + 1);
+                add(children[i], parentID, tree, level + 1, altQueries);
             }
         }
     }
@@ -87,19 +83,14 @@ var WORDTREE = {};
     function redraw(rtree, ltree) {
         rtree.UpdateTree();
         ltree.UpdateTree();
-        rtree.config.topXAdjustment = 0;
-        ltree.config.topXAdjustment = 0;
-
-        rtree.UpdateTree();
-        ltree.UpdateTree();
         rtree.collapseAboveLevel();
         ltree.collapseAboveLevel();
     }
 
-    function createTree(words, treeOptions) {
+    function createTree(words, treeOptions, altQueries) {
         nodeID = -1;
         var tree = new WordTree(treeOptions);
-        add(words, -1, tree, 0);
+        add(words, -1, tree, 0, altQueries);
         return tree;
     }
 
@@ -112,8 +103,8 @@ var WORDTREE = {};
                 topYAdjustment : TOP_X_ADJUST_DEFAULT
             },
             settings : {
-                paper       : paper,
-                viewDocUrl  : viewDocUrl
+                paper     : paper,
+                searchUrl : searchUrl
             }
         };
     }
@@ -122,15 +113,12 @@ var WORDTREE = {};
         WordTree.setJustDraggedStatus(paper, true);
     }
 
-    function getAllElements(parentId) {
-        var index = graphElToIdxMap[parentId];
-
-        return WORDTREE.treeObj[index].ltree.paperSet.items.concat(WORDTREE.treeObj[index].rtree.paperSet.items,
-               WORDTREE.treeObj[index].altQueryRaphaelElements);
+    function getAllElements() {
+        return WORDTREE.treeObj.ltree.paperSet.items.concat(WORDTREE.treeObj.rtree.paperSet.items);
     }
 
     var startAll = function () {
-        var allElements = getAllElements(this.paper.canvas.parentNode.id);
+        var allElements = getAllElements();//this.paper.canvas.parentNode.id);
 
         for(var i = 0; i < allElements.length; i++){
             var el = allElements[i], bbox = el.getBBox(), isPath = (allElements[i].type == "path");
@@ -140,7 +128,7 @@ var WORDTREE = {};
         }
     };
     var moveAll = function (dx, dy) {
-        var allElements = getAllElements(this.paper.canvas.parentNode.id);
+        var allElements = getAllElements();//this.paper.canvas.parentNode.id);
         for(var i = 0; i < allElements.length; i++) {
             var el = allElements[i], bbox = el.getBBox(), isPath = (allElements[i].type == "path");
             if (!isPath) {
@@ -153,10 +141,9 @@ var WORDTREE = {};
     };
     var upAll = function () { };
 
-    function getSelectedElementTransform(field) {
-        var index = graphElToIdxMap[field],
-            ltree = WORDTREE.treeObj[index].ltree,
-            rtree = WORDTREE.treeObj[index].rtree,
+    function getSelectedElementTransform() {
+        var ltree = WORDTREE.treeObj.ltree,
+            rtree = WORDTREE.treeObj.rtree,
             lsel = ltree.iSelectedNode,
             rsel = rtree.iSelectedNode;
 
@@ -169,9 +156,9 @@ var WORDTREE = {};
                  dy : rootNode.YPosition - selNode.raphaelElements.boundingRect.attr('y') };
     }
 
-    WORDTREE.recenterOnSelected = function(field) {
-        var allElements = getAllElements(field);
-        var xform = getSelectedElementTransform(field);
+    WORDTREE.recenterOnSelected = function() {
+        var allElements = getAllElements();
+        var xform = getSelectedElementTransform();
         if (xform == null) return;
 
         for(var i = 0; i < allElements.length; i++) {
@@ -185,17 +172,11 @@ var WORDTREE = {};
     };
 
     WORDTREE.makeWordTrees = function(conf) {
-        var paper      = conf['paper'],
-            prefixes   = conf['prefixes'],
-            suffixes   = conf['suffixes'],
-            altQueries = conf['altQueries'];
-        graphElHeight  = conf['graphElHeight'];
-        viewDocUrl     = conf['viewDocUrl'];
+        var paper = conf[PAPER_KEY], altQueries = conf[ALT_QUERIES_KEY];
+        searchUrl = conf[SEARCH_URL_KEY];
 
-        graphElToIdxMap[conf['graphElName']] = WORDTREE.treeObj.length;
-
-        var rtree = createTree(suffixes, getTreeOptions(WordTree.RO_LEFT,  paper));
-        var ltree = createTree(prefixes, getTreeOptions(WordTree.RO_RIGHT, paper));
+        var rtree = createTree(conf[SUFFIXES_KEY], getTreeOptions(WordTree.RO_LEFT,  paper), altQueries);
+        var ltree = createTree(conf[PREFIXES_KEY], getTreeOptions(WordTree.RO_RIGHT, paper), altQueries);
         rtree.setOppositeTree(ltree);
         ltree.setOppositeTree(rtree);
 
@@ -204,29 +185,52 @@ var WORDTREE = {};
         ltree.paperSet.drag(moveAll, startAll, upAll);
         rtree.paperSet.drag(moveAll, startAll, upAll);
 
-        WORDTREE.treeObj.push({
+        WORDTREE.treeObj = {
             paper : paper,
             rtree : rtree,
-            ltree : ltree,
-            altQueryRaphaelElements : addAltQueries(paper, altQueries)
-        });
+            ltree : ltree
+        };
     };
 
-    WORDTREE.selectNode = function(whichTree, nodeId, index) {
-        var tree = whichTree == 'R' ? WORDTREE.treeObj[index].rtree : WORDTREE.treeObj[index].ltree;
+    WORDTREE.selectNode = function(whichTree, nodeId) {
+        var tree = whichTree == 'R' ? WORDTREE.treeObj.rtree : WORDTREE.treeObj.ltree;
+        tree.expandParents(nodeId);
         tree.unhighlightNode();
         tree.selectNode(nodeId);
     };
 
-    WORDTREE.search = function(searchStr, searchFromSel, index) {
-        var ltree = WORDTREE.treeObj[index].ltree,
-            rtree = WORDTREE.treeObj[index].rtree;
+
+
+    function rootNodeIndex(foundNodes) {
+        for(var i = 0; i < foundNodes.length; i++) {
+            if (foundNodes[i].pid == -1) return i;
+        }
+        return -1;
+    }
+
+    function hasRootNode(foundNodes) {
+        return rootNodeIndex(foundNodes) >= 0;
+    }
+
+    WORDTREE.search = function(searchStr, searchFromSel) {
+        var ltree = WORDTREE.treeObj.ltree,
+            rtree = WORDTREE.treeObj.rtree;
 
         if (searchFromSel && ltree.iSelectedNode == -1 && rtree.iSelectedNode == -1) {
             searchFromSel = false;
         }
+        var foundNodes = [];
+        if (!searchFromSel || rtree.iSelectedNode != -1) {
+            foundNodes = rtree.search(searchStr, searchFromSel);
+        }
 
-        return { rtreeNodes : (!searchFromSel || rtree.iSelectedNode != -1) ? rtree.search(searchStr, searchFromSel) : [],
-                 ltreeNodes : (!searchFromSel || ltree.iSelectedNode != -1) ? ltree.search(searchStr, searchFromSel) : []};
+        if (!searchFromSel || ltree.iSelectedNode != -1) {
+            var ltreeNodes = ltree.search(searchStr, searchFromSel);
+            if (hasRootNode(foundNodes) && hasRootNode(ltreeNodes)) {
+                ltreeNodes.pop(rootNodeIndex(ltreeNodes));
+            }
+            foundNodes = foundNodes.concat(ltreeNodes);
+        }
+        return foundNodes;
     };
 })();

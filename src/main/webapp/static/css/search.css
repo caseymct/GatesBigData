@@ -375,3 +375,12 @@ form div.fieldset_row_button_div {
 #date_begin, #date_end {
     padding: 2px;
 }
+
+#show_query_button {
+    padding: 3px 8px;
+    visibility : hidden;
+}
+
+#show_query_button div {
+    font-size : 12px;
+}

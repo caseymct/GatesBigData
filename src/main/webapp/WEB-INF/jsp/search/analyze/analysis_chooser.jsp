@@ -21,14 +21,19 @@
 
         var infoElId         = 'info',              wordTreeElId              = 'wordtree',
             wordTreeSelectId = 'wordtree_select',   wordTreeSelectContainerId = 'wordtree_select_container',
-            xAxisInputElId   = "x_axis_field",      xAxisACElId               = "x_axis_autocomplete",
-            xAxisToggleElId  = "x_axis_toggle",     xAxisContainerElId        = "x_axis_container",
-            yAxisInputElId   = "y_axis_field",      yAxisACElId               = "y_axis_autocomplete",
-            yAxisToggleElId  = "y_axis_toggle",     yAxisContainerElId        = "y_axis_container",
-            seriesInputElId  = "series_field",      seriesACElId              = "series_autocomplete",
-            seriesToggleElId = "series_toggle",     seriesContainerElId       = "series_container",
+            xAxisInputElId   = 'x_axis_field',      xAxisACElId               = 'x_axis_autocomplete',
+            xAxisToggleElId  = 'x_axis_toggle',     xAxisContainerElId        = 'x_axis_container',
+            yAxisInputElId   = 'y_axis_field',      yAxisACElId               = 'y_axis_autocomplete',
+            yAxisToggleElId  = 'y_axis_toggle',     yAxisContainerElId        = 'y_axis_container',
+            seriesInputElId  = 'series_field',      seriesACElId              = 'series_autocomplete',
+            seriesToggleElId = 'series_toggle',     seriesContainerElId       = 'series_container',
             plotElId         = 'plot',              infoEl                    = Dom.get(infoElId),
-            warnDialogElName = "warn_dialog",       warnDialogCSSClass        = "yui-pe-content";
+            warnDialogElName = 'warn_dialog',       warnDialogCSSClass        = 'yui-pe-content',
+            toggleCSSClass   = 'toggle',            toggleLabelCSSClass       = 'toggle_label',
+
+            CORE_KEY         = 'core',              QUERY_KEY                 = 'query',
+            FQ_KEY           = 'fq',                NUM_FOUND_KEY             = 'numfound',
+            INFO_FIELD_KEY   = 'infofield';
 
         var wordTreeSelected = null,                warnDlg                   = null,
             xAxisSelected    = {},                  yAxisSelected             = {},
@@ -41,14 +46,14 @@
             baseUrl             = '<c:url value="/" />',
             infoFieldsUrl       = baseUrl + "search/infofields",
             wordTreeUrl         = baseUrl + "search/analyze/wordtree" + urlRequestStr,
-            plotUrl             = baseUrl + "search/analyze/plot" + UI.util.constructRequestString(requestParams, ['core', 'query', 'fq', 'numfound']);
+            plotUrl             = baseUrl + "search/analyze/plot" + UI.util.constructRequestString(requestParams, [CORE_KEY, QUERY_KEY, FQ_KEY, NUM_FOUND_KEY]);
 
         /* Code to execute */
         buildInfoHtml();
         buildWordTreeHTML();
         createSelect(wordTreeSelectContainerId, wordTreeSelectId);
 
-        if (requestParams[UI.STRUCTURED_DATA_EL_ID_KEY] == "false") {
+        if (requestParams[UI.STRUCTURED_DATA_EL_ID_KEY] == "true") {
             buildPlotSelectHTML();
             initWarnDlg();
 
@@ -70,7 +75,6 @@
             var ac = new AutoComplete(acInputElName, acContainerElName, ds, acConfigs);
 
             var toggleEl = Dom.get(acToggleElId);
-
             var button = new Button(toggleEl);
 
             var toggle = function(e) {
@@ -91,8 +95,8 @@
         }
 
         function adjustContentHeight(nFields) {
-            var newH = nFields * 20;
-            var h = parseInt(Dom.getStyle(UI.CONTENT_EL_NAME, "height").replace("px", ""));
+            var newH = nFields * 25;
+            var h = UI.util.getNPixels(Dom.getStyle(UI.CONTENT_EL_NAME, "height"));
             if (newH > h) {
                 Dom.setStyle(Dom.get(UI.CONTENT_EL_NAME), "height", newH + "px");
             }
@@ -100,8 +104,8 @@
 
         function createAutoComplete(field, acInputElName, acContainerElName, acToggleElId) {
             var countsKey = (field == UI.INFO_FIELDS_SERIES_FIELDS_KEY) ? 'separatefieldcounts' : 'nonnullcounts';
-            var url = infoFieldsUrl + UI.util.constructRequestString(requestParams, ['core', 'query', 'fq'],
-                    [ { key : 'infofield', value : field }, { key : countsKey, value : true }]);
+            var url = infoFieldsUrl + UI.util.constructRequestString(requestParams, [CORE_KEY, QUERY_KEY, FQ_KEY],
+                    [ { key : INFO_FIELD_KEY, value : field }, { key : countsKey, value : true }]);
 
             Connect.asyncRequest('GET', url, {
                 success: function(o) {
@@ -124,7 +128,8 @@
                 this.set("label", ("<em class=\"yui-button-label\">" + wordTreeSelected + "</em>"));
             };
 
-            var url = infoFieldsUrl + "?core=" + requestParams["core"] + "&infofield=" + UI.INFO_FIELDS_WORD_TREE_FIELDS_KEY;
+            var url = infoFieldsUrl + UI.util.constructRequestString(requestParams, [CORE_KEY],
+                        [{ key : INFO_FIELD_KEY, value : UI.INFO_FIELDS_WORD_TREE_FIELDS_KEY }]);
             Connect.asyncRequest('GET', url, {
                 success: function(o) {
                     var response = Json.parse(o.responseText);
@@ -161,27 +166,27 @@
 
         function buildWordTreeHTML() {
             var div = UI.addDomElementChild('div', infoEl, {}, { "padding-top" : "20px"});
-            var fieldset = UI.addDomElementChild('fieldset', div, {}, { border: "1px solid gray", padding : "10px 0px 20px 20px" });
-            UI.addDomElementChild('legend', fieldset, { innerHTML: "Word Tree"}, { padding: "0px 10px 0px 10px" });
+            var fieldset = UI.addDomElementChild('fieldset', div);
+            UI.addDomElementChild('legend', fieldset, { innerHTML: "Word Tree"});
             div = UI.addDomElementChild('div', fieldset);
             UI.addDomElementChild('span', div,  { innerHTML : "Field: "}, { "vertical-align" : "4px" });
             UI.addDomElementChild('label', div, { id : wordTreeSelectId });
             UI.addClearBothDiv(div);
-            UI.addDomElementChild('a', fieldset, { id: wordTreeElId, innerHTML: "Show word tree", href: "#"},
-                    { "class" :  "button small", "margin-top" : "20px" });
+            UI.addDomElementChild('a', fieldset, { id: wordTreeElId, innerHTML: "Show word tree" }, { 'class' : 'button small' });
 
             Event.addListener(wordTreeElId, "click", function(o) {
                 Event.stopEvent(o);
-                window.open(wordTreeUrl + "&analysisfield=" + wordTreeSelected, "_blank");
+                window.open(wordTreeUrl + '&analysisfield=' + wordTreeSelected, '_blank');
             });
         }
 
         function buildACContainer(parentDiv, inputElId, axisACElId, toggleElId, containerElId, labelText) {
-            UI.addDomElementChild('label', parentDiv, { htmlFor : inputElId, innerHTML: labelText }, { "class" : "toggle_label" });
-            var acDiv = UI.addDomElementChild('div', parentDiv, { id : axisACElId }, { padding : "5px" } );
-            UI.addDomElementChild('input', acDiv, { id : inputElId, type : "text"});
-            UI.addDomElementChild('input', acDiv, { id : toggleElId, type : "button", name : toggleElId, value: "Show" }, { "class" : "toggle"});
-            UI.addDomElementChild('div', acDiv, { id : containerElId });
+
+            var acDiv = UI.addDomElementChild('div', parentDiv, { id : axisACElId });
+            UI.addDomElementChild('label', acDiv, { htmlFor : inputElId, innerHTML: labelText }, { 'class' : toggleLabelCSSClass });
+            UI.addDomElementChild('input', acDiv, { id : inputElId,  type : "text"});
+            UI.addDomElementChild('input', acDiv, { id : toggleElId, type : "button", name : toggleElId, value: "Show" }, { 'class' : toggleCSSClass });
+            UI.addDomElementChild('div',   acDiv, { id : containerElId });
         }
 
         function initWarnDlg() {
@@ -204,15 +209,14 @@
                             "420 records have valid ACCOUNT_DATE values.<br>" +
                     "<span class='explain_span'><b>Y Axis field</b> : ITEM_COST (0)</span>" +
                             " A value of 0 means all ITEM_COST values for this search are undefined.<br>" +
-                    "<span class='explain_span'><b>Series field</b> : CUSTOMER_NAME (10)</span>" +
-                            " This search can be split into 10 different series per customer name."},
-                    { "margin-bottom" : "30px" });
+                    "<span class='explain_span explain_span_last'><b>Series field</b> : CUSTOMER_NAME (10)</span>" +
+                            " This search can be split into 10 different series per customer name."});
         }
 
         function buildPlotSelectHTML() {
             var div = UI.addDomElementChild('div', infoEl, {}, { "padding-top" : "10px"} );
-            var fieldset = UI.addDomElementChild('fieldset', div, {}, { border: "1px solid gray", padding : "10px 0px 20px 20px" });
-            UI.addDomElementChild('legend', fieldset, { innerHTML: "Plot"}, { padding: "0px 10px 0px 10px" });
+            var fieldset = UI.addDomElementChild('fieldset', div);
+            UI.addDomElementChild('legend', fieldset, { innerHTML: "Plot"});
 
             addExplanatoryPlotHTML(fieldset);
 
@@ -224,8 +228,7 @@
             buildWarnDlgHTML(div);
 
             UI.addClearBothDiv(div);
-            UI.addDomElementChild('a', fieldset, { id: plotElId, innerHTML: "Plot", href: "#"},
-                    { "class" :  "button small", "margin-top" : "20px" });
+            UI.addDomElementChild('a', fieldset, { id: plotElId, innerHTML: "Plot" }, { "class" :  "button small" });
 
             Event.addListener(plotElId, "click", function(o) {
                 Event.stopEvent(o);

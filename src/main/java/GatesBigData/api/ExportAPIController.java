@@ -122,6 +122,7 @@ public class ExportAPIController extends APIController {
                                     HttpServletResponse response) throws IOException {
 
         SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, request.getSession());
+        fq = SolrUtils.composeFilterQuery(fq, schemaInfo);
 
         List<String> fields;
         if (Utils.nullOrEmpty(fieldString)) {

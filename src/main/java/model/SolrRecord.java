@@ -36,7 +36,7 @@ public class SolrRecord {
         String contentStr = jsonObject.toString(3).replaceAll("\n", Constants.DEFAULT_NEWLINE);
         content = contentStr.getBytes();
         contentType = SolrUtils.getDocumentContentType(doc);
-        id  = SolrUtils.getFieldStringValue(doc, Constants.SOLR_ID_FIELD_NAME, "not_found");
+        id  = SolrUtils.getFieldStringValue(doc, Constants.SOLR_FIELD_NAME_ID, "not_found");
         fileName = new File(id).getName();
     }
 

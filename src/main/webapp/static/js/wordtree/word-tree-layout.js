@@ -21,34 +21,35 @@ function unhighlight(el, color) {
 }
 
 WordNode = function (conf) {
-    this.id     = conf['id'];
-	this.pid    = conf['pid'];
-	this.dsc    = conf['dsc'];
-	this.w      = conf['w'];
-	this.h      = conf['h'];
-	this.target = conf['target'];
-    this.paper  = conf['paper'];
-    this.size   = conf['size'];
+    this.id             = conf['id'];
+	this.pid            = conf['pid'];
+	this.dsc            = conf['dsc'];
+	this.w              = conf['w'];
+	this.h              = conf['h'];
+	this.target         = conf['target'];
+    this.paper          = conf['paper'];
+    this.size           = conf['size'];
+    this.prefixTree     = conf['prefixTree'];
 
-	this.siblingIndex = 0;
-	this.dbIndex = 0;
+	this.siblingIndex   = 0;
+	this.dbIndex        = 0;
 	
-	this.XPosition = 0;
-	this.YPosition = 0;
-	this.prelim = 0;
-	this.modifier = 0;
-	this.leftNeighbor = null;
-	this.rightNeighbor = null;
-	this.nodeParent = null;	
-	this.nodeChildren = [];
-	
-	this.isCollapsed = false;
-	this.canCollapse = false;
-	
-	this.isSelected = false;
+	this.XPosition      = 0;
+	this.YPosition      = 0;
+	this.prelim         = 0;
+	this.modifier       = 0;
+	this.leftNeighbor   = null;
+	this.rightNeighbor  = null;
+	this.nodeParent     = null;
+	this.nodeChildren   = [];
 
-    this.color = 'black';
-    this.borderColor = 'lightgray';
+	this.isCollapsed    = false;
+	this.canCollapse    = false;
+	
+	this.isSelected     = false;
+
+    this.color          = 'black';
+    this.borderColor    = 'lightgray';
     this._initRaphaelElementsObject();
 };
 
@@ -163,7 +164,7 @@ function setConfig(configOptions) {
         iRootOrientation : WordTree.RO_LEFT,
         topXAdjustment : 0,
         topYAdjustment : 0,
-        collapseAboveLevel : 1,
+        levelToCollapseAbove : 0,
         linkColor : "#D68330",
         nodeColor : "#CCCCFF",
         nodeBorderColor : "blue",
@@ -201,7 +202,7 @@ WordTree = function (options) {
 	
 	this.rootYOffset = 0;
 	this.rootXOffset = 0;
-	
+
 	this.nDatabaseNodes = [];
 	this.mapIDs = {};
 
@@ -214,8 +215,6 @@ WordTree = function (options) {
 	this.root = new WordNode({ id : -1, pid : null, dsc : null, w : 2, h : 2, size : this.size, target : null, paper : this.paper });
 	this.iSelectedNode = -1;
     this.paperSet = this.paper.set();
-    this.minY = 0;
-    this.maxY = 0;
     this.rootElX = 0;
     this.rootElY = 0;
     this.rootNodeRaphaelElementId = this.orientedRight() ? WordTree.PREFIX_ROOT_NODE_RAPHAEL_EL_ID : WordTree.SUFFIX_ROOT_NODE_RAPHAEL_EL_ID;
@@ -255,6 +254,12 @@ WordTree.FONT_SIZE_CSS_KEY   = 'font-size';
 WordTree.FONT_FAMILY_CSS_KEY = 'font-family';
 WordTree.TEXT_ANCHOR_CSS_KEY = 'text-anchor';
 
+WordTree.NODE_RECT_RADIUS    = 8;
+WordTree.NODE_PAD_X          = 10;
+WordTree.NODE_PAD_Y          = 12;
+WordTree.NODE_H_OFFSET       = 12;
+WordTree.NODE_W_OFFSET       = 7;
+WordTree.EXPAND_IMG_WIDTH    = 15;
 WordTree.NODE_HIGHLIGHT_BORDER_COLOR = 'red';
 
 WordTree.getJustDraggedEl = function(paper) {
@@ -304,8 +309,7 @@ WordTree._firstWalk = function (tree, node, level) {
             leftSibling.prelim + tree._getNodeSize(leftSibling) + tree.config.iSiblingSeparation;
     } else {
         var n = node._getChildrenCount();
-        for(var i = 0; i < n; i++)
-        {
+        for(var i = 0; i < n; i++) {
             var iChild = node._getChildAt(i);
             WordTree._firstWalk(tree, iChild, level + 1);
         }
@@ -366,8 +370,9 @@ WordTree._apportion = function (tree, node, level) {
 
 WordTree._secondWalk = function (tree, node, level, X, Y) {
     if (level <= tree.config.iMaxDepth) {
-        node.YPosition = tree.rootXOffset + node.prelim + X;
-        node.XPosition = tree.rootYOffset + Y;
+
+        node.YPosition = tree.rootYOffset + node.prelim + X;
+        node.XPosition = tree.rootXOffset + Y;
 
         if (tree.orientedRight()) {
             node.XPosition = -node.XPosition - node.w;
@@ -387,12 +392,10 @@ WordTree.prototype._positionTree = function () {
 	this.maxLevelHeight     = [];
 	this.maxLevelWidth      = [];
 	this.previousLevelNode  = [];
+    this.rootYOffset        = this.config.topYAdjustment;
+    this.rootXOffset        = this.config.topXAdjustment*(this.orientedRight() ? -1 : 1);
 
-	WordTree._firstWalk(this.self, this.root, 0);
-
-    this.rootYOffset = this.config.topYAdjustment * (this.orientedRight() ? -1 : 1);
-    this.rootXOffset = this.config.topXAdjustment;
-
+    WordTree._firstWalk(this.self, this.root, 0);
 	WordTree._secondWalk(this.self, this.root, 0, 0, 0);
 };
 
@@ -466,14 +469,35 @@ WordTree.prototype.collapseAboveLevel = function() {
     var n, node;
     for (n = 0; n < this.nDatabaseNodes.length; n++) {
         node = this.nDatabaseNodes[n];
-        if (node._getLevel() > this.collapseAboveLevel && node.isCollapsed == false) {
-            node.collapseNode(node.id, node.id);
+
+        if (node._getLevel() > this.config.levelToCollapseAbove && node.isCollapsed == false && node.canCollapse) {
+            this.collapseNode(node.id, node.id);
         }
     }
 };
 
+WordTree.prototype._prelimDrawTree = function () {
+    var node = null;
+
+    this.paper.setStart();
+
+    for (var n = 0; n < this.nDatabaseNodes.length; n++) {
+        node = this.nDatabaseNodes[n];
+        if (!node._isAncestorCollapsed()) {
+            var t = this.paper.text(node.XPosition + 5, node.YPosition + node.h/2, node.dsc);
+            t.attr(WordTree.FONT_SIZE_CSS_KEY,   node.size)
+             .attr(WordTree.TEXT_ANCHOR_CSS_KEY, WordTree.DEFAULT_TEXT_ANCHOR)
+             .attr(WordTree.FONT_FAMILY_CSS_KEY, WordTree.DEFAULT_FONT_FAMILY);
+
+            node.w = t.getBBox().width  + WordTree.NODE_PAD_X + WordTree.EXPAND_IMG_WIDTH;
+            node.h = t.getBBox().height + WordTree.NODE_PAD_Y;
+        }
+    }
+
+    this.paperSet = this.paper.setFinish();
+};
+
 WordTree.prototype._drawTree = function () {
-    var nodeRectRadius = 8, nodePadX = 10, nodePadY = 12, nodeHOffset = 12, nodeWOffset = 7, expandImgWidth = 15;
     var node = null;
 
     function onClickSelect() {
@@ -500,8 +524,8 @@ WordTree.prototype._drawTree = function () {
 
             var textAttrs = { fill : node.color },
                 anchorRectAttrs = {
-                    x : node.XPosition, y : node.YPosition, radius : nodeRectRadius,
-                    hOffset: nodeHOffset, wOffset : nodeWOffset + expandImgWidth,
+                    x : node.XPosition, y : node.YPosition, radius : WordTree.NODE_RECT_RADIUS,
+                    hOffset: WordTree.NODE_H_OFFSET, wOffset : WordTree.NODE_W_OFFSET + WordTree.EXPAND_IMG_WIDTH,
                     fill : 'white', stroke : node.borderColor },
                 anchorData = { 'tree' : this, 'node' : node },
                 textX = node.XPosition + 5,
@@ -510,17 +534,14 @@ WordTree.prototype._drawTree = function () {
             textAttrs[WordTree.FONT_SIZE_CSS_KEY] = node.size;
             var els = this._addAnchorRect(this.paper, textX, textY, node.dsc, textAttrs, anchorData, anchorRectAttrs, n == 0, onClickSelect);
             var text = els.text, aRect = els.anchor, bRect = els[WordTree.BOUNDING_RECT_KEY],
-                textBBox = text.getBBox(), rectBBox = aRect.getBBox();
-
-            if (rectBBox.y < this.minY)  this.minY = rectBBox.y;
-            if (rectBBox.y2 > this.maxY) this.maxY = rectBBox.y2;
+                textBBox = text.getBBox();
 
             if (node.target) {
                 els.items.push(this._addTargetOverlays(node.target, textBBox));
             }
 
-            node.w = textBBox.width + nodePadX + expandImgWidth;
-            node.h = textBBox.height + nodePadY;
+            node.w = textBBox.width + WordTree.NODE_PAD_X + WordTree.EXPAND_IMG_WIDTH;
+            node.h = textBBox.height + WordTree.NODE_PAD_Y;
             node.raphaelElements[WordTree.SVG_ELS_KEY] = node.raphaelElements[WordTree.SVG_ELS_KEY].concat(els.items);
             node.raphaelElements[WordTree.BOUNDING_RECT_KEY] = bRect;
 
@@ -542,8 +563,6 @@ WordTree.prototype._drawTree = function () {
 	}
     this.paperSet = this.paper.setFinish();
 };
-
-
 
 WordTree.prototype._getText = function(paper, x, y, desc, textAttrs) {
     var t = paper.text(x, y, desc);
@@ -622,62 +641,67 @@ WordTree.prototype._addAnchorRect = function(paper, x, y, desc, textAttrs, ancho
 };
 
 WordTree.prototype._addTargetOverlays = function (target, textBBox) {
-    var imgSize = 15, imgX = textBBox.x2 + 5, imgY = textBBox.y + (textBBox.height - imgSize)/2;
+    var imgSize = 15, imgHoverSize = 16, imgX = textBBox.x2 + 5, imgY = textBBox.y + (textBBox.height - imgSize)/2;
 
-    var viewDocUrl = this.viewDocUrl,
-              tree = this;
+    var tree = this;
 
-    return this.paper.image(this.config.showLinksImage, imgX, imgY, imgSize, imgSize)
+    var img = this.paper.image(this.config.showLinksImage, imgX, imgY, imgSize, imgSize)
+                     .attr('opacity', 0.7)
                      .data('paper', this.paper)
                      .data('target', target)
+                     .data('searchUrl', this.searchUrl)
                      .click(anchorClick);
-
-    function linkClickHandler() {
-        window.open(viewDocUrl + "&id=" + this.data('id'), "_blank");
-    }
+    var hoverIn  = function() { this.attr({'opacity' : 1.0})},
+        hoverOut = function() { this.attr({'opacity' : 0.7})};
+    img.hover(hoverIn, hoverOut);
+    return img;
 
     function closeAnchorClick() {
         this.data(WordTree.ELS_TO_REMOVE_KEY).applyFn('remove');
     }
 
     function anchorClick () {
-        var paper = this.data('paper');
+        var paper     = this.data('paper'),
+            tgt       = this.data('target'),
+            searchUrl = this.data('searchUrl');
 
         if (WordTree.wasJustDragged(paper)) {
             WordTree.setJustDraggedStatus(paper, false);
             return;
         }
 
-        var bbox = this.getBBox();
-        var tgt  = this.data('target');
-        var i, rectPadX = 10, rectPadY = 10, fontSize = 10, textPadY = 5, rectX = bbox.x, rectY = bbox.y;
-        var links = [], headerAttrs = {};
+        var isAltQuery = true, altQueries = null;
+        try {
+            altQueries = JSON.parse(tgt);
+        } catch (e) {
+            isAltQuery = false;
+        }
 
-        headerAttrs[WordTree.FONT_SIZE_CSS_KEY]   = fontSize;
-        headerAttrs[WordTree.FONT_WEIGHT_CSS_KEY] = 'bold';
-        var header = tree._getText(paper, rectX + rectPadX*2, rectY + rectPadY, "Files with this sentence:", headerAttrs);
+        if (!isAltQuery) {
+            window.open(searchUrl + '"' + tgt + '"', "_blank");
+            return;
+        }
+        var links = [], fontSize = 12,
+            bbox  = this.getBBox(), rectX = bbox.x, rectY = bbox.y;
 
+        var header = tree._getText(paper, rectX + WordTree.NODE_PAD_X*2, rectY + WordTree.NODE_PAD_Y,
+                                   "This query also appeared as:", { 'font-size' : 12, 'font-weight' : 'bold' });
         links.push(header);
-        var textAttrs = {"font-size" : fontSize},
-                textX = rectX + rectPadX,
-                textY = rectY + rectPadY* 2,
-                    w = header.getBBox().width + rectPadY;
-        /*
-        for(i = 0; i < tgt.length; i++) {
-            var desc = tgt[i]['title'],
-                anchorData = { id : tgt[i]['id'] };
-            anchorData[WordTree.FILL_CSS_KEY]        = 'blue';
-            anchorData[WordTree.FONT_WEIGHT_CSS_KEY] = 'bold';
 
-            var newEls = tree._addAnchorRect(paper, textX, textY + (i + 1)*(fontSize + textPadY), desc, textAttrs,
-                                             anchorData, null, linkClickHandler);
+        var textX = rectX + WordTree.NODE_PAD_X,
+            textY = rectY + WordTree.NODE_PAD_Y*2,
+                w = header.getBBox().width + WordTree.NODE_PAD_Y;
+
+        for(var i = 0; i < altQueries.length; i++) {
+            var desc = altQueries[i]['name'] + ' (' + altQueries[i]['count'] + ')';
+            var newEls = tree._addAnchorRect(paper, textX, textY + (i + 1)*(fontSize + WordTree.NODE_PAD_Y/2), desc,
+                                             {"font-size" : fontSize}, {}, null, false, null);
             links = links.concat(newEls.items);
-
             w = Math.max(newEls.anchor.getBBox().width, w);
-        }   */
+        }
 
-        var y2 = links[links.length - 1].getBBox().y2 - rectY + rectPadY;
-        var linksRect = paper.rect(rectX, rectY, w + rectPadX*2, y2, 8)
+        var y2 = links[links.length - 1].getBBox().y2 - rectY + WordTree.NODE_PAD_Y;
+        var linksRect = paper.rect(rectX, rectY, w + WordTree.NODE_PAD_X*2, y2, 8)
                              .attr('fill', 'white').attr('stroke', 'black');
 
         var anchorData = {};
@@ -686,8 +710,9 @@ WordTree.prototype._addTargetOverlays = function (target, textBBox) {
         anchorData[WordTree.FONT_WEIGHT_CSS_KEY] = 'bold';
 
         anchorData[WordTree.ELS_TO_REMOVE_KEY] = links.concat(linksRect);
-        var closeEls = tree._addAnchorRect(paper, rectX + rectPadX/2 + 3, rectY + rectPadY/2 + 8, "X", textAttrs,
-                                           anchorData, {}, false, closeAnchorClick);
+        var closeEls = tree._addAnchorRect(paper, rectX + WordTree.NODE_PAD_X/2 + 3, rectY + WordTree.NODE_PAD_Y/2 + 8,
+                                           "X", {'font-size' : fontSize}, anchorData, {}, false, closeAnchorClick);
+
         links.concat(closeEls.items).applyFn('toFront');
     }
 };
@@ -709,23 +734,42 @@ WordTree.prototype._transformPrefixTree = function() {
     this.paperSet.transform("t" + xdiff + "," + ydiff);
 };
 
+WordTree.prototype._positionAndDraw = function(prelim) {
+    this._removeRaphaelEls();
+    this._positionTree();
+
+    if (prelim) {
+        this._prelimDrawTree();
+    } else {
+        this._drawTree();
+    }
+};
+
 WordTree.prototype._setRootElementCoords = function() {
     var el = this.paper.getById(this.rootNodeRaphaelElementId);
     this.rootElX = el.attr('x');
     this.rootElY = el.attr('y');
 };
 
+WordTree.prototype._setTopYAdjustmentAfterPreliminaryDraw = function() {
+    this.config.topYAdjustment = 200 - 0.75*this.getNodeFromNodeId(0).YPosition;
+};
+
+WordTree.prototype._setTopXAdjustmentsAfterPreliminaryDraw = function() {
+    if (!this.nDatabaseNodes[0].prefixTree && this.oppositeTree.nDatabaseNodes.length > 1) {
+        this.config.topXAdjustment = 300;
+    }
+};
+
 // WordTree API begins here...
 WordTree.prototype.UpdateTree = function () {
-    var el = this.paper.getById(this.rootNodeRaphaelElementId);
-    if (el != undefined) {
-        this.config.topYAdjustment += (el.attr('x') - this.rootElX);
-        this.config.topXAdjustment += (el.attr('y') - this.rootElY);
-    }
 
-    this._removeRaphaelEls();
-    this._positionTree();
-    this._drawTree();
+    // can't understand why twice :p
+    this._positionAndDraw(true);
+    this._setTopYAdjustmentAfterPreliminaryDraw();
+    this._setTopXAdjustmentsAfterPreliminaryDraw();
+    this._positionAndDraw(false);
+
     this._transformPrefixTree();
     this._setRootElementCoords();
 };
@@ -748,9 +792,10 @@ WordTree.prototype.add = function (id, pid, dsc, size, target) {
 	}
 
 	var node = new WordNode({ id : id, pid : pid, dsc : dsc, w : this.config.defaultNodeWidth, h : this.config.defaultNodeHeight,
-        size : size, target : target, paper : this.paper });
+        size : size, target : target, paper : this.paper, prefixTree : this.orientedRight() });
 	node.nodeParent = pnode;  //Set it's parent
-	pnode.canCollapse = true; //It's obvious that now the parent can collapse	
+	pnode.canCollapse = true;
+
 	var i = this.nDatabaseNodes.length;	//Save it in database
 	node.dbIndex = this.mapIDs[id] = i;	 
 	this.nDatabaseNodes[i] = node;	
@@ -795,5 +840,17 @@ WordTree.prototype.collapseNode = function (nodeId, startNodeId) {
 
     for (var i = 0; i < nodeChildren.length; i++) {
         this.collapseNode(nodeChildren[i].id, startNodeId);
+    }
+};
+
+WordTree.prototype.expandParents = function (nodeId) {
+    var node = this.nDatabaseNodes[this.mapIDs[nodeId]];
+    var nodeParent = node.nodeParent, parentCollapsed = nodeParent.isCollapsed;
+
+    node.changeRaphaelElementVisibility(false);
+    if (parentCollapsed) {
+        nodeParent.isCollapsed = false;
+        nodeParent.raphaelElements[WordTree.COLLAPSE_IMG_KEY].attr('src', this.config.expandedImage);
+        this.expandParents(nodeParent.id);
     }
 };

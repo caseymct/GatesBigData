@@ -1,8 +1,8 @@
 package GatesBigData.api;
 
-import GatesBigData.utils.*;
+import GatesBigData.utils.Constants;
+import GatesBigData.utils.DateUtils;
 import model.SolrCollectionSchemaInfo;
-import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import service.CoreService;
 import service.HDFSService;
 import service.SearchService;
-import service.SolrReindexService;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -81,54 +80,24 @@ public class CoreAPIController extends APIController {
     @RequestMapping(value="/empty", method = RequestMethod.GET)
     public ResponseEntity<String> deleteIndex(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) {
 
-        boolean deleted = coreService.deleteIndex(coreName);
-
-        JSONObject response = new JSONObject();
-        response.put("Core", coreName);
-        response.put("Deleted", deleted);
+        StringWriter writer = new StringWriter();
+        coreService.doSolrOperation(coreName, Constants.SOLR_OPERATION_DELETE, null, writer);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>(response.toString(), httpHeaders, OK);
+        return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
     }
 
     @RequestMapping(value="/add/infofiles", method = RequestMethod.GET)
     public ResponseEntity<String> addFacetFields(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) {
 
-        boolean added = coreService.addInfoFilesToSolr(coreName, hdfsService.getInfoFilesContents(coreName));
-        JSONObject response = new JSONObject();
-        response.put("Added", added);
+        StringWriter writer = new StringWriter();
+        coreService.doSolrOperation(coreName, Constants.SOLR_OPERATION_ADD_INFOFILES,
+                                    hdfsService.getInfoFilesContents(coreName), writer);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>(response.toString(), httpHeaders, OK);
-    }
-
-    @RequestMapping(value="/addfile/json", method = RequestMethod.GET)
-    public ResponseEntity<String> addDocument(@RequestParam(value = PARAM_FILE_NAME, required = true) String fileName,
-                                              @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
-                                              @RequestParam(value = PARAM_HDFS, required = true) String hdfsKey) {
-        boolean added = false;
-
-        JSONObject response = new JSONObject();
-        response.put("File", fileName);
-        response.put("Core", coreName);
-
-        String jsonDocument = Utils.readFileIntoString(fileName);
-
-        if (!jsonDocument.equals("")) {
-            try {
-                JSONObject jsonObject = JSONObject.fromObject(jsonDocument);
-                added = coreService.createAndAddDocumentToSolr(jsonObject, hdfsKey, coreName);
-            } catch (JSONException e) {
-                System.err.println(e.getMessage());
-            }
-        }
-        response.put("Added", added);
-
-        HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>(response.toString(), httpHeaders, OK);
+        return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
     }
 
     @RequestMapping(value="/add/json", method = RequestMethod.POST)
@@ -170,10 +139,14 @@ public class CoreAPIController extends APIController {
 
     @RequestMapping(value="/field/daterange", method = RequestMethod.GET)
     public ResponseEntity<String> dateRange(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
-                                            @RequestParam(value = PARAM_FIELD_NAME, required = true) String field) throws IOException, InvocationTargetException, NoSuchMethodException, IllegalAccessException {
+                                            @RequestParam(value = PARAM_FIELD_NAME, required = true) String field,
+                                            HttpServletRequest request) {
 
-        List<String> dateRange = searchService.getSolrFieldDateRange(coreName, field, DateUtils.SHORT_DATE);
-        String dateString = dateRange.get(0) + " to " + dateRange.get(1);
+        SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, request.getSession());
+
+        List<Date> dateRange = searchService.getSolrFieldDateRange(coreName, field, schemaInfo.fieldTypeIsDate(field));
+        String dateString = DateUtils.getFormattedDateString(dateRange.get(0), DateUtils.SHORT_DATE_FORMAT) + " to " +
+                            DateUtils.getFormattedDateString(dateRange.get(1), DateUtils.SHORT_DATE_FORMAT);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));

@@ -2,14 +2,11 @@ package GatesBigData.api;
 
 import GatesBigData.utils.Constants;
 import GatesBigData.utils.SolrUtils;
-import GatesBigData.utils.Utils;
-import model.ExtendedSolrQuery;
 import model.SolrCollectionSchemaInfo;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
@@ -34,12 +31,10 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.StringTokenizer;
 
 import static java.util.Collections.singletonList;
-import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.OK;
 
 @Controller
@@ -62,8 +57,9 @@ public class SolrAPIController extends APIController {
     }
 
     private boolean skipCoreName(String coreName) {
-        return coreName.equals(Constants.SOLR_THUMBNAILS_CORE_NAME) ||
-                coreName.endsWith(Constants.SOLR_SUGGEST_CORE_SUFFIX);
+        return  coreName.equals(Constants.SOLR_THUMBNAILS_CORE_NAME) ||
+                coreName.endsWith(Constants.SOLR_SUGGEST_CORE_SUFFIX) ||
+                coreName.endsWith(Constants.SOLR_TEST_CORE_SUFFIX);
     }
 
     @RequestMapping(value="/corenames", method = RequestMethod.GET)
@@ -82,9 +78,9 @@ public class SolrAPIController extends APIController {
 
             SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(name, session);
             g.writeStartObject();
-            g.writeStringField(Constants.SOLR_CORE_FIELD_NAME, name);
-            g.writeStringField(Constants.SOLR_TITLE_FIELD_NAME, schemaInfo.getCoreTitle());
-            g.writeStringField(Constants.SOLR_STRUCTURED_DATA_FIELD_NAME, schemaInfo.isStructuredData() + "");
+            g.writeStringField(Constants.SOLR_FIELD_NAME_CORE, name);
+            g.writeStringField(Constants.SOLR_FIELD_NAME_TITLE, schemaInfo.getCoreTitle());
+            g.writeStringField(Constants.SOLR_FIELD_NAME_STRUCTURED_DATA, schemaInfo.isStructuredData() + "");
             g.writeEndObject();
         }
         g.writeEndArray();
@@ -99,15 +95,15 @@ public class SolrAPIController extends APIController {
     @RequestMapping(value="/add/infofiles", method = RequestMethod.GET)
     public ResponseEntity<String> addInfoFiles() {
 
-        JSONObject response = new JSONObject();
+        StringWriter writer = new StringWriter();
         for(String coreName : solrService.getCoreNames()) {
-            boolean added = coreService.addInfoFilesToSolr(coreName, hdfsService.getInfoFilesContents(coreName));
-            response.put(coreName, added);
+            HashMap<String, String> params = hdfsService.getInfoFilesContents(coreName);
+            coreService.doSolrOperation(coreName, Constants.SOLR_OPERATION_ADD_INFOFILES, params, writer);
         }
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>(response.toString(), httpHeaders, OK);
+        return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
     }
 
     @RequestMapping(value="/info/all", method = RequestMethod.GET)
@@ -128,7 +124,8 @@ public class SolrAPIController extends APIController {
 
         String suggestionCoreName = SolrUtils.getSuggestionCoreName(coreName);
         SolrServer suggestionSolrServer = coreService.getSolrServer(suggestionCoreName);
-        coreService.deleteIndex(suggestionCoreName);
+
+        coreService.doSolrOperation(suggestionCoreName, Constants.SOLR_OPERATION_DELETE, null, writer);
 
         // Couldn't find a better way to retrieve core information from an empty core
         // JIRA issue indicates that REST functionality has not yet been exposed
@@ -139,8 +136,8 @@ public class SolrAPIController extends APIController {
         long numAdded = 0;
 
         do {
-            SolrDocumentList docs = searchService.getResultList(coreName, Constants.SOLR_QUERY_DEFAULT, null,
-                    Constants.SOLR_SORT_FIELD_DEFAULT, Constants.SOLR_SORT_ORDER_DEFAULT, start, PAGE_SIZE, viewFields);
+            SolrDocumentList docs = searchService.getResultList(coreName, Constants.SOLR_DEFAULT_VALUE_QUERY, null,
+                    Constants.SOLR_DEFAULT_VALUE_SORT_FIELD, Constants.SOLR_DEFAULT_VALUE_SORT_ORDER, start, PAGE_SIZE, viewFields);
 
             if (numDocs == Constants.INVALID_LONG) {
                 numDocs = docs.getNumFound();

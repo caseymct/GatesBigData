@@ -17,197 +17,171 @@
         var Dom  = YAHOO.util.Dom,    Connect = YAHOO.util.Connect,
             Json = YAHOO.lang.JSON,     Event = YAHOO.util.Event;
 
-        var infoElId             = "info",             contentEl            = Dom.get(UI.CONTENT_EL_NAME),
-            graphContentElId     = "graphcontent",     queryInfoElId        = 'query_info',
-            searchLabelCSSClass  = "search_label_div", searchHdrLblCSSClass = 'search_header_label',
-            onlySelLabelCSSClass = "only_sel_label",   searchImgCSSClass    = 'search_img',
-            searchLblCtrCSSClass = 'search_label_container_div',
-            justFirstPage        = false;
+        var infoElId             = 'info',              contentEl               = Dom.get(UI.CONTENT_EL_NAME),
+            graphElId            = 'graph',             graphContentElId        = 'graph_content',
+            queryInfoElId        = 'query_info',        searchClickElId         = 'search_click',
+            selectWordTreeElId   = 'select_word_tree',  selectWordTreeDivElId   = 'select_word_tree_div',
+            searchInputElId      = 'search_input',      searchResultsElId       = 'search_results',
+            searchOnlySelElId    = 'search_onlysel',    recenterClickElId       = 'recenter',
+            resetClickElId       = 'reset',
+            changeFieldElId      = 'change_field',      searchLblCtrCSSClass    = 'search_label_container_div',
+            searchLabelCSSClass  = 'search_label_div',  searchHdrLblCSSClass    = 'search_header_label',
+            onlySelLabelCSSClass = 'only_sel_label',    searchResultsLabelElId  = 'search_results_lbl',
+
+            PREFIX_KEY           = 'prefix',            SUFFIX_KEY              = 'suffix',
+            ALT_QUERIES_KEY      = 'alternate_queries', CORE_KEY                = 'core',
+            ANALYSIS_FIELD_KEY   = 'analysisfield',     FQ_KEY                  = 'fq',
+            QUERY_KEY            = 'query',             ROWS_KEY                = 'rows',
+            NUM_FOUND_KEY        = 'numfound',          HL_KEY                  = 'hl',
+            SENTENCE_KEY         = 'sentence',          COUNT_KEY               = 'count',
+            PAPER_HEIGHT         = 2000,                PAPER_WIDTH             = 2000;
 
         var requestParams       = UI.util.getRequestParameters(),
-            structured          = requestParams[UI.STRUCTURED_DATA_EL_ID_KEY],
-            coreName            = requestParams['core'],
-            analysisField       = requestParams['analysisfield'],
-            requestFields       = ['fl', 'query', 'core', 'analysisfield', 'fq'],
-            extraFields         = [ { key : 'hl', value : !structured }, { key : 'rows', value : requestParams['numfound'] }],
-            urlRequestParams    = UI.util.constructRequestString(requestParams, requestFields, extraFields);
+            structured          = requestParams[UI.STRUCTURED_DATA_EL_ID_KEY] == 'true',
+            coreName            = requestParams[CORE_KEY],
+            analysisField       = requestParams[ANALYSIS_FIELD_KEY],
+            requestFields       = [QUERY_KEY, CORE_KEY, ANALYSIS_FIELD_KEY, FQ_KEY],
+            extraFields         = [ { key : HL_KEY, value : !structured }, { key : ROWS_KEY, value : requestParams[NUM_FOUND_KEY] }],
+            urlRequestParams    = UI.util.constructRequestString(requestParams, requestFields, extraFields),
+            responseObject      = null,
+            fields              = [];
 
-        var baseUrl             = '<c:url value="/" />',
-            searchImg           = baseUrl + 'static/images/wordtree/search.gif',
-            analyzeAllUrl       = baseUrl + 'analyze/snippets/all' + urlRequestParams,
-            analyzeFirstPageUrl = baseUrl + 'analyze/snippets/firstpage' + urlRequestParams,
-            viewDocUrl          = baseUrl + 'core/document/' + (structured ? 'view' : 'prizmview') + '?view=preview&core=' + coreName;
-
-        var PREFIX_KEY              = 'prefix',             SUFFIX_KEY              = 'suffix',
-            ALT_QUERIES_KEY         = 'alternate_queries',  MV_BTN_EL_TEXT          = '_mvbtn_',
-            GRAPH_EL_TEXT           = '_graph',             SEARCH_CLICK_EL_TEXT    = '_search_click',
-            SEARCH_INPUT_EL_TEXT    = '_search_input',      SEARCH_RESULTS_EL_TEXT  = '_search_results',
-            ONLY_SEL_INPUT_EL_TEXT  = '_search_onlysel',    RECENTER_CLICK_EL_TEXT  = '_recenter',
-            MOVE_INCR               = 50,                   PAPER_HEIGHT            = 500,
-            PAPER_WIDTH             = 2000,                 DIRS                    = ['left', 'right', 'up', 'down'];
+        var BASE_URL            = '<c:url value="/" />',
+            ANALYZE_ALL_URL     = BASE_URL + 'analyze/snippets/all' + urlRequestParams,
+            ANALYZE_FIRST_URL   = BASE_URL + 'analyze/snippets/firstpage' + urlRequestParams,
+            SEARCH_URL          = BASE_URL + 'search/' + coreName + '?query=';
 
         buildHtml();
 
-        function getSvgGraphElName(field)           { return field + GRAPH_EL_TEXT; }
-        function getRecenterClickElName(field)      { return field + RECENTER_CLICK_EL_TEXT; }
-        function getSearchClickElName(field)        { return field + SEARCH_CLICK_EL_TEXT; }
-        function getSearchInputElName(field)        { return field + SEARCH_INPUT_EL_TEXT; }
-        function getSearchOnlySelInputElName(field) { return field + ONLY_SEL_INPUT_EL_TEXT; }
-        function getSearchResultsInputElName(field) { return field + SEARCH_RESULTS_EL_TEXT; }
-        function getSearchInputValue(field)         { return Dom.get(getSearchInputElName(field)).value; }
-        function getSearchOnlySelValue(field)       { return Dom.get(getSearchOnlySelInputElName(field)).checked; }
+        Connect.asyncRequest('GET', ANALYZE_ALL_URL, {
+            success: function(o) {
+                responseObject = Json.parse(o.responseText);
+                fields = Object.keys(responseObject).sort();
 
-        function getMoveButtonElName(field, dir)    { return field + MV_BTN_EL_TEXT + dir; }
-        function getFieldAndDirFromMoveButtonElName(elName) {
-            var f = elName.split(MV_BTN_EL_TEXT);
-            return { field : f[0], dir : f[1] };
-        }
-
-        function getFieldFromSearchClickElName(el)   {  return el.substring(0, el.indexOf(SEARCH_CLICK_EL_TEXT)); }
-        function getFieldFromRecenterClickElName(el) {  return el.substring(0, el.indexOf(RECENTER_CLICK_EL_TEXT)); }
-        function getFieldFromSearchResultsClickElName(el) {  return el.substring(0, el.indexOf(SEARCH_RESULTS_EL_TEXT)); }
-
-        function getTransform(fieldName, dir) {
-            switch (dir) {
-                case "left"  : return { x : -1*MOVE_INCR, y : 0 };
-                case "right" : return { x : MOVE_INCR, y : 0 };
-                case "up"    : return { x : 0, y : -1*MOVE_INCR };
-                case "down"  : return { x : 0, y : MOVE_INCR };
+                populateSelect(fields, selectWordTreeElId, getFieldSelectName, getFieldSelectValue);
             }
-            return { x : 0, y : 0 };
-        }
+        });
 
-        function getHlStrings(s, isPost) {
-            var key = 'hl.simple.' + (isPost ? 'post' : 'pre');
-            var orig = s.match(eval('/"' + key + '":"(.*?)",/'))[1];
-            orig = orig.replace(/\//g, "\\/");
-            return [orig, orig.replace(/"/g, "'")];
-        }
+        Event.addListener(changeFieldElId, 'click', function(o) {
+            Event.stopEvent(o);
+            buildWordTreeHtml(Dom.get(selectWordTreeElId).value);
+        });
 
-        function fixHlStrings(s) {
-            var pre  = getHlStrings(rawSnippetData, false);
-            var post = getHlStrings(rawSnippetData, true);
-            return s.replace(eval('/' + pre[0] + '/g'), pre[1]).replace(eval('/' + post[0] + '/g'), post[1]);
-        }
+        function buildWordTreeHtml(fieldName) {
+            buildResponseHtml(fieldName);
 
-        if (!structured) {
-            var hl = {};
-            hl["hl"] = fixHlStrings(rawSnippetData);
-
-            // send the event
-            Connect.initHeader('Content-Type', 'application/json');
-            Connect.setDefaultPostHeader('application/json');
-            Connect.asyncRequest('POST', analyzeFirstPageUrl, {
-                success: function(o) {
-                    var response = Json.parse(o.responseText);
-                    buildGraphicResponse(response);
-                }
-            }, Json.stringify(hl));
-        } else {
-            Connect.asyncRequest('GET', analyzeAllUrl, {
-                success: function(o) {
-                    var response = Json.parse(o.responseText);
-                    buildGraphicResponse(response);
-                }
+            Event.addListener(searchClickElId, 'click', function(e) {
+                Event.stopEvent(e);
+                var searchResults = WORDTREE.search(Dom.get(searchInputElId).value, Dom.get(searchOnlySelElId).checked);
+                populateSelect(searchResults, searchResultsElId, getSearchSelectName, getSearchSelectValue);
             });
+
+            Event.addListener(searchResultsElId, 'focus', function(e) {
+                this.selectedIndex = -1;
+            });
+
+            Event.addListener(searchResultsElId, 'change', function(e) {
+                var val = this.options[this.selectedIndex].value.match(/(R|L)_(\d+)/);
+                WORDTREE.selectNode(val[1], val[2]);
+                WORDTREE.recenterOnSelected();
+            });
+
+            Event.addListener(recenterClickElId, 'click', function(e) {
+                Event.stopEvent(e);
+                WORDTREE.recenterOnSelected();
+            });
+
+            Event.addListener(resetClickElId, 'click', function(e) {
+                Event.stopEvent(e);
+                WORDTREE.selectNode('R', 0);
+                WORDTREE.recenterOnSelected();
+            });
+
+            var paper = Raphael(graphElId, PAPER_WIDTH, PAPER_HEIGHT);
+            WORDTREE.makeWordTrees({
+                paper         : paper,
+                searchUrl     : SEARCH_URL + (structured ? analysisField : fieldName) + ':',
+                prefixes      : responseObject[fieldName][PREFIX_KEY],
+                suffixes      : responseObject[fieldName][SUFFIX_KEY],
+                altQueries    : responseObject[fieldName][ALT_QUERIES_KEY]
+            });
+
+            formatSvgBorder();
         }
 
-        function buildGraphicResponse(response) {
-            var fields = Object.keys(response);
-
-            for(var i = 0; i < fields.length; i++) {
-                var fieldName = fields[i], graphElName = getSvgGraphElName(fieldName);
-                buildResponseHtml(fieldName);
-
-                Event.addListener(getSearchClickElName(fieldName), 'click', function(e) {
-                    Event.stopEvent(e);
-                    var fieldName = getFieldFromSearchClickElName(this.id);
-                    var searchResults = WORDTREE.search(getSearchInputValue(fieldName), getSearchOnlySelValue(fieldName), 0);
-                    var select = Dom.get(getSearchResultsInputElName(fieldName));
-                    select.options.length = 0;
-
-                    function addToSelect(nodes, treeDir) {
-                        for(var i = 0; i < nodes.length; i++) {
-                            select.options[select.options.length] = new Option(nodes[i].dsc, treeDir + '_' + nodes[i].id);
-                        }
-                    }
-                    addToSelect(searchResults['ltreeNodes'], 'L');
-                    addToSelect(searchResults['rtreeNodes'], 'R');
-                });
-
-                Event.addListener(getSearchResultsInputElName(fieldName), 'change', function(e) {
-                    var val = this.options[this.selectedIndex].value.match(/(R|L)_(\d+)/);
-                    WORDTREE.selectNode(val[1], val[2], 0);
-                    WORDTREE.recenterOnSelected(getSvgGraphElName(getFieldFromSearchResultsClickElName(this.id)));
-                });
-
-                Event.addListener(getRecenterClickElName(fieldName), 'click', function(e) {
-                    Event.stopEvent(e);
-                    WORDTREE.recenterOnSelected(getSvgGraphElName(getFieldFromRecenterClickElName(this.id)));
-                });
-
-                var paper = Raphael(graphElName, PAPER_WIDTH, PAPER_HEIGHT);
-                WORDTREE.makeWordTrees({
-                    paper         : paper,
-                    graphElHeight : parseInt(Dom.getStyle(graphElName, "height")),
-                    graphElName   : graphElName,
-                    viewDocUrl    : viewDocUrl,
-                    prefixes      : response[fieldName][PREFIX_KEY],
-                    suffixes      : response[fieldName][SUFFIX_KEY],
-                    altQueries    : response[fieldName][ALT_QUERIES_KEY]
-                });
-
-                formatSvgBorder(fieldName);
-            }
-        }
-
-        function formatSvgBorder(fieldName) {
-            var svg = getSvg(getSvgGraphElName(fieldName));
-            Dom.setStyle(svg, "border", "1px solid gray");
+        function formatSvgBorder() {
+            var svg = getSvg();
+            Dom.setStyle(svg, "border", "1px solid #97381B");
             Dom.setStyle(svg, "border-radius", "5px");
         }
 
-        function getSvg(parentNodeName) {
-            var parentNode = Dom.get(parentNodeName);
-            var children = Dom.getChildrenBy(parentNode, function(node) { return node.tagName == "svg"; });
-            return children[0];
+        function getSvg() {
+            return Dom.getChildrenBy(Dom.get(graphElId), function(node) { return node.tagName == "svg"; })[0];
+        }
+
+        function getFieldSelectName(field) {
+            if (structured) {
+                var p = responseObject[field][PREFIX_KEY];
+                return p[SENTENCE_KEY].split(" ")[0] + ' (' + p[COUNT_KEY] + ')';
+            }
+            return field;
+        }
+        function getFieldSelectValue(field) { return field; }
+        function getSearchSelectName(node)  { return node.dsc; }
+        function getSearchSelectValue(node) { return (node.prefixTree ? 'L' : 'R') + '_' + node.id; }
+
+        function populateSelect(nodes, selectElId, nameFn, valueFn) {
+            var select = Dom.get(selectElId);
+            select.options.length = 0;
+
+            for(var i = 0; i < nodes.length; i++) {
+                select.options[select.options.length] = new Option(nameFn(nodes[i]), valueFn(nodes[i]));
+            }
         }
 
         function buildResponseHtml(field) {
             var graphContentEl = Dom.get(graphContentElId);
-            var parentDiv = UI.addDomElementChild('div', graphContentEl, { id : field + "_div" }, { "padding-top" : "30px"});
-            var headerDiv = UI.addDomElementChild('div', parentDiv, { id : field + "_hdr" });
+            UI.removeDivChildNodes(graphContentEl);
+
+            var fieldset = UI.addDomElementChild('fieldset', graphContentEl);
+            var legend = UI.addDomElementChild('legend', fieldset, { innerHTML: "Sentence results from field " + field });
+
+            var parentDiv = UI.addDomElementChild('div', fieldset);
+            var headerDiv = UI.addDomElementChild('div', parentDiv);
 
             var r = UI.addDomElementChild('div', headerDiv, {}, { 'class' : searchLblCtrCSSClass } );
-            UI.addDomElementChild('div', r, { innerHTML: "Sentence results from field " + field }, { "class" : searchHdrLblCSSClass });
+            UI.addDomElementChild('a', r, { innerHTML: 'Recenter on selected', id : recenterClickElId }, { "class" : 'button small' });
+            UI.addDomElementChild('a', r, { innerHTML: 'Reset to original position', id : resetClickElId }, { "class" : 'button small' });
 
-            r = UI.addDomElementChild('div', headerDiv, {}, { 'class' : searchLblCtrCSSClass } );
-            UI.addDomElementChild('a', r, { innerHTML: 'Recenter on selected', id : field + '_recenter' }, { "class" : searchHdrLblCSSClass });
+            var searchDiv = UI.addDomElementChild('div', headerDiv);
+            var searchInputsDiv = UI.addDomElementChild('div', searchDiv, {}, { "class" : searchLabelCSSClass } );
 
-            var searchDiv = UI.addDomElementChild('div', headerDiv, {}, { "class" : searchLabelCSSClass } );
-            var searchLabelDiv = UI.addDomElementChild('div', searchDiv, {}, { "class" : searchLabelCSSClass } );
-            var label = UI.addDomElementChild('label', searchLabelDiv, { innerHTML : 'Search '});
-            UI.addDomElementChild('input', label, { id : getSearchInputElName(field), value : '', size: '10', maxlength : '100'});
-            var searchLink = UI.addDomElementChild('a', searchLabelDiv, { id : getSearchClickElName(field), href: '#'});
-            UI.addDomElementChild('img', searchLink, { src : searchImg, border : 0 }, { 'class' : searchImgCSSClass });
+            var div = UI.addDomElementChild('div', searchInputsDiv);
+            UI.addDomElementChild('a', div, { id : searchClickElId, innerHTML: 'Search'}, { 'class' : 'button small'});
+            UI.addDomElementChild('input', div, { id : searchInputElId, value : '', size: '20', maxlength : '100'});
 
-            var searchResultsDiv = UI.addDomElementChild('div', headerDiv, {}, { "class" : searchLabelCSSClass } );
-            var searchResultsLabelDiv = UI.addDomElementChild('div', searchResultsDiv, {}, { "class" : searchLabelCSSClass } );
-            UI.addDomElementChild('label', searchResultsLabelDiv, { innerHTML : 'Search Results '});
-            UI.addDomElementChild('select', searchResultsLabelDiv, { id : getSearchResultsInputElName(field) }, { float : 'left'});
 
-            var onlySelLabel = UI.addDomElementChild('label', searchDiv, { innerHTML : 'Search only children of selected: '},
-                    { 'class' : onlySelLabelCSSClass });
-            var onlySelInput = UI.addDomElementChild('input', onlySelLabel, { id : getSearchOnlySelInputElName(field), type : 'checkbox' },
-                    { 'vertical-align' : 'middle' });
+            div = UI.addDomElementChild('div', searchInputsDiv);
+            UI.addDomElementChild('input', div, { id : searchOnlySelElId, type : 'checkbox' }, { float : 'left'});
+            UI.addDomElementChild('label', div, { innerHTML : 'Only children of selected '}, { 'class' : onlySelLabelCSSClass });
+            UI.addClearBothDiv(searchInputsDiv);
+
+            var searchResultsDiv = UI.addDomElementChild('div', searchDiv, {}, { "class" : searchLabelCSSClass, width : '500px' } );
+            UI.addDomElementChild('label', searchResultsDiv, { id : searchResultsLabelElId, innerHTML : 'Search Results '});
+            UI.addDomElementChild('select', searchResultsDiv, { id : searchResultsElId }, { float : 'left'});
+            UI.addClearBothDiv(searchResultsDiv);
 
             UI.addClearBothDiv(headerDiv);
-            UI.addDomElementChild('div', parentDiv, { id : getSvgGraphElName(field) });
+            UI.addDomElementChild('div', parentDiv, { id : graphElId });
+
+            UI.addClearBothDiv(fieldset);
         }
 
         function buildHtml() {
             var infoEl = UI.addDomElementChild('div', contentEl, { id : infoElId });
-            var div = UI.addDomElementChild('div', infoEl, { id : queryInfoElId });
+            var fieldset = UI.addDomElementChild('fieldset', infoEl);
+            var legend = UI.addDomElementChild('legend', fieldset, { innerHTML: "Query information" });
+            var div = UI.addDomElementChild('div', fieldset, { id : queryInfoElId });
 
             Object.keys(requestParams).forEach(function(key) {
                 var midDiv = UI.addDomElementChild('div', div, {}, { 'class' : searchLblCtrCSSClass });
@@ -217,6 +191,13 @@
             });
 
             UI.addClearBothDiv(infoEl);
+
+            var selDiv = UI.addDomElementChild('div', contentEl, { id : selectWordTreeDivElId });
+            var t = structured ? 'results for field ' + analysisField + ' starting with word:' : ' field ';
+            UI.addDomElementChild('input', selDiv, { type : 'button', value: 'Show', id : changeFieldElId });
+            UI.addDomElementChild('label', selDiv, { innerHTML : t});
+            UI.addDomElementChild('select', selDiv, { id : selectWordTreeElId });
+            UI.addClearBothDiv(selDiv);
 
             UI.addDomElementChild('div', contentEl, { id : graphContentElId });
             UI.addClearBothDiv(contentEl);

@@ -1,5 +1,7 @@
 var UI = {};
 UI.util = {};
+UI.date = {};
+UI.request = {};
 UI.DATEPICK = {};
 UI.EXPORT = {};
 UI.SEARCH = {};
@@ -9,22 +11,22 @@ UI.FACET = {};
     var Dom = YAHOO.util.Dom, Event = YAHOO.util.Event, Connect = YAHOO.util.Connect, Json = YAHOO.lang.JSON;
 
     // Define universal URL keys
-    UI.URLS_KEY                     = 'urls';
-    UI.QUERY_BUILDER_AC_URL_KEY     = 'queryBuilderAutoCompleteUrl';
-    UI.VIEW_DOC_URL_KEY             = 'viewDocUrl';
-    UI.LOADING_IMG_URL_KEY          = 'loadingImgUrl';
-    UI.THUMBNAIL_URL_KEY            = 'thumbnailUrl';
-    UI.FIELD_NAMES_URL_KEY          = 'fieldNamesUrl';
-    UI.TABLE_FIELD_NAMES_URL_KEY    = 'tableFieldNamesUrl';
-    UI.AUDIT_FIELD_NAMES_URL_KEY    = 'auditFieldNamesUrl';
-    UI.FACET_URL_KEY                = 'facetUrl';
-    UI.SEARCH_URL_KEY               = 'searchUrl';
-    UI.SEARCH_BASE_URL_KEY          = 'searchBaseUrl';
-    UI.SUGGEST_URL_KEY              = 'suggestUrl';
-    UI.DATE_PICKER_URL_KEY          = 'datePickerUrl';
-    UI.EXPORT_URL_KEY               = 'exportUrl';
-    UI.JSP_EXPORT_URL_KEY           = 'jspExportUrl';
-    UI.ANALYZE_URL_KEY              = 'analyzeUrl';
+    UI.URLS_KEY                       = 'urls';
+    UI.QUERY_BUILDER_AC_URL_KEY       = 'queryBuilderAutoCompleteUrl';
+    UI.VIEW_DOC_URL_KEY               = 'viewDocUrl';
+    UI.LOADING_IMG_URL_KEY            = 'loadingImgUrl';
+    UI.THUMBNAIL_URL_KEY              = 'thumbnailUrl';
+    UI.FIELD_NAMES_URL_KEY            = 'fieldNamesUrl';
+    UI.TABLE_FIELD_NAMES_URL_KEY      = 'tableFieldNamesUrl';
+    UI.AUDIT_FIELD_NAMES_URL_KEY      = 'auditFieldNamesUrl';
+    UI.FACET_URL_KEY                  = 'facetUrl';
+    UI.SEARCH_URL_KEY                 = 'searchUrl';
+    UI.SEARCH_BASE_URL_KEY            = 'searchBaseUrl';
+    UI.SUGGEST_URL_KEY                = 'suggestUrl';
+    UI.DATE_PICKER_URL_KEY            = 'datePickerUrl';
+    UI.EXPORT_URL_KEY                 = 'exportUrl';
+    UI.JSP_EXPORT_URL_KEY             = 'jspExportUrl';
+    UI.ANALYZE_URL_KEY                = 'analyzeUrl';
 
     // Define element name keys
     UI.TAB_LIST_EL_NAME_KEY           = 'tabListElName';
@@ -37,21 +39,23 @@ UI.FACET = {};
     UI.CONTENT_EL_NAME                = 'content';
 
     // Define keys
-    UI.SELECTED_CORE_KEY            = 'selectedCore';
-    UI.CORE_NAMES_KEY               = 'coreNames';
-    UI.TAB_DISPLAY_NAMES_KEY        = 'tabDisplayNames';
-    UI.DISPLAY_NAME_KEY             = 'displayName';
-    UI.DISPLAY_NAMES_KEY            = 'displayNames';
-    UI.BUILD_CORE_TAB_HTML_FN_KEY   = 'buildCoreTabHtmlFn';
-    UI.DATE_FIELD_KEY               = 'dateField';
-    UI.DATA_TYPE_KEY                = 'dataType';
-    UI.DATA_TYPE_STRUCTURED         = 'structured';
-    UI.DATA_TYPE_UNSTRUCTURED       = 'unstructured';
-    UI.THUMBNAIL_KEY                = 'thumbnail';
-    UI.THUMBNAIL_TYPE_KEY           = 'thumbnailType';
+    UI.SELECTED_CORE_KEY              = 'selectedCore';
+    UI.CORE_NAMES_KEY                 = 'coreNames';
+    UI.TAB_DISPLAY_NAMES_KEY          = 'tabDisplayNames';
+    UI.DISPLAY_NAME_KEY               = 'displayName';
+    UI.DISPLAY_NAMES_KEY              = 'displayNames';
+    UI.BUILD_CORE_TAB_HTML_FN_KEY     = 'buildCoreTabHtmlFn';
+    UI.DATE_FIELD_KEY                 = 'dateField';
+    UI.DATA_TYPE_KEY                  = 'dataType';
+    UI.DATA_TYPE_STRUCTURED           = 'structured';
+    UI.DATA_TYPE_UNSTRUCTURED         = 'unstructured';
+    UI.THUMBNAIL_KEY                  = 'thumbnail';
+    UI.THUMBNAIL_TYPE_KEY             = 'thumbnailType';
+    UI.INITIAL_QUERY_KEY              = 'query';
 
     UI.FACET.INSERT_FACET_HTML_AFTER_EL_NAME_KEY        = 'insertFacetHtmlAfterElName';
     UI.FACET.UPDATE_FACET_FN                            = 'updateFacetFn';
+    UI.FACET.FACET_OPTIONS_DIV_EL_NAME                  = 'facet_options';
 
     UI.SEARCH.GET_SEARCH_REQ_PARAMS_FN_KEY              = 'searchRequestParamsFn';
     UI.SEARCH.SELECT_DATA_COLUMN_DEFS_KEY               = 'selectDataColumnDefs';
@@ -83,11 +87,15 @@ UI.FACET = {};
     UI.UNSTRUCTURED_DATA_EL_ID_KEY                      = 'unstructured';
     UI.INFO_FIELDS_TABLE_FIELDS_KEY                     = 'TABLEFIELDS';
     UI.INFO_FIELDS_WORD_TREE_FIELDS_KEY                 = 'WORDTREEFIELDS';
+    UI.INFO_FIELDS_AUDIT_FIELDS_KEY                     = 'AUDITFIELDS';
     UI.INFO_FIELDS_X_AXIS_FIELDS_KEY                    = 'XAXIS';
     UI.INFO_FIELDS_Y_AXIS_FIELDS_KEY                    = 'YAXIS';
     UI.INFO_FIELDS_SERIES_FIELDS_KEY                    = 'SERIES';
 
-    UI.MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    UI.FACET_FIELDS_DELIMITER_KEY                       = '<field>';
+    UI.FACET_VALUES_DELIMITER_KEY                       = '<values>';
+    UI.FACET_VALUE_OPTIONS_DELIMITER_KEY                = '<op>';
+    UI.FACET_DATE_RANGE_DELIMITER_KEY                   = '<to>';
 
     /* UI and Dom functionality */
     UI.getSolrCoreData = function() {
@@ -134,7 +142,6 @@ UI.FACET = {};
         urls[UI.VIEW_DOC_URL_KEY]           = baseUrl + 'core/document/' + (structured ? 'view' : 'prizmview');
         urls[UI.LOADING_IMG_URL_KEY]        = baseUrl + 'static/images/loading.png';
         urls[UI.THUMBNAIL_URL_KEY]          = baseUrl + 'document/thumbnail/get';
-
         return urls;
     };
 
@@ -222,7 +229,8 @@ UI.FACET = {};
         params[UI.URLS_KEY] = {};
         params[UI.URLS_KEY][UI.EXPORT_URL_KEY]            = baseUrl + 'export';
         params[UI.URLS_KEY][UI.FIELD_NAMES_URL_KEY]       = baseUrl + 'core/fieldnames';
-        params[UI.URLS_KEY][UI.AUDIT_FIELD_NAMES_URL_KEY] = baseUrl + 'search/infofields?infofield=auditFields&core=';
+        params[UI.URLS_KEY][UI.AUDIT_FIELD_NAMES_URL_KEY] = baseUrl + 'search/infofields?infofield=' +
+                                                            UI.INFO_FIELDS_AUDIT_FIELDS_KEY + '&core=';
         return params;
     };
 
@@ -502,8 +510,63 @@ UI.FACET = {};
     };
 
     /* Utility functions */
+    UI.util.REQUEST_CORE_KEY        = 'core';
+    UI.util.REQUEST_QUERY_KEY       = 'query';
+    UI.util.REQUEST_Q_KEY           = 'q';
+    UI.util.REQUEST_FQ_KEY          = 'fq';
+    UI.util.REQUEST_SORT_KEY        = 'sort';
+    UI.util.REQUEST_ORDER_KEY       = 'order';
+    UI.util.REQUEST_NUM_FOUND_KEY   = 'numfound';
+    UI.util.REQUEST_INFO_FIELD_KEY  = 'infofield';
+
     UI.util.stripBrackets = function(s) {
         return (typeof s == "string") ? s.replace(/^\[|\]$/g, '') : s;
+    };
+
+    UI.util.getRequestParamDisplayString = function(requestParams, param) {
+        switch (param) {
+            case UI.util.REQUEST_QUERY_KEY :
+            case UI.util.REQUEST_Q_KEY     : return UI.util.getRequestQueryParam(requestParams); break;
+            case UI.util.REQUEST_FQ_KEY    : return UI.util.getRequestFilterQueryParam(requestParams); break;
+            case UI.util.REQUEST_SORT_KEY  : return UI.util.getRequestSortAndOrderParams(requestParams); break;
+            default: return UI.util.specifyReturnValueIfUndefined(requestParams[param], '');
+        }
+    };
+
+    UI.util.getRequestQueryParam = function(requestParams) {
+        var q1 = requestParams[UI.util.REQUEST_QUERY_KEY],
+            q2 = requestParams[UI.util.REQUEST_Q_KEY];
+        return q1 != undefined ? decodeURIComponent(q1) : (q2 != undefined ? decodeURIComponent(q2) : '');
+    };
+
+    UI.util.getRequestFilterQueryParam = function(requestParams) {
+        var fq = requestParams[UI.util.REQUEST_FQ_KEY];
+        if (fq == undefined) return '';
+
+        var s = '', fqList = decodeURIComponent(fq).split(UI.FACET_FIELDS_DELIMITER_KEY);
+        for(var i = 0; i < fqList.length; i++) {
+            if (fqList[i] == '') continue;
+
+            var fqValList = fqList[i].split(UI.FACET_VALUES_DELIMITER_KEY),
+                field = fqValList[0], vals = fqValList[1];
+
+            s += '+' + field + ':';
+            if (vals.match(UI.FACET_DATE_RANGE_DELIMITER_KEY) != null) {
+                var dates = vals.split(UI.FACET_VALUE_OPTIONS_DELIMITER_KEY);
+                for(var j = 0; j < dates.length; j++) {
+                    s += '[' + dates[j].replace(eval('/' + UI.FACET_DATE_RANGE_DELIMITER_KEY + '/g'), ' to ') + '] ';
+                }
+            } else {
+                s += '(' + fqValList[1].replace(eval('/' + UI.FACET_VALUE_OPTIONS_DELIMITER_KEY + '/g'), ' ') + ') ';
+            }
+        }
+        return s;
+    };
+
+    UI.util.getRequestSortAndOrderParams = function(requestParams) {
+        var sort = requestParams[UI.util.REQUEST_SORT_KEY],
+            order = requestParams[UI.util.REQUEST_ORDER_KEY];
+        return sort != undefined && order != undefined ? sort + ' ' + order : '';
     };
 
     UI.util.getRequestParameters = function() {
@@ -750,6 +813,28 @@ UI.FACET = {};
         }
 
         throw new Error("Unable to copy obj! Its type isn't supported.");
+    };
+
+    /* Date functions
+     */
+    UI.date.MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+
+    function checkMonth(m)  { return UI.date.MONTHS.indexOf((m + '').toUpperCase()) != -1 || (!isNaN(m) && m >= 1 && m <= 12); }
+    function checkDay(d)    { return !isNaN(d) && d >= 1 && d <= 31; }
+    function checkYear(y)   { return !isNaN(y) && y >= 1900; }
+
+    function getMonthString(month) {
+        var m = UI.date.MONTHS.indexOf((month + '').toUpperCase());
+        return UI.date.MONTHS[(m != -1) ? m : parseInt(month) - 1];
+    }
+
+    UI.date.getDateString = function(m, d, y) {
+        return checkMonth(m) && checkDay(d) && checkYear(y) ? getMonthString(m) + '-' + d + '-' + y : null;
+    };
+
+    UI.date.formatFacetFieldIfDate = function(fieldVal) {
+        var f = fieldVal.match(/(\w{3}-\d{2}-\d{4}) to (\w{3}-\d{2}-\d{4})/);
+        return f == null ? fieldVal : f[1] + UI.FACET_DATE_RANGE_DELIMITER_KEY + f[2];
     };
 
 })();

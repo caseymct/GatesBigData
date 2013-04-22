@@ -53,12 +53,16 @@ public class PlotDatum {
         return this.y;
     }
 
+    private Object getFormattedDate(Date d) {
+        return DateUtils.getFormattedDateString(d, DateUtils.DAY_DATE_FORMAT);
+    }
+
     public Object getFormattedX() {
-        return this.x instanceof Date ? DateUtils.DAY_FORMAT.format(this.x) : this.x;
+        return this.x instanceof Date ? getFormattedDate((Date) this.x) : this.x;
     }
 
     public Object getFormattedY() {
-        return this.y instanceof Date ? DateUtils.DAY_FORMAT.format(this.y) : this.y;
+        return this.y instanceof Date ? getFormattedDate((Date) this.y) : this.y;
     }
 
     public double getXDoubleValue() {

@@ -72,6 +72,14 @@ public class JsonParsingUtils {
         }
     }
 
+    public static JSONArray convertCollectionToJSONArray(Collection c) {
+        JSONArray ret = new JSONArray();
+        for(Object s : c) {
+            ret.add(s);
+        }
+        return ret;
+    }
+
     public static JSONArray convertStringListToJSONArray(List<String> l) {
         JSONArray ret = new JSONArray();
         for(String s : l) {

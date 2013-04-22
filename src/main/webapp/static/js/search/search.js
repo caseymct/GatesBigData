@@ -5,8 +5,9 @@ SEARCH.util = {};
 (function() {
 
     /* Set core name and header for this search file */
-    var url = window.location.href.split('/');
-    SEARCH.ui.coreName = url[url.length - 1];
+    var url = window.location.href.split('/'), lastUrlComponent = url[url.length - 1],
+        idx = lastUrlComponent.indexOf('?');
+    SEARCH.ui.coreName = (idx == -1) ? lastUrlComponent : lastUrlComponent.substring(0, idx);
 
     SEARCH.ui.longStringWidth  = 210;
     SEARCH.ui.shortStringWidth = 80;
@@ -19,48 +20,44 @@ SEARCH.util = {};
         Button  = YAHOO.widget.Button,  Panel       = YAHOO.widget.Panel;
 
     var colStringMaxChars     = 20,                  colDateStringMaxChars       = 30,
-        rowsPerPage           = 10,                  queryDefaultValue           = "*:*",
+        rowsPerPage           = 10,                  queryDefaultValue           = '*:*',
 
         // button IDs
-        submitButtonElId      = "submit",            resetButtonElId             = "reset",
-        exportButtonElId      = "export",            analyzeButtonElId           = "analyze",
-        analyzeFormElId       = "analyzeForm",
+        submitButtonElId      = 'submit',            resetButtonElId             = 'reset',
+        exportButtonElId      = 'export',            analyzeButtonElId           = 'analyze',
 
         // other DOM IDs
-		previewDataId         = "preview_image",     showQueryElId               = "show_query",
-        paginatorElId         = "pag",               searchResultContainerElId   = "search_result_container",
-        numFoundElId          = "num_found",         sortOrderButtonGroupElId    = "sort_ascdesc_buttongroup",
-        sortByDivElId         = "sort_by_div",       searchResultsElId           = "search_results",
-        previewContainerElId  = "preview_container", sortBySelectElId            = "sort_date_label",
-        showQueryElIdBody     = "show_query_text",   showQueryButtonElId         = "show_query_button",
-        showQueryCloseElId    = "show_query_close",
+		previewDataId         = 'preview_image',     showQueryElId               = 'show_query',
+        paginatorElId         = 'pag',               searchResultContainerElId   = 'search_result_container',
+        numFoundElId          = 'num_found',         sortOrderButtonGroupElId    = 'sort_ascdesc_buttongroup',
+        sortByDivElId         = 'sort_by_div',       searchResultsElId           = 'search_results',
+        previewContainerElId  = 'preview_container', sortBySelectElId            = 'sort_date_label',
+        showQueryElIdBody     = 'show_query_text',   showQueryButtonElId         = 'show_query_button',
+        showQueryCloseElId    = 'show_query_close',
 
         // solr
-        solrResponseKey       = "response",          solrResponseFacetKey        = "facet_counts",
-        solrResponseDocsKey   = "docs",              solrResponseNumFoundKey     = "num_found",
-        solrDocIdFieldName    = "id",                solrResponseHighlightingKey = "highlighting",
-        solrDocContentsKey    = "content",           solrResponseViewFieldsKey   = "fl",
-        thumbnailKey          = "thumbnail",         solrDocHDFSSegmentFieldName = "HDFSSegment",
-        thumbnailTypeKey      = "thumbnail_type",    solrDocHDFSKeyFieldName     = "HDFSKey",
-        solrDocContentTypeKey = "content_type",      solrDocImageContentType     = "image/png",
-        solrDocTxtContentType = "text/html",         solrDocJSONContentType      = "application/json",
+        solrResponseKey       = 'response',          solrResponseFacetKey        = 'facet_counts',
+        solrResponseDocsKey   = 'docs',              solrResponseNumFoundKey     = 'num_found',
+        solrDocIdFieldName    = 'id',                solrResponseHighlightingKey = 'highlighting',
+        solrDocContentsKey    = 'content',           solrDocContentTypeKey       = 'content_type',
+        thumbnailKey          = 'thumbnail',         thumbnailTypeKey            = 'thumbnail_type',
+        solrDocTxtContentType = 'text/html',         solrDocImageContentType     = 'image/png',
+                                                     solrDocJSONContentType      = 'application/json',
         //request
-        numFoundRequestParam  = "numfound",
+        numFoundRequestParam  = 'numfound',
 
         //preview
         noPreviewText         = "No preview available",
 
         // CSS variables
-        searchResultElWidthStructured   = "56%",    searchResultSubheadingCSSClass  = "search_subheading",
-        searchResultElWidthUnstructured = "100%",   searchResultDivCSSClass         = "search_result_div",
-                                                    previewDivCSSClass              = 'preview_result_div';
+        searchResultSubheadingCSSClass  = 'search_subheading',      searchResultElWidthStructured   = '56%',
+        searchResultDivCSSClass         = 'search_result_div',      searchResultElWidthUnstructured = '100%',   
+        yuiButtonLabelCSSClass          = 'yui-button-label',       previewDivCSSClass              = 'preview_result_div';
 
     var searchInputEls                  = [],       dataSourceFields                = [],
         thumbnailData                   = {},       initialSelectIndex              = 0,
-        highlightSnippets               = "",       highlightIdToTitleMapJsonKey    = "idToTitleMap",
-        viewFields                      = "",       facetsFromLastSearch            = null,
-        docsFromLastSearch              = null,     numFound                        = 0,
-        urlSearchParams                 = "",
+        facetsFromLastSearch            = null,     docsFromLastSearch              = null,
+        numFound                        = 0,        urlSearchParams                 = "",
 
         // URLs
         loadingImgUrl = "", thumbnailUrl  = "", analyzeUrl = "",
@@ -126,6 +123,7 @@ SEARCH.util = {};
         }
 
         buildHTML();
+        searchIfInitialQuerySpecified();
     };
 
     function buildHTML() {
@@ -152,29 +150,19 @@ SEARCH.util = {};
         UI.insertDomElementAfter('div', searchResultsInsertAfterEl, { id: paginatorElId });
 
         // Show solr query
-        var showQueryButton = UI.insertDomElementAfter('a', searchResultsInsertAfterEl,
-            { id : showQueryButtonElId, innerHTML: "Show Solr Query" },
-            { "class" : "button small", padding: "3px 8px 3px 8px", visibility : "hidden" } );
+        UI.insertDomElementAfter('a', searchResultsInsertAfterEl, { id : showQueryButtonElId, innerHTML: "Show Solr Query" },
+            { 'class' : 'button small' } );
         var showQueryEl = UI.addDomElementChild('div', Dom.get("collections_tab_content"), { id : showQueryElId });
-        UI.addDomElementChild('div', showQueryEl, { innerHTML: "Query submitted to Solr"}, { "class" : "hd", "font-size" : "12px"} );
-        UI.addDomElementChild('div', showQueryEl, { id : showQueryElIdBody }, { "class" : "bd", "font-size" : "12px" } );
+        UI.addDomElementChild('div', showQueryEl, { innerHTML: "Query submitted to Solr"}, { "class" : "hd" } );
+        UI.addDomElementChild('div', showQueryEl, { id : showQueryElIdBody }, { "class" : "bd" } );
 
         // Build buttons
         var searchButtonsInsertAfterEl = Dom.get(insertSearchButtonsAfterElName);
         el = UI.insertDomElementAfter('div', searchButtonsInsertAfterEl, null, { "class" :  "buttons", "padding-bottom" : "5px" });
-        UI.addDomElementChild('a', el, { id: submitButtonElId, innerHTML: "Search", href: "#"}, { "class" :  "button small"});
-        UI.addDomElementChild('a', el, { id: resetButtonElId,  innerHTML: "Reset",  href: "#"}, { "class" :  "button small"});
-        UI.addDomElementChild('a', el, { id: exportButtonElId, innerHTML: "Export", href: "#"}, { "class" :  "button small"});
-
-        // Add analyze hidden form data
+        UI.addDomElementChild('a', el, { id: submitButtonElId,  innerHTML: "Search",  href: "#"}, { "class" :  "button small"});
+        UI.addDomElementChild('a', el, { id: resetButtonElId,   innerHTML: "Reset",   href: "#"}, { "class" :  "button small"});
+        UI.addDomElementChild('a', el, { id: exportButtonElId,  innerHTML: "Export",  href: "#"}, { "class" :  "button small"});
         UI.addDomElementChild('a', el, { id: analyzeButtonElId, innerHTML: "Analyze", href: "#"}, { "class" :  "button small"});
-        var f = UI.addDomElementChild('form', el, { id : analyzeFormElId, method: "POST", target : "_blank", action: "analyze"}, { height: "0px" });
-        UI.addDomElementChild('input', f, { id: UI.SNIPPET_DATA_INPUT_EL_NAME, name: UI.SNIPPET_DATA_INPUT_EL_NAME, type: "text" }, { visibility: "hidden"});
-        UI.addDomElementChild('input', f, { id: UI.QUERY_DATA_INPUT_EL_NAME, name: UI.QUERY_DATA_INPUT_EL_NAME, type: "text" }, { visibility: "hidden"});
-        UI.addDomElementChild('input', f, { id: UI.VIEW_DOC_URL_INPUT_EL_NAME, name: UI.VIEW_DOC_URL_INPUT_EL_NAME, type: "text" }, { visibility: "hidden"});
-        UI.addDomElementChild('input', f, { id: UI.VIEW_FIELDS_DATA_INPUT_EL_NAME, name: UI.VIEW_FIELDS_DATA_INPUT_EL_NAME, type: "text" }, { visibility: "hidden"});
-        UI.addDomElementChild('input', f, { id: UI.DATA_TYPE_DATA_INPUT_EL_NAME, name: UI.DATA_TYPE_DATA_INPUT_EL_NAME,
-                                            type: "text", value: unstructuredData }, { visibility: "hidden"});
 
         UI.insertDomElementAfter('div', el, null, { "class" :  "row" });
 
@@ -188,6 +176,16 @@ SEARCH.util = {};
         initPaginator();
         initSortOrderButtonGroup();
         initShowQueryPanel();
+    }
+
+    function searchIfInitialQuerySpecified() {
+        var initialQuery = YAHOO.deconcept.util.getRequestParameter(UI.INITIAL_QUERY_KEY);
+        if (initialQuery == '') return;
+
+        Event.onContentReady(UI.FACET.FACET_OPTIONS_DIV_EL_NAME, function() {
+            searchInputEls[getSearchTabActiveIndex()].value = decodeURIComponent(initialQuery);
+            SEARCH.ui.search();
+        });
     }
 
     SEARCH.ui.getUrlSearchParams = function() {
@@ -220,20 +218,6 @@ SEARCH.util = {};
         el.innerHTML = '<a href="#">' + data + '</a>';
     };
 
-    function updateAnalysisData(response) {
-        var highlighting = response[solrResponseHighlightingKey],
-                    docs = response[solrResponseDocsKey];
-
-        highlighting[highlightIdToTitleMapJsonKey] = {};
-        for(var i = 0; i < docs.length; i++) {
-            highlighting[highlightIdToTitleMapJsonKey][docs[i]['id']] = docs[i]['title'];
-        }
-
-        // set the global variables
-        highlightSnippets = Json.stringify(highlighting);
-        viewFields = unstructuredData ? response[solrResponseViewFieldsKey] : "Account.AccountName";
-    }
-
     function updateDocsFromLastSearch(docs) {
         var i, docId, doc;
         docsFromLastSearch = {};
@@ -248,13 +232,12 @@ SEARCH.util = {};
 
     var searchSuccessCallback = function(o) {
         UI.hideWait();
-
         var result = Json.parse(o.responseText);
         facetsFromLastSearch = result[solrResponseKey][solrResponseFacetKey];
         buildSearchResultHtmlFn(result);
 
+        updateSolrQueryDiv(decodeURIComponent(result.response.q));
         updateDocsFromLastSearch(result[solrResponseKey][solrResponseDocsKey]);
-        updateAnalysisData(result[solrResponseKey]);
         updateNumFound(result[solrResponseKey][solrResponseNumFoundKey], 1);
         updatePaginatorAfterSearch();
 
@@ -273,7 +256,7 @@ SEARCH.util = {};
         var fq = getFilterQueryFn();
         var queryTerms = getQueryTerms();
         urlSearchParams = constructUrlSearchParams(queryTerms, fq, 0);
-        updateSolrQueryDiv(searchUrl + urlSearchParams);
+
         clearPreviewContainerImage();
 
         Connect.asyncRequest('GET', searchUrl + urlSearchParams, {
@@ -299,15 +282,9 @@ SEARCH.util = {};
 
         Event.addListener(analyzeButtonElId, "click", function (e) {
             Event.stopEvent(e);
-            var urlParams = SEARCH.ui.getUrlSearchParams() + "&structured=" + unstructuredData + "&fl=" + viewFields;
-            window.open(analyzeUrl + urlParams, "_blank");
-
-            /*Dom.get(UI.SNIPPET_DATA_INPUT_EL_NAME).value     = highlightSnippets; //Json.stringify(SEARCH.ui.snippetsFromLastSearch);
-            Dom.get(UI.QUERY_DATA_INPUT_EL_NAME).value       = SEARCH.ui.getUrlSearchParams();
-            Dom.get(UI.VIEW_DOC_URL_INPUT_EL_NAME).value     = viewDocUrl + "?view=preview&core=" + SEARCH.ui.coreName;
-            Dom.get(UI.VIEW_FIELDS_DATA_INPUT_EL_NAME).value = viewFields;
-            //Dom.get(UI.DATA_TYPE_DATA_INPUT_EL_NAME).value   = unstructuredData;
-            document.forms[analyzeFormElId].submit();*/
+            var url = analyzeUrl + (unstructuredData ? "/wordtree" + SEARCH.ui.getUrlSearchParams() :
+                                                       SEARCH.ui.getUrlSearchParams() + '&structured=true');
+            window.open(url, "_blank");
         });
     }
 
@@ -493,8 +470,14 @@ SEARCH.util = {};
             button.set("selectedMenuItem", this.getItem(initialSelectIndex));
         }, sortBySelect);
 
-        sortBySelect.on("selectedMenuItemChange", function (event) {
-            this.set("label", ("<em class=\"yui-button-label\">" + event.newValue.cfg.getProperty("text") + "</em>"));
+        sortBySelect.on("selectedMenuItemChange", function (e) {
+            var newVal = e.newValue.cfg.getProperty('text');
+            this.set('label', ('<em class="' + yuiButtonLabelCSSClass + '">' + newVal + '</em>'));
+
+            var oldVal = e.prevValue;
+            if (docsFromLastSearch != null && oldVal != null && oldVal.cfg.getProperty('text') != newVal) {
+                SEARCH.ui.search();
+            }
         });
     }
 
@@ -519,9 +502,15 @@ SEARCH.util = {};
         paginator.setState(newState);
     }
 
-    function updateSolrQueryDiv (searchString) {
+    function updateSolrQueryDiv (params) {
+        var s = [], paramArgs = params.split("&");
+        for(var i = 0; i < paramArgs.length; i++) {
+            if (paramArgs[i].match(/^(facet|fl|hl)/) == null) {
+                s.push(paramArgs[i] + '<br>');
+            }
+        }
         Dom.setStyle(Dom.get(showQueryButtonElId), "visibility", "visible");
-        Dom.get(showQueryElIdBody).innerHTML = decodeURIComponent(searchString);
+        Dom.get(showQueryElIdBody).innerHTML = s.join('&');
     }
 
     function constructUrlSearchParams(queryTerms, fq, start) {
@@ -547,17 +536,6 @@ SEARCH.util = {};
               data = record.getData(),
             dataId = UI.util.returnEmptyIfUndefined(data.id);
 
-        /*var urlParams = "?core=" + SEARCH.ui.coreName + "&id=" + data.id;
-        var callback = {
-            success: function(o) {
-                var response = Json.parse(o.responseText);
-                this.argument.table.updateCell(record, thumbnailKey, response[solrDocContentsKey]);
-                this.argument.table.updateCell(record, thumbnailTypeKey, response[solrDocContentTypeKey]);
-                setPreviewContainerData(record.getData().title, response[solrDocContentsKey], response[solrDocContentTypeKey]);
-            },
-            argument: { table: dataTable, record: record}
-        };  */
-
         if (data[thumbnailKey] == undefined) {
             dataTable.updateCell(record, thumbnailKey, docsFromLastSearch[dataId]);
             dataTable.updateCell(record, thumbnailTypeKey, solrDocJSONContentType);
@@ -577,7 +555,7 @@ SEARCH.util = {};
 
         var dataTable = new DataTable(searchResultsElId, selectDataColumnDefs, dataSource, { width:"100%" });
 
-        dataTable.subscribe("sortedByChange", function(e) {
+        /*dataTable.subscribe("sortedByChange", function(e) {
             var sortField = e.newValue.column.key;
             var index = -1;
             for(var i = 0; i < selectData.length; i++) {
@@ -589,7 +567,7 @@ SEARCH.util = {};
             sortBySelect.set("selectedMenuItem", sortBySelect.getMenu().getItem(index));
             paginator.setStartIndex(0);
             SEARCH.ui.search();
-        });
+        }); */
 
         dataTable.subscribe("cellClickEvent", function (e) {
             Event.stopEvent(e.event);
@@ -604,28 +582,55 @@ SEARCH.util = {};
         });
     }
 
+    function getIndexFromSearchResultDivId(id)  { return id.match("searchResult([0-9]+)")[1]; }
+    function constructSearchResultDivId(i)      { return "searchResult" + i; }
+    function constructPreviewDivId(i)           { return "preview" + i; }
+    function constructLinkDivId(i)              { return "link" + i; }
+
+    function searchResultListMouseEnter(e) {
+        clearPreviewContainerImage();
+
+        var idx     = getIndexFromSearchResultDivId(this.id);
+        var href    = Dom.get(constructLinkDivId(idx)).href;
+        var file    = href.match("id=([^&]+)(&|$)")[1];
+        var segment = href.match("segment=([^&]+)(&|$)")[1];
+        var title   = file.substring(file.lastIndexOf("/") + 1);
+
+        currPreviewContainerEl = Dom.get(constructPreviewDivId(idx));
+
+        if (thumbnailData[file] == undefined) {
+            setPreviewContainerLoadingImage();
+            var urlParams = "?core=" + SEARCH.ui.coreName + "&segment=" + segment + "&id=" + file;
+
+            Connect.asyncRequest('GET', thumbnailUrl + urlParams, {
+                success: function(o) {
+                    var response = Json.parse(o.responseText);
+                    thumbnailData[file] = {};
+                    thumbnailData[file][solrDocContentsKey]    = response[solrDocContentsKey];
+                    thumbnailData[file][solrDocContentTypeKey] = response[solrDocContentTypeKey];
+
+                    setPreviewContainerData(title, response[solrDocContentsKey], response[solrDocContentTypeKey]);
+                }
+            });
+
+        } else {
+            setPreviewContainerData(title, thumbnailData[file][solrDocContentsKey], thumbnailData[file][solrDocContentTypeKey]);
+        }
+    }
+
     function buildSearchResultList(result) {
         var searchResultsEl = Dom.get(searchResultsElId);
         searchResultsEl.innerHTML = "";
 
-        function getIndexFromSearchResultDivId(id)  { return id.match("searchResult([0-9]+)")[1]; }
-        function constructSearchResultDivId(i)      { return "searchResult" + i; }
-        function constructPreviewDivId(i)           { return "preview" + i; }
-        function constructLinkDivId(i)              { return "link" + i; }
-
-        var i = 0,
-            docs = result[solrResponseKey][solrResponseDocsKey],
+        var docs      = result[solrResponseKey][solrResponseDocsKey],
             highlight = result[solrResponseKey][solrResponseHighlightingKey];
 
-        docs.forEach(function(doc) {
-            var titleHref = viewDocUrl + "?view=preview" +
-                            "&core=" + SEARCH.ui.coreName +
-                            "&segment=" + doc[solrDocHDFSSegmentFieldName] +
-                            "&id=" + doc[solrDocIdFieldName];
-            var titleId = constructLinkDivId(i),
+        for(var i = 0; i < docs.length; i++) {
+            var doc               = docs[i],
+                titleHref         = viewDocUrl + "?view=preview&core=" + SEARCH.ui.coreName + "&id=" + doc[solrDocIdFieldName],
+                titleId           = constructLinkDivId(i),
                 searchResultDivId = constructSearchResultDivId(i),
-                previewDivId = constructPreviewDivId(i);
-            i = i + 1;
+                previewDivId      = constructPreviewDivId(i);
 
             var pdiv   = UI.addDomElementChild("div", searchResultsEl);
 
@@ -634,17 +639,17 @@ SEARCH.util = {};
             var title = UI.addDomElementChild("div", div);
             UI.addDomElementChild("a", title, { id: titleId, href: titleHref, innerHTML: doc['title'] }, { color: "blue" });
             UI.addDomElementChild("div", div, { innerHTML: "Author: <b>" + doc['author'] + "</b>"},
-                                              { "class" :  searchResultSubheadingCSSClass });
-            UI.addDomElementChild("div", div, { innerHTML: "Content type: <b>" + doc['content_type'] + "</b>"},
-                                              { "class" :  searchResultSubheadingCSSClass });
+                { "class" :  searchResultSubheadingCSSClass });
+            UI.addDomElementChild("div", div, { innerHTML: "Content type: <b>" + doc[solrDocContentTypeKey] + "</b>"},
+                { "class" :  searchResultSubheadingCSSClass });
             UI.addDomElementChild("div", div, { innerHTML: "Created On: <i>" + doc['creation_date'] + "</i>, " +
-                                                           "Last Modified: <i>" + doc['last_modified'] + "</i>"},
-                                              { "class" :  searchResultSubheadingCSSClass});
+                    "Last Modified: <i>" + doc['last_modified'] + "</i>"},
+                { "class" :  searchResultSubheadingCSSClass});
 
             var highlightObj = highlight[doc[solrDocIdFieldName]];
             Object.keys(highlightObj).forEach(function(key) {
                 UI.addDomElementChild("div", div, { innerHTML: "Field <b>" + key + "</b>"},
-                                                  { "class" :  searchResultSubheadingCSSClass, color: "darkgreen"});
+                    { "class" :  searchResultSubheadingCSSClass, color: "darkgreen"});
                 highlightObj[key].forEach(function(s) {
                     UI.addDomElementChild("div", div, { innerHTML: "... " + s + "... "}, { "class" : "search_result"});
                 })
@@ -658,37 +663,8 @@ SEARCH.util = {};
                 window.open(this.href, "_blank");
             });
 
-            Event.addListener(searchResultDivId, "mouseenter", function(e) {
-                clearPreviewContainerImage();
-
-                var idx     = getIndexFromSearchResultDivId(this.id);
-                var href    = Dom.get(constructLinkDivId(idx)).href;
-                var file    = href.match("id=([^&]+)(&|$)")[1];
-                var segment = href.match("segment=([^&]+)(&|$)")[1];
-                var title   = file.substring(file.lastIndexOf("/") + 1);
-
-                currPreviewContainerEl = Dom.get(constructPreviewDivId(idx));
-
-                if (thumbnailData[file] == undefined) {
-                    setPreviewContainerLoadingImage();
-                    var urlParams = "?core=" + SEARCH.ui.coreName + "&segment=" + segment + "&id=" + file;
-
-                    Connect.asyncRequest('GET', thumbnailUrl + urlParams, {
-                        success: function(o) {
-                            var response = Json.parse(o.responseText);
-                            thumbnailData[file] = {};
-                            thumbnailData[file][solrDocContentsKey]    = response[solrDocContentsKey];
-                            thumbnailData[file][solrDocContentTypeKey] = response[solrDocContentTypeKey];
-
-                            setPreviewContainerData(title, response[solrDocContentsKey], response[solrDocContentTypeKey]);
-                        }
-                    });
-
-                } else {
-                    setPreviewContainerData(title, thumbnailData[file][solrDocContentsKey], thumbnailData[file][solrDocContentTypeKey]);
-                }
-            });
-        });
+            Event.addListener(searchResultDivId, "mouseenter", searchResultListMouseEnter);
+        }
     }
 
 })();

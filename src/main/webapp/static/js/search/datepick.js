@@ -4,17 +4,15 @@ DATEPICK.util = {};
 
 (function() {
     var Connect         = YAHOO.util.Connect,
-        Event           = YAHOO.util.Event,
         Dom             = YAHOO.util.Dom;
     
     var dateBeginInputElName            = "date_begin",
         dateEndInputElName              = "date_end",
         dateConstraintTextElName        = "date_constraint_text",
         dateConstraintRangeTextElName   = "date_constraint_range",
-        dateRangeTextStyle              = "font-size:12px; padding-top:3px",
-        dateTextInputSize               = 10;
-
-    var monthAbbrev = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+        dateRangeTextCSS                = { 'font-size' : '12px', 'padding-top' : '3px' },
+        dateTextInputSize               = 10,
+        defaultDateSearchValue          = '*';
 
     var dateField = "",
         dateRangeUrl = "";
@@ -25,28 +23,16 @@ DATEPICK.util = {};
         buildHTML(names[UI.DATEPICK.DATE_PICK_EL_NAME_KEY]);
     };
 
-    function formatDateString(day, month, year) {
-        return year + "-" + (((month < 10) ? "0" : "") + month) + "-" + (((day < 10) ? "0" : "") + day);
-    }
+    function getDateConstraint(inputName, picker) {
+        var input = Dom.get(inputName).value.trim(),
+            match = input.match(/^([a-zA-Z]{3}|[0-9]{1,2})-([0-9]{1,2})-([0-9]{4})$/);
 
-    function getDateConstraint(inputName, datePicker) {
-        if (datePicker == false) return "*";
+        if (input.match(/\*/) != null || (match == null && picker == false)) return defaultDateSearchValue;
 
-        //first check the input
-        var input = Dom.get(inputName).value.trim();
-        if (input.match(/^[\s]*[\\*]*$/) != null) return "*";
+        var dateString = match != null ? UI.date.getDateString(match[1], match[2], match[3]) :
+                                         UI.date.getDateString(picker.month, picker.day, picker.year);
 
-        var datePickerRep = formatDateString(parseInt(datePicker.day), parseInt(datePicker.month), parseInt(datePicker.year));
-        var match = input.match(/^([a-zA-Z]{3})-([0-9]{2})-([0-9]{4})$/);
-        if (match != null) {
-            var inputMonth = monthAbbrev.indexOf(match[1]) + 1;
-            var inputDay = parseInt(match[2].replace(/^0/,""));
-            var inputYear = parseInt(match[3]);
-            if (inputMonth != parseInt(datePicker.month) || inputDay != parseInt(datePicker.day) || inputYear != datePicker.year) {
-                return formatDateString(inputDay, inputMonth, inputYear);
-            }
-        }
-        return datePickerRep;
+        return dateString != null ? dateString : defaultDateSearchValue;
     }
 
     function buildHTML(datePickElName) {
@@ -54,11 +40,11 @@ DATEPICK.util = {};
 
         var l = UI.addDomElementChild('label', datePickDiv, { "for" : dateBeginInputElName, innerHTML : "Constrain by "});
         UI.addDomElementChild('span', l, { id : dateConstraintTextElName });
-        UI.addDomElementChild('input', datePickDiv, { type : 'text', size: dateTextInputSize, id : dateBeginInputElName, value: '*'});
+        UI.addDomElementChild('input', datePickDiv, { type : 'text', size: dateTextInputSize, id : dateBeginInputElName, value: defaultDateSearchValue});
         UI.addDomElementChild('label', datePickDiv, { "for" : dateEndInputElName, innerHTML: " to "});
-        UI.addDomElementChild('input', datePickDiv, { type : 'text', size: dateTextInputSize, id : dateEndInputElName, value: '*'});
+        UI.addDomElementChild('input', datePickDiv, { type : 'text', size: dateTextInputSize, id : dateEndInputElName, value: defaultDateSearchValue});
         UI.addDomElementChild('br', datePickDiv);
-        var s = UI.addDomElementChild('span', datePickDiv, { innerHTML: "In this index, field " }, { "font-size" : "12px", "padding-top" : "3px" });
+        var s = UI.addDomElementChild('span', datePickDiv, { innerHTML: "In this index, field " }, dateRangeTextCSS);
         UI.addDomElementChild('span', s, { id : dateConstraintRangeTextElName });
 
         createDatePickers();
@@ -89,16 +75,20 @@ DATEPICK.util = {};
                     "<i>" + dateStr[0] + "</i> to <i>" + dateStr[1] + "</i>";
 
                 if (start != null) beginDatePick.setSelectedDay({ day:start[2], month:start[1], year:start[3] });
-                if (end != null) endDatePick.setSelectedDay({ day:end[2], month:end[1], year:end[3] });
+                if (end != null)   endDatePick.setSelectedDay({ day:end[2], month:end[1], year:end[3] });
             }
         });
 
-        DATEPICK.util.getDateConstraintFilterQueryString = function() {
-            var startDate = getDateConstraint(dateBeginInputElName, beginDatePick.getSelectedDay());
-            var endDate   = getDateConstraint(dateEndInputElName, endDatePick.getSelectedDay());
 
-            return (startDate == "*" && endDate == "*") ? "" :
-                "%2B" + dateField + ":[" + startDate + " TO " + endDate + "] ";
+        DATEPICK.util.getDateConstraintFilterQueryString = function() {
+            var startDate = getDateConstraint(dateBeginInputElName, beginDatePick.getSelectedDay()),
+                endDate   = getDateConstraint(dateEndInputElName, endDatePick.getSelectedDay()),
+                startDateSpecified = (startDate != defaultDateSearchValue),
+                endDateSpecified   = (endDate != defaultDateSearchValue);
+
+            if (!startDateSpecified && !endDateSpecified) return '';
+            return UI.FACET_FIELDS_DELIMITER_KEY + dateField + UI.FACET_VALUES_DELIMITER_KEY +
+                   startDate + UI.FACET_DATE_RANGE_DELIMITER_KEY + endDate;
         };
     }
 

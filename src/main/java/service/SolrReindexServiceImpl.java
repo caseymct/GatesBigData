@@ -173,12 +173,12 @@ public class SolrReindexServiceImpl extends Configured implements SolrReindexSer
                 /*
                 if (docList.size() == 10000) {
                     System.out.println(this.getName() + " adding " + docList.size() + " docs to Solr.");
-                    coreService.addDocumentToSolrIndex(docList, coreName);
+                    coreService.update(docList, coreName);
                     docList = new ArrayList<SolrInputDocument>();
                 }  */
             }
             //System.out.println(this.getName() + " adding " + docList.size() + " docs to Solr.");
-            //coreService.addDocumentToSolrIndex(docList, coreName);
+            //coreService.update(docList, coreName);
         }
 
         public void doRun() {

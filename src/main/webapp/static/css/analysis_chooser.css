@@ -18,7 +18,8 @@
 .toggle_label {
     float : left;
     margin-right : 10px;
-    margin-top : 10px;
+    margin-top: 5px;
+    width: 80px;
 }
 
 .explain_span {
@@ -26,6 +27,11 @@
     float: left;
     width: 300px;
 }
+
+.explain_span_last {
+    margin-bottom: 30px;
+}
+
 /* needed for stacked instances for ie & sf z-index bug of absolute inside relative els */
 /*#x_axis_autocomplete { z-index:9001; }
 #y_axis_autocomplete { z-index:9000; }
@@ -51,4 +57,27 @@
     width : 100px;
     padding-right : 10px;
     font-weight : bold;
+}
+
+#info fieldset {
+    border: 1px solid gray;
+    border-radius: 5px;
+    padding: 10px 0 20px 20px;
+}
+
+#info legend {
+    padding: 0 10px;
+}
+
+#wordtree,
+#plot {
+    margin-top : 20px;
+}
+
+#x_axis_autocomplete,
+#y_axis_autocomplete,
+#series_autocomplete {
+    padding: 5px;
+    float: left;
+    width: 100%;
 }

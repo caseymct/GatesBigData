@@ -19,8 +19,7 @@
 
     (function() {
         var Dom  = YAHOO.util.Dom,        Connect = YAHOO.util.Connect,
-            Json = YAHOO.lang.JSON,         Event = YAHOO.util.Event,
-            Slider = YAHOO.widget.Slider;
+            Json = YAHOO.lang.JSON,         Event = YAHOO.util.Event;
 
         var baseUrl = '<c:url value="/" />',
             plotUrl = baseUrl + 'search/plot',
@@ -43,22 +42,27 @@
             nFoundCtrDivElName   = "n_found_container",    sliderTxtLblCSSClass = "slider_text_label",
             sliderSetValsButtonsCSSClass = "slider_set_val_buttons",
 
+            xMaxTicks            = 10,                     yMaxTicks            = 10,
             maxWidth             = 1000,                   maxHeight            = 600,
             marginTop            = 20,                     marginRight          = 150,
             marginBottom         = 100,                    marginLeft           = 100,
+            msPerDay             = 1000*60*60*24,
             width                = maxWidth - marginLeft - marginRight,
             height               = maxHeight - marginTop - marginBottom;
 
-        var requestParamFields   = ["query", "fq", "core", "numfound", "xaxis", "yaxis", "series"],
+        var requestParamFields   = [UI.util.REQUEST_QUERY_KEY, UI.util.REQUEST_FQ_KEY, UI.util.REQUEST_CORE_KEY,
+                                    UI.util.REQUEST_NUM_FOUND_KEY, "xaxis", "yaxis", "series"],
             requestParams        = UI.util.getRequestParameters(),
             hasSeries            = (requestParams["series"] != undefined);
 
-        var minX        = 0,            maxX               = maxWidth,
-            minY        = 0,            maxY               = maxHeight,
-            seriesData  = [],           allData            = [],
-            xAxisIsDate = false,        yAxisIsDate        = false,
-            slidePoints = false,        currPlotIsSeries   = false,
-            svgEls      = {},           plotData           = {};
+        var minX                 = 0,                      maxX                 = maxWidth,
+            minY                 = 0,                      maxY                 = maxHeight,
+            gapX                 = 0,                      gapY                 = 0,
+            seriesData           = [],                     allData              = [],
+            xAxisIsDate          = false,                  yAxisIsDate          = false,
+            slidePoints          = false,                  currPlotIsSeries     = false,
+            svgEls               = {},                     plotData             = {},
+            uniqueXDates         = [];
 
         var parseDate         = d3.time.format("%d-%b-%y").parse,
             parseFullYearDate = d3.time.format("%b-%d-%Y").parse;
@@ -91,34 +95,45 @@
         Event.addListener(ySliderSetMaxElId, "click", function(o) { setMinMaxRangeValues(false, false); });
 
         function adjust(range, isMin, isDate) {
-            var min = UI.util.returnIfDefined(0.0, range['min']),
-                max = UI.util.returnIfDefined(0.0, range['max']),
-                val = isMin ? min : max;
+            var min           = UI.util.returnIfDefined(0.0, range['min']),
+                max           = UI.util.returnIfDefined(0.0, range['max']),
+                val           = isMin ? min : max,
+                mult          = isMin ? -1 : 1,
+                defaultMargin = isDate ? msPerDay : 1;
+
             if (isDate) {
                 max = parseDate(max).getTime();
                 min = parseDate(min).getTime();
                 val = parseDate(val).getTime();
             }
+            var margin = mult*(max > min ? (max - min)*.05 : defaultMargin);
+            return isDate ? new Date(val + margin) : val + margin;
+        }
 
-            var margin = (isMin ? -1 : 1)*(max - min)*.05;
-            return isDate ? new Date(val + margin) : Math.floor(val + margin);
+        function calculateRangeGap(isDate, range) {
+            var min = UI.util.returnIfDefined(0.0, range['min']),
+                max = UI.util.returnIfDefined(0.0, range['max']);
+            return isDate ? parseDate(max).getTime() - parseDate(min).getTime() : max - min;
         }
 
         function setGraphVariablesFromPlotData(responseJSON) {
-            plotData        = responseJSON;
-            xAxisName       = plotData['xAxis'];
-            yAxisName       = plotData['yAxis'];
-            seriesFieldName = plotData['series'];
-            xAxisIsDate     = plotData['xAxisIsDate'];
-            yAxisIsDate     = plotData['yAxisIsDate'];
-            minX            = adjust(plotData['xRange'], true, xAxisIsDate);
-            maxX            = adjust(plotData['xRange'], false, xAxisIsDate);
-            minY            = adjust(plotData['yRange'], true, yAxisIsDate);
-            maxY            = adjust(plotData['yRange'], false, yAxisIsDate);
-            seriesData      = plotData['data']['series'];
-            allData         = plotData['data']['all'];
+            plotData         = responseJSON;
+            xAxisName        = plotData['xAxis'];
+            yAxisName        = plotData['yAxis'];
+            seriesFieldName  = plotData['series'];
+            xAxisIsDate      = plotData['xAxisIsDate'];
+            yAxisIsDate      = plotData['yAxisIsDate'];
+            gapX             = calculateRangeGap(xAxisIsDate, plotData['xRange']);
+            gapY             = calculateRangeGap(yAxisIsDate, plotData['yRange']);
+            minX             = adjust(plotData['xRange'], true,  xAxisIsDate);
+            maxX             = adjust(plotData['xRange'], false, xAxisIsDate);
+            minY             = adjust(plotData['yRange'], true,  yAxisIsDate);
+            maxY             = adjust(plotData['yRange'], false, yAxisIsDate);
+            seriesData       = plotData['data']['series'];
+            allData          = plotData['data']['all'];
+            uniqueXDates     = plotData['data']['uniqueXDates'];
 
-            slidePoints     = allData['series1'].length < 8000;
+            slidePoints      = allData['series1'].length < 8000;
             currPlotIsSeries = seriesData != undefined && Object.keys(seriesData).length > 0;
         }
 
@@ -152,6 +167,45 @@
             return (px > bx && px < ex && py > by && py < ey) ? 1 : 0;
         }
 
+        function getDateTicks(begin, end, maxTicks) {
+            var format;
+            var secs = (begin-end)/1000, mins = secs/60, hrs = mins/60, days = hrs/24, months = days/30, years = months/12;
+
+            if (years >= maxTicks) {
+                format = d3.time.format("%Y");
+            } else if (months >= maxTicks) {
+                format = d3.time.format("%b-%Y");
+            } else {
+                format = d3.time.format("%b-%d-%Y");
+            }
+
+            var addToTicks = false, n = uniqueXDates.length, ticks = [];
+            for(var i = 0; i < n; i++) {
+                if ((i == 0 && begin < uniqueXDates[0]) ||
+                    (i > 0 && begin > uniqueXDates[i-1] && begin < uniqueXDates[i])) addToTicks = true;
+                if (end < uniqueXDates[i] && addToTicks) addToTicks = false;
+                if (addToTicks) ticks.push(new Date(uniqueXDates[i]));
+            }
+
+            if (ticks.length > maxTicks) {
+                //prune
+            }
+
+            return { format : format, ticks : ticks };
+        }
+
+        function getTickValues(begin, end, maxTicks, isDate) {
+            var val, size = end - begin, step = size/maxTicks;
+            var ticks = [], startVal = begin instanceof Date ? begin.getTime() : begin;
+            for (var i = 0; i <= maxTicks; i++) {
+                val = startVal + step*i;
+                ticks.push(isDate ? new Date(val) : val);
+                if (isDate) console.log(val);
+            }
+
+            return ticks;
+        }
+
         function drawGraph() {
             removeSvg();
 
@@ -164,11 +218,17 @@
             var x = (xAxisIsDate ? d3.time.scale() : d3.scale.linear()).domain([minX, maxX]).range([0, width]);
             var y = d3.scale.linear().domain([minY, maxY]).range([height, 0]);
 
-            var xAxis = d3.svg.axis().scale(x).orient("bottom").ticks(10);
+            var xAxis = d3.svg.axis().scale(x).orient("bottom").ticks(gapX == 0 ? 2 : xMaxTicks);
             if (xAxisIsDate) {
-                xAxis.tickFormat(d3.time.format("%b-%d-%Y"));
+                var f = getDateTicks(minX.getTime(), maxX.getTime(), xMaxTicks);
+                xAxis.tickFormat(f.format);
+                xAxis.tickValues(f.ticks);
+            } else {
+                xAxis.tickValues(getTickValues(minX, maxX, xMaxTicks, false));
             }
-            var yAxis = d3.svg.axis().scale(y).orient("left").ticks(10);
+
+            var yAxis = d3.svg.axis().scale(y).orient("left");
+            yAxis.tickValues(getTickValues(minY, maxY, yMaxTicks, yAxisIsDate));
 
             var svg = d3.select(Dom.get(graphElId)).append("svg")
                     .attr("width",  maxWidth + (UI.util.lengthOfLongestStringInArray(seriesNames) * 8))
@@ -249,7 +309,7 @@
                     html: true,
                     title: function() {
                         var d = this.__data__;
-                        var x = xAxisIsDate ? UI.MONTHS[d.x.getMonth()] + "-" + d.x.getDate() + "-" + d.x.getFullYear() : d.x,
+                        var x = xAxisIsDate ? UI.date.getDateString(d.x.getMonth() + 1, d.x.getDate(), d.x.getFullYear()) : d.x,
                             y = d.y;
 
                         var s = "Count: " + d.count + "<br>" + xAxisName + ": " + x + "<br>" + yAxisName + ": " + y;
@@ -265,6 +325,7 @@
                 var fn           = isX ? x : y,
                     axis         = isX ? xAxis : yAxis,
                     axisSelector = isX ? ".x.axis" : ".y.axis",
+                    maxTicks     = isX ? xMaxTicks : yMaxTicks,
                     isDate       = isX ? xAxisIsDate : yAxisIsDate,
                     minValue     = isDate ? new Date(begin) : begin,
                     maxValue     = isDate ? new Date(end) : end;
@@ -274,20 +335,22 @@
                 updateSliderHTMLElements(isX, minValue, maxValue);
 
                 var t = svg.transition().duration(0);
-                var val, nSteps = axis.ticks()[0], size = end - begin, step = size/nSteps;
-                var ticks = [];
-                for (var i = 0; i <= nSteps; i++) {
-                    val = isDate ? new Date(begin + step*i) : Math.floor(begin + step*i);
-                    ticks.push(val);
+
+                if (isDate) {
+                    var f = getDateTicks(minValue.getTime(), maxValue.getTime(), maxTicks);
+                    axis.tickFormat(f.format);
+                    axis.tickValues(f.ticks);
+                } else {
+                    axis.tickValues(getTickValues(minValue, maxValue, maxTicks, isDate));
                 }
 
-                axis.tickValues(ticks);
                 var a = t.select(axisSelector).call(axis);
 
                 if (isX) {
                     a.selectAll("text")
                             .style("text-anchor", "end")
-                            .attr("dx", "-.8em").attr("dy", ".15em").attr("transform", function(d) { return "rotate(-65)" });
+                            .attr("dx", "-.8em").attr("dy", ".15em")
+                            .attr("transform", function(d) { return "rotate(-65)" });
                 }
 
                 if (slidePoints) {
@@ -307,14 +370,14 @@
                     max = xAxisIsDate ? maxX.getTime() : maxX;
 
                  $("#" + xSliderElId).slider({
-                    range : true, min : min, max : max, values : [min, max],
+                    range : true, min : min, max : max, step: (max-min)/1000, values : [min, max],
                     slide  : function(event, ui) { zoom(true, slidePoints, ui.values[0], ui.values[1]); },
                     stop   : function(event, ui) { zoom(true, true, ui.values[0], ui.values[1]); },
                     change : function(event, ui) { zoom(true, true, ui.values[0], ui.values[1]); }
                 });
 
                 $("#" + ySliderElId).slider({
-                    range: true, min: minY, max: maxY, values: [minY, maxY],
+                    range: true, min: minY, max: maxY, step: (maxY-minY)/1000, values: [minY, maxY],
                     slide  : function(event, ui) { zoom(false, slidePoints, ui.values[0], ui.values[1]); },
                     stop   : function(event, ui) { zoom(false, true, ui.values[0], ui.values[1]); },
                     change : function(event, ui) { zoom(false, true, ui.values[0], ui.values[1]); }
@@ -339,6 +402,7 @@
                     return;
                 }
                 parsed = parsed.getTime();
+                debugger;
             } else {
                 parsed = parseFloat(val);
                 if (isNaN(parsed)) {
@@ -347,21 +411,11 @@
                 }
             }
 
-            var range  = $('#'+ sliderElId).slider("values"),
+            var range  = $('#'+ sliderElId).slider("option", "values"),
                 newMin =  isMin && parsed < range[1] ? parsed : range[0],
                 newMax = !isMin && parsed > range[0] ? parsed : range[1];
 
-            $('#'+ sliderElId).slider("values", [newMin, newMax]);
-        }
-
-        function addTitle(svg) {
-            var legendX     = width - 65,
-                    legendTextX = width - 52,
-                    rectW       = 10, rectH = 10,
-                    h           = 20,
-                    grayColor   = "#808080";
-
-
+            $('#'+ sliderElId).slider("option", "values", [newMin, newMax]);
         }
 
         function addLegend(svg, seriesNames) {
@@ -520,8 +574,8 @@
             UI.addDomElementChild('a', graphOptionsEl, { id : redrawElId, innerHTML : "Redraw" }, { "class" : "button small" } );
         }
 
-        var convertDateSliderVal = function (date) {
-            return UI.MONTHS[date.getMonth()] + "-" + date.getDate() + "-" + date.getFullYear();
+        var convertDateSliderVal = function (d) {
+            return UI.date.getDateString(d.getMonth() + 1, d.getDate(), d.getFullYear());
         };
 
         var updateSliderHTMLElements = function (xSlider, newMin, newMax) {

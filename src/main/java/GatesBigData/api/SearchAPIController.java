@@ -10,6 +10,8 @@ import model.SolrCollectionSchemaInfo;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
+import org.codehaus.jackson.JsonFactory;
+import org.codehaus.jackson.JsonGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -58,10 +60,10 @@ public class SearchAPIController extends APIController {
 
         FacetFieldEntryList facetFields = (FacetFieldEntryList) session.getAttribute(sessionKey);
         if (Utils.nullOrEmpty(facetFields)) {
-            String facetFieldInfo = searchService.getCoreInfoFieldValue(coreName, Constants.SOLR_FACET_FIELDS_ID_FIELD_NAME);
+            String facetFieldInfo = searchService.getCoreInfoFieldValue(coreName, Constants.SOLR_FIELD_NAME_FACET_FIELDS);
 
             if (Utils.nullOrEmpty(facetFieldInfo)) {
-                facetFieldInfo = hdfsService.getInfoFilesContents(coreName).get(Constants.SOLR_FACET_FIELDS_ID_FIELD_NAME);
+                facetFieldInfo = hdfsService.getInfoFilesContents(coreName).get(Constants.SOLR_FIELD_NAME_FACET_FIELDS);
             }
             facetFields = SolrUtils.constructFacetFieldEntryList(facetFieldInfo, schemaInfo);
             session.setAttribute(sessionKey, facetFields);
@@ -75,8 +77,8 @@ public class SearchAPIController extends APIController {
         String viewFields = (String) session.getAttribute(sessionKey);
         if (Utils.nullOrEmpty(viewFields)) {
             Set<String> fieldList = new HashSet<String>();
-            fieldList.addAll(SolrUtils.getFieldsFromInfoString(searchService.getCoreInfoFieldValue(coreName, Constants.SOLR_PREVIEW_FIELDS_ID_FIELD_NAME)));
-            fieldList.addAll(Arrays.asList(Constants.SOLR_ID_FIELD_NAME, Constants.SOLR_URL_FIELD_NAME));
+            fieldList.addAll(SolrUtils.getFieldsFromInfoString(searchService.getCoreInfoFieldValue(coreName, Constants.SOLR_FIELD_NAME_PREVIEW_FIELDS)));
+            fieldList.addAll(Arrays.asList(Constants.SOLR_FIELD_NAME_ID, Constants.SOLR_FIELD_NAME_URL));
             viewFields = StringUtils.join(fieldList, ",");
 
             if (Utils.nullOrEmpty(viewFields)) {
@@ -118,12 +120,12 @@ public class SearchAPIController extends APIController {
         SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, session);
 
         if (schemaInfo.isFieldMultiValued(sortField)) {
-            sortField = Constants.SOLR_SORT_FIELD_DEFAULT;
+            sortField = Constants.SOLR_DEFAULT_VALUE_SORT_FIELD;
         }
 
         searchService.solrSearch(query, coreName, sortField, sortOrder,
-                (start == null) ? Constants.SOLR_START_DEFAULT : start,
-                (rows == null)  ? Constants.SOLR_ROWS_DEFAULT  : rows, fq,
+                (start == null) ? Constants.SOLR_DEFAULT_VALUE_START : start,
+                (rows == null)  ? Constants.SOLR_DEFAULT_VALUE_ROWS : rows, SolrUtils.composeFilterQuery(fq, schemaInfo),
                 getFacetFields(schemaInfo, coreName, session), getViewFields(schemaInfo, coreName, session),
                 schemaInfo.getDateFieldNames(), writer);
 
@@ -193,18 +195,20 @@ public class SearchAPIController extends APIController {
                                                 @RequestParam(value = PARAM_GET_NON_NULL_COUNTS, required = false) boolean getNonNullCounts,
                                                 @RequestParam(value = PARAM_GET_SEPARATE_FIELD_COUNTS, required = false) boolean getFacetCounts,
                                                 @RequestParam(value = PARAM_QUERY, required = false) String queryStr,
-                                                @RequestParam(value = PARAM_FQ, required = false) String fq) throws IOException {
+                                                @RequestParam(value = PARAM_FQ, required = false) String fq,
+                                                HttpServletRequest request) throws IOException {
 
-        String fieldString = searchService.getCoreInfoFieldValue(coreName, infoFieldName);
-
-        List<String> fields = Arrays.asList(StringUtils.split(fieldString, ","));
+        List<String> fields = searchService.getCoreInfoFieldValues(coreName, infoFieldName);
         List<String> listValues = fields;
+
         if (getNonNullCounts || getFacetCounts) {
+            SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, request.getSession());
+            fq = SolrUtils.composeFilterQuery(fq, schemaInfo);
             listValues = searchService.getFieldCounts(coreName, queryStr, fq, fields, getFacetCounts);
         }
 
         JSONObject ret = new JSONObject();
-        ret.put(infoFieldName, JsonParsingUtils.convertStringListToJSONArray(listValues));
+        ret.put(infoFieldName.toUpperCase(), JsonParsingUtils.convertStringListToJSONArray(listValues));
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
@@ -221,19 +225,17 @@ public class SearchAPIController extends APIController {
                                                 @RequestParam(value = PARAM_FQ, required = false) String fq,
                                                 HttpServletRequest request) throws IOException {
 
-        StringWriter writer = new StringWriter();
         HttpSession session = request.getSession();
         SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, session);
+        fq = SolrUtils.composeFilterQuery(fq, schemaInfo);
 
         SeriesPlot seriesPlot = searchService.getPlotData(coreName, query, fq, numFound, xAxisField,
                 schemaInfo.fieldTypeIsDate(xAxisField), yAxisField, schemaInfo.fieldTypeIsDate(yAxisField),
                 seriesField, schemaInfo.fieldTypeIsDate(seriesField));
 
-        writer.append(seriesPlot.getPlotData().toString());
 
         HttpHeaders httpHeaders = new HttpHeaders();
-
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
+        return new ResponseEntity<String>(seriesPlot.getPlotData().toString(), httpHeaders, OK);
     }
 }

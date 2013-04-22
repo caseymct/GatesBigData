@@ -3,8 +3,11 @@ package service;
 import net.sf.json.JSONObject;
 import org.apache.nutch.parse.ParseData;
 import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrInputDocument;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.List;
 
@@ -16,29 +19,35 @@ public interface CoreService {
 
     public SolrServer getHttpSolrServer(String coreName);
 
-    public boolean createAndAddDocumentToSolr(Object content, String hdfsKey, String coreName);
+    public int solrServerAdd(String coreName, List<SolrInputDocument> docs) throws IOException, SolrServerException;
 
-    public boolean addInfoFilesToSolr(String coreName, HashMap<String, String> hdfsInfoFileContents);
+    public int solrServerAdd(String coreName, SolrInputDocument doc) throws IOException, SolrServerException;
 
-    public boolean addDocumentToSolrIndex(SolrInputDocument doc, String coreName);
+    public int update(String coreName, SolrInputDocument doc) throws IOException, SolrServerException;
 
-    public boolean addDocumentsToSolrIndex(List<SolrInputDocument> docs, String coreName);
+    public int update(String coreName, List<SolrInputDocument> docs) throws IOException, SolrServerException;
 
-    public SolrInputDocument createSolrDocument(HashMap<String, String> params);
+    public int update(String coreName) throws IOException, SolrServerException;
+
+    public int addInfoFiles(String coreName, HashMap<String, String> contents) throws IOException, SolrServerException;
+
+    public SolrInputDocument createSolrDocument(HashMap<String, Object> fields);
 
     public SolrInputDocument createSolrInputDocumentFromNutch(String urlString, ParseData parseData, String segment,
                                                               String coreName, String contentType, String content);
 
-    public boolean addNutchDocumentToSolr(String urlString, ParseData parseData, String segment,
-                                          String coreName, String contentType, String content);
+    public int addNutchDocumentToSolr(String urlString, ParseData parseData, String segment,
+                                          String coreName, String contentType, String content) throws IOException, SolrServerException;
 
-    public boolean deleteIndex(String coreName);
+    public int deleteIndex(String coreName) throws IOException, SolrServerException;
 
-    public boolean deleteById(String coreName, List<String> ids);
+    public int deleteById(String coreName, List<String> ids) throws IOException, SolrServerException;
 
-    public boolean deleteByField(String coreName, String field, String value);
+    public int deleteByField(String coreName, String field, String value) throws IOException, SolrServerException;
 
-    public boolean deleteByField(String coreName, String field, List<String> values);
+    public int deleteByField(String coreName, String field, List<String> values) throws IOException, SolrServerException;
 
     public JSONObject getCoreInfo(String coreName);
+
+    public int doSolrOperation(String coreName, int operation, HashMap<String, String> params, StringWriter writer);
 }

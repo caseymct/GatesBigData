@@ -54,15 +54,15 @@ public class SchemaField {
     }
 
     public boolean isCoreTitleField() {
-        return this.name.equals(Constants.SOLR_CORE_TITLE_FIELD_NAME);
+        return this.name.equals(Constants.SOLR_FIELD_NAME_CORE_TITLE);
     }
 
     public boolean isSuggestionCoreField() {
-        return this.name.equals(Constants.SOLR_SUGGESTION_CORE_FIELD_NAME);
+        return this.name.equals(Constants.SOLR_FIELD_NAME_SUGGESTION_CORE);
     }
 
     public boolean isStructuredDataField() {
-        return this.name.equals(Constants.SOLR_STRUCTURED_DATA_FIELD_NAME);
+        return this.name.equals(Constants.SOLR_FIELD_NAME_STRUCTURED_DATA);
     }
 
     public String getName() {

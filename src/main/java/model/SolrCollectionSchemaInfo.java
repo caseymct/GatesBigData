@@ -101,14 +101,14 @@ public class SolrCollectionSchemaInfo {
             Node field = copyFields.item(s);
             if (field.getNodeType() == Node.ELEMENT_NODE){
                 Element el = (Element) field;
-                String src = el.getAttribute(COPYFIELD_SOURCE_KEY);
+                String src  = el.getAttribute(COPYFIELD_SOURCE_KEY);
                 String dest = el.getAttribute(COPYFIELD_DEST_KEY);
 
-                if (src.equals(Constants.SOLR_CONTENT_FIELD_NAME)) continue;
+                if (src.equals(Constants.SOLR_FIELD_NAME_CONTENT)) continue;
 
-                if(dest.endsWith(SolrUtils.SOLR_SCHEMA_PREFIXFIELD_ENDSWITH)) {
+                if (dest.endsWith(Constants.SOLR_FIELD_TYPE_PREFIX_SUFFIX)) {
                     prefixFieldToCopySourceMap.put(dest, el.getAttribute(COPYFIELD_SOURCE_KEY));
-                } else if (dest.endsWith(SolrUtils.SOLR_SCHEMA_FACETFIELD_ENDSWITH)) {
+                } else if (dest.endsWith(Constants.SOLR_FIELD_TYPE_FACET_SUFFIX)) {
                     copySourceToFacetFieldMap.put(el.getAttribute(COPYFIELD_SOURCE_KEY), dest);
                 }
             }
@@ -155,9 +155,23 @@ public class SolrCollectionSchemaInfo {
         return copySourceToFacetFieldMap.containsKey(fieldName) ? copySourceToFacetFieldMap.get(fieldName) : fieldName;
     }
 
+    public String getFieldType(String fieldName) {
+        return fieldInfoMap.containsKey(fieldName) ? fieldInfoMap.get(fieldName).getType() : null;
+    }
+
     public boolean fieldTypeIsDate(String fieldName) {
         SchemaField schemaField = getSchemaField(fieldName);
         return schemaField != null && schemaField.getType().equals(Constants.SOLR_FIELD_TYPE_DATE);
+    }
+
+    public boolean fieldTypeIsString(String fieldName) {
+        SchemaField schemaField = getSchemaField(fieldName);
+        return schemaField != null && Constants.SOLR_TEXT_FIELDS.contains(schemaField.getType());
+    }
+
+    public boolean fieldTypeIsNumber(String fieldName) {
+        SchemaField schemaField = getSchemaField(fieldName);
+        return schemaField != null && Constants.SOLR_NUMBER_FIELDS.contains(schemaField.getType());
     }
 
     public List<String> getViewFieldNames() {

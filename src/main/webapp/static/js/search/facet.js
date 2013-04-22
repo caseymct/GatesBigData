@@ -13,7 +13,6 @@ FACET.util = {};
         contentContainerDivElName   = "content_container",  // from main.tag
         facetContainerDivElName     = "facet_container",    // from main.tag
         treeViewDivElName           = "tree_view",          // from main.tag
-        facetOptionsDivElName       = "facet_options",
         buttonDownOverlayCSSClass   = "button down-big-overlay",
         buttonUpOverlayCSSClass     = "button up-big-overlay",
 
@@ -23,6 +22,8 @@ FACET.util = {};
         facetTreeUrl                = "",
         responseFacetKey            = "response",
         solrResponseFacetKey        = "facet_counts";
+
+    FACET.allFacets = {};
 
     function getFacetOptionDivId(nodeIndex)     { return "treeNodeDiv" + nodeIndex; }
     function getFacetOptionAnchorId(nodeIndex)  { return "treeNode" + nodeIndex; }
@@ -46,7 +47,7 @@ FACET.util = {};
 
     function buildHTML(insertAfterElName) {
         var insertAfterNode = Dom.get(insertAfterElName);
-        var el = UI.insertDomElementAfter('div', insertAfterNode, { id: facetOptionsDivElName}, null);
+        var el = UI.insertDomElementAfter('div', insertAfterNode, { id: UI.FACET.FACET_OPTIONS_DIV_EL_NAME }, null);
         UI.addClearBothDiv(el);
     }
 
@@ -79,14 +80,11 @@ FACET.util = {};
     FACET.ui.buildInitialFacetTree = function() {
         Connect.asyncRequest('GET', facetTreeUrl, {
             success: function(o) {
-                var result = Json.parse(o.responseText),
-                    facets = result[responseFacetKey][solrResponseFacetKey];
+                var result = Json.parse(o.responseText);
+                FACET.allFacets = result[responseFacetKey][solrResponseFacetKey];
                 makeVisible(showOverlayButtonElName);
                 showOverlay();
-
-                if (facets != undefined && facets != null) {
-                    FACET.ui.buildFacetTree(facets);
-                }
+                buildFullFacetTree();
             },
             failure: function(o) {
                 alert("Could not build facets. " + o);
@@ -142,7 +140,7 @@ FACET.util = {};
             var facetOptionAnchorId = getFacetOptionAnchorId(node.index);
 
             if (Dom.inDocument(facetOptionDivId) == false) {
-                var anchorDiv = UI.addDomElementChild("div", Dom.get(facetOptionsDivElName),
+                var anchorDiv = UI.addDomElementChild("div", Dom.get(UI.FACET.FACET_OPTIONS_DIV_EL_NAME),
                     { id : facetOptionDivId }, { float : "left" });
                 var anchor = UI.addDomElementChild("a", anchorDiv,
                     { id: facetOptionAnchorId }, { margin: "2px", "class" : "button delete" });
@@ -150,25 +148,43 @@ FACET.util = {};
 
                 Event.addListener(facetOptionDivId, "click", function(e) {
                     UI.removeElement(facetOptionDivId);
+
+                    if (getDOMFacets().length == 0) {
+                        buildFullFacetTree();
+                    }
                 });
             }
         });
     };
 
+    function buildFullFacetTree() {
+        if (FACET.allFacets != undefined && FACET.allFacets != null) {
+            FACET.ui.buildFacetTree(FACET.allFacets);
+        }
+    }
+
+    function getDOMFacets() {
+        return Dom.get(UI.FACET.FACET_OPTIONS_DIV_EL_NAME).getElementsByTagName('a');
+    }
+
     FACET.util.getFacetFilterQueryString = function() {
-        var i, t, o, facetOptions = {},
-            domFacets = Dom.get(facetOptionsDivElName).getElementsByTagName('a');
+        var i, t, facetOptions = {}, domFacets = getDOMFacets();
 
         for (i = 0; i < domFacets.length; i++) {
             t = domFacets[i].innerHTML.split(" : ");
-            o = "\"" + t[1] + "\"";
-            facetOptions[t[0]] = facetOptions.hasOwnProperty(t[0]) ? facetOptions[t[0]] + " " + o: o;
+            var field = t[0], val = UI.date.formatFacetFieldIfDate(t[1]);
+
+            if (facetOptions.hasOwnProperty(field)) {
+                facetOptions[field] += UI.FACET_VALUE_OPTIONS_DELIMITER_KEY + val;
+            } else {
+                facetOptions[field] = val;
+            }
         }
 
         var fqStr = "";
         var keys = Object.keys(facetOptions);
         for (i = 0; i < keys.length; i++) {
-            fqStr += "%2B" + keys[i] + ":(" + facetOptions[keys[i]].encodeForRequest() + ")";
+            fqStr += UI.FACET_FIELDS_DELIMITER_KEY + keys[i] + UI.FACET_VALUES_DELIMITER_KEY + facetOptions[keys[i]].encodeForRequest();
         }
 
         return fqStr;

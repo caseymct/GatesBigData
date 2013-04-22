@@ -13,15 +13,27 @@ public class ValueComparator implements Comparator<String> {
         Number n1 = base.get(a);
         Number n2 = base.get(b);
 
+        double d1, d2;
+
         if (n1 instanceof Double) {
-            return (n1.doubleValue() >= n2.doubleValue()) ? -1 : 1;
+            d1 = n1.doubleValue();
+            d2 = n2.doubleValue();
         } else if (n1 instanceof Long) {
-            return (n1.longValue() >= n2.longValue()) ? -1 : 1;
+            d1 = (double) n1.longValue();
+            d2 = (double) n2.longValue();
         } else if (n1 instanceof Integer) {
-            return (n1.intValue() >= n2.intValue()) ? -1 : 1;
+            d1 = (double) n1.intValue();
+            d2 = (double) n2.intValue();
         } else if (n1 instanceof Float) {
-            return (n1.floatValue() >= n2.floatValue()) ? -1 : 1;
+            d1 = (double) n1.floatValue();
+            d2 = (double) n2.floatValue();
+        } else if (n1 instanceof Short) {
+            d1 = (double) n1.shortValue();
+            d2 = (double) n2.shortValue();
+        } else {
+            d1 = (double) n1.byteValue();
+            d2 = (double) n2.byteValue();
         }
-        return (n1.byteValue() >= n2.byteValue()) ? -1 : 1;
+        return (d1 == d2) ? a.compareTo(b) : (d1 > d2 ? -1 : 1);
     }
 }

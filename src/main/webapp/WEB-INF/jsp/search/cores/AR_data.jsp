@@ -17,7 +17,7 @@
 <script type="text/javascript">
     (function() {
 
-        var dateField = "TRANSACTION_DATE",
+        var dateField = "TRX_DATE",
             baseUrl = '<c:url value="/" />';
 
         UI.initWait();

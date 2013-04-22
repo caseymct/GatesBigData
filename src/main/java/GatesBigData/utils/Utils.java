@@ -30,11 +30,10 @@ public class Utils {
             logger.error(e.getMessage());
         }
 
-        return localhost.equals(Constants.PRODUCTION_HOSTNAME);
+        return Constants.PRODUCTION_SERVER.contains(localhost);
     }
 
-    public static List<String> getTokens(String d) {
-        String delimiter = "~";
+    public static List<String> getTokens(String d, String delimiter) {
         List<String> tokens = new ArrayList<String>();
 
         StringTokenizer tk = new StringTokenizer(d, delimiter, true);
@@ -67,6 +66,10 @@ public class Utils {
 
     public static <T> Object getObjectIfExists(HashMap<String, T> map, String key, T defaultValue) {
         return map.containsKey(key) ? map.get(key) : defaultValue;
+    }
+
+    public static <T> T returnIfNotNull(T o, T defaultValue) {
+        return o != null ? o : defaultValue;
     }
 
     public static String replaceHTMLAmpersands(String s) {

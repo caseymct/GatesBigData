@@ -6,69 +6,56 @@ EXPORTOPTIONS.util = {};
         Dom   = YAHOO.util.Dom,       Overlay = YAHOO.widget.Overlay,
         Json  = YAHOO.lang.JSON;
 
-    var contentElName               = "content",                         headerElName       = "export_header",
-        searchInfoElName            = "search_info",                     coreInfoElName     = "core_info",
-        queryInfoElName             = "query_info",                      fqInfoElName       = "fq_info",
-        sortInfoElName              = "sort_info",                       numFoundInfoElName = "numfound_info",
+    var headerElName           = "export_header",          contentEl                   = Dom.get(UI.CONTENT_EL_NAME),
+        searchInfoElName       = 'search_info',
+        infoLabelCSSClass      = "info_label",             infoValueCSSClass           = "info_value",
+        overlayElCSSClass      = "overlay_el",             overlayInnerElCSSClass      = "overlay_inner_el",
+        overlayDivCSSClass     = "overlay_div",            buttonShowOverlayCSSClass   = "button show_overlay",
+        buttonCollapseCSSClass = "button collapse",        buttonSmallCSSClass         = "button small",
 
-        coreInfoContainerElName     = "core_info_container",    queryInfoContainerElName    = "query_info_container",
-        fqInfoContainerElName       = "fq_info_container",      sortInfoContainerElName     = "sort_info_container",
-        numFoundInfoContainerElName = "numfound_info_container",
-
-        infoLabelCSSClass           = "info_label",             infoValueCSSClass           = "info_value",
-        overlayElCSSClass           = "overlay_el",             overlayInnerElCSSClass      = "overlay_inner_el",
-        overlayDivCSSClass          = "overlay_div",            buttonShowOverlayCSSClass   = "button show_overlay",
-        buttonCollapseCSSClass      = "button collapse",        buttonSmallCSSClass         = "button small",
-
-        checkAllButtonElName        = "check_all",                  checkNoneButtonElName   = "check_none",
-        exportOptionsElName         = "export_options",             exportInputFileElName   = "export_file_name",
-        exportFileDivElName         = "export_file_div",            exportButtonElName      = "export",
-        exportButtonCSSClass        = "button small",               checkboxGrpElName       = "export_fields",
-        checkAuditButtonElName      = "check_audit";
+        checkAllButtonElName   = "check_all",              checkNoneButtonElName       = "check_none",
+        exportOptionsElName    = "export_options",         exportInputFileElName       = "export_file_name",
+        exportFileDivElName    = "export_file_div",        exportButtonElName          = "export",
+        exportButtonCSSClass   = "button small",           checkboxGrpElName           = "export_fields",
+        checkAuditButtonElName = "check_audit";
 
     var urls            = "",
+        auditFields     = [],
         exportOptionsEl = null;
 
-    var infoHtmlVars = [
-            { infoEl : coreInfoElName, containerEl : coreInfoContainerElName, html: "Core: "},
-            { infoEl : queryInfoElName, containerEl : queryInfoContainerElName, html: "Query: "},
-            { infoEl : fqInfoElName, containerEl : fqInfoContainerElName, html: "Filter query: "},
-            { infoEl : sortInfoElName, containerEl : sortInfoContainerElName, html: "Sort by: "},
-            { infoEl : numFoundInfoElName, containerEl : numFoundInfoContainerElName, html: "Num found: "}];
-
-    var urlStr = window.location.href.substring(window.location.href.indexOf("?") + 1);
-
-    var coreName = getRequestParamOrNone("core"),
-        query    = getRequestParamOrNone("query"),
-        fq       = getRequestParamOrNone("fq"),
-        sort     = getRequestParamOrNone("sort"),
-        order    = getRequestParamOrNone("order"),
-        numFound = getRequestParamOrNone("numfound");
-
-    function getRequestParamOrNone(param) {
-        var p = YAHOO.deconcept.util.getRequestParameter(param);
-        return (p == "") ? "<i>None</i>" : p;
-    }
+    var urlStr          = window.location.href.substring(window.location.href.indexOf("?") + 1),
+        requestParams   = UI.util.getRequestParameters(),
+        requestKeys     = Object.keys(requestParams),
+        coreName        = UI.util.getRequestParamDisplayString(requestParams, UI.util.REQUEST_CORE_KEY);
 
     EXPORTOPTIONS.init = function(vars) {
         urls = vars[UI.URLS_KEY];
         buildHtml();
         initVars();
+        registerListeners();
         buildFieldsHtml();
     };
 
+    function getRequestInfoDivId(k)            { return k + '_info'; }
+    function getRequestInfoContainerDivId(k)   { return k + '_info_container'; }
+    function getRequestInfoDivInnerHtml(k)     { return '<b>' + UI.util.getRequestParamDisplayString(requestParams, k) + '</b>'; }
+
     function buildHtml() {
-        var i, div, contentEl = Dom.get(contentElName);
+        var i, div;
 
         UI.addDomElementChild('h2', contentEl, { id : headerElName, innerHTML: "Export Search Results" });
-
         var searchInfo = UI.addDomElementChild('div', contentEl, { id : searchInfoElName });
 
-        for(i = 0; i < infoHtmlVars.length; i++) {
-            div = UI.addDomElementChild('div', searchInfo, { id : infoHtmlVars[i]['containerEl'] });
-            UI.addDomElementChild('div', div, { innerHTML : infoHtmlVars[i]['html'] }, { "class" :  infoLabelCSSClass });
-            UI.addDomElementChild('div', div, { id : infoHtmlVars[i]['infoEl'] }, { "class" :  infoValueCSSClass });
+        for(i = 0; i < requestKeys.length; i++) {
+            var k = requestKeys[i];
+            if (k == UI.util.REQUEST_ORDER_KEY) continue;
+
+            div = UI.addDomElementChild('div', searchInfo, { id : getRequestInfoContainerDivId(k) });
+            UI.addDomElementChild('div', div, { innerHTML : k + ':' }, { 'class' : infoLabelCSSClass });
+            UI.addDomElementChild('div', div, { id : getRequestInfoDivId(k), innerHTML : getRequestInfoDivInnerHtml(k) },
+                                              { 'class' :  infoValueCSSClass });
         }
+
         UI.addClearBothDiv(searchInfo);
 
         div = UI.addDivWithClass(contentEl, "buttons");
@@ -87,38 +74,33 @@ EXPORTOPTIONS.util = {};
         UI.addDomElementChild('a', div, { href: "#", id : exportButtonElName, innerHTML: "Export" }, { "class" :  exportButtonCSSClass });
 
         UI.addClearBothDiv(contentEl);
-        //UI.addDivWithClass(contentEl, "row");
     }
 
     function initVars() {
-        // TODO: put core information on page
-        Dom.get(queryInfoElName).innerHTML    = "<b>" + decodeURIComponent(query) + "</b>";
-        Dom.get(sortInfoElName).innerHTML     = "<b>" + sort + ", " + order + "</b>";
-        Dom.get(coreInfoElName).innerHTML     = "<b>" + coreName + "</b>";
-        Dom.get(fqInfoElName).innerHTML       = "<b>" + decodeURIComponent(fq) + "</b>";
-        Dom.get(numFoundInfoElName).innerHTML = "<b>" + numFound + "</b>";
+        Connect.asyncRequest('GET', urls[UI.AUDIT_FIELD_NAMES_URL_KEY] + coreName, {
+            success : function(o) {
+                var fields = Json.parse(o.responseText);
+                auditFields = UI.util.specifyReturnValueIfUndefined(fields[UI.INFO_FIELDS_AUDIT_FIELDS_KEY], []);
+            }
+        });
 
         exportOptionsEl = Dom.get(exportOptionsElName);
+    }
 
+    function registerListeners() {
         Event.addListener(checkAllButtonElName, "click", function(e) {
             Event.stopEvent(e);
-            changeAllCheckedStatus(true, "");
+            changeAllCheckedStatus(true, []);
         });
 
         Event.addListener(checkNoneButtonElName, "click", function(e) {
             Event.stopEvent(e);
-            changeAllCheckedStatus(false, "");
+            changeAllCheckedStatus(false, []);
         });
 
         Event.addListener(checkAuditButtonElName, "click", function(e) {
             Event.stopEvent(e);
-
-            Connect.asyncRequest('GET', urls[UI.AUDIT_FIELD_NAMES_URL_KEY] + coreName, {
-                success : function(o) {
-                    var fields = o.responseText;
-                    changeAllCheckedStatus(true, fields);
-                }
-            });
+            changeAllCheckedStatus(true, auditFields);
         });
 
         Event.addListener(exportButtonElName, "click", function(e) {
@@ -139,9 +121,8 @@ EXPORTOPTIONS.util = {};
         Dom.setStyle(getCheckboxLabelElName(checkboxId), "color", status ? "black" : "gray");
     }
 
-    function changeAllCheckedStatus(status, nameFilter) {
-        var checkboxes  = document.getElementsByName(checkboxGrpElName);
-        var checkboxStatus, nameFilters = nameFilter == "" ? [] : nameFilter.split(",");
+    function changeAllCheckedStatus(status, nameFilters) {
+        var checkboxStatus, checkboxes  = document.getElementsByName(checkboxGrpElName);
 
         for (var i = 0; i < checkboxes.length; i++) {
             checkboxStatus = status;
@@ -232,10 +213,9 @@ EXPORTOPTIONS.util = {};
                     } else {
                         currCheckboxParent = exportOptionsEl;
                     }
+
                     var chkboxId = names[i].toUpperCase();
-
                     var d = UI.addDomElementChild('div', currCheckboxParent, null, { "class" :  overlayElCSSClass });
-
                     var c = UI.addDomElementChild('input', d, { "type" : "checkbox", name: checkboxGrpElName, value: i, id: chkboxId },
                                                               { "vertical-align" : "bottom" } );
                     if (child.match(/^[A-Z]/) != null) c.checked = true;

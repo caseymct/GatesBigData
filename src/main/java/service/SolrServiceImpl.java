@@ -37,6 +37,7 @@ public class SolrServiceImpl implements SolrService {
             solrServer.setZkClientTimeout(Constants.ZK_CLIENT_TIMEOUT);
             solrServer.setZkConnectTimeout(Constants.ZK_CONNECT_TIMEOUT);
             return solrServer;
+
         } catch (MalformedURLException e) {
             logger.error(e.getMessage());
         }
@@ -44,40 +45,70 @@ public class SolrServiceImpl implements SolrService {
     }
 
     public SolrServer getHttpSolrServer() {
-        String solrUrl = SolrUtils.getSolrServerURI(null);
-        return new HttpSolrServer(solrUrl);
+        return new HttpSolrServer(SolrUtils.getSolrServerURI(null));
     }
 
-    public boolean solrServerCommit(SolrServer server, SolrInputDocument doc) {
-        return solrServerCommit(server, Arrays.asList(doc));
+    public int solrServerAdd(SolrServer server, SolrInputDocument doc) throws IOException, SolrServerException {
+        return solrServerAdd(server, Arrays.asList(doc));
     }
 
-    public boolean solrServerCommit(SolrServer server, List<SolrInputDocument> docs) {
-        try {
-            server.commit();
+    public int solrServerAdd(SolrServer server, List<SolrInputDocument> docs) throws IOException, SolrServerException {
+        return server.add(docs).getStatus();
+    }
 
-            UpdateRequest req = new UpdateRequest();
-            req.setAction(AbstractUpdateRequest.ACTION.COMMIT, false, false);
+    public int solrServerAddAndCommit(SolrServer server, SolrInputDocument doc) throws IOException, SolrServerException {
+        return solrServerAddAndCommit(server, Arrays.asList(doc));
+    }
 
-            if (docs != null && docs.size() != 0) {
-                req.add(docs);
-            }
-            UpdateResponse rsp = req.process(server);
-            rsp.getStatus();
-
-        } catch (SolrServerException e) {
-            System.err.println(e.getMessage());
-            return false;
-
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-            return false;
+    public int solrServerAddAndCommit(SolrServer server, List<SolrInputDocument> docs) throws IOException, SolrServerException {
+        if (Constants.SolrResponseSuccess(solrServerCommit(server))) {
+            return solrServerUpdate(server, docs);
         }
-        return true;
+        return Constants.SOLR_RESPONSE_CODE_ERROR;
     }
 
-    public boolean solrServerCommit(SolrServer server) {
-        return solrServerCommit(server, new ArrayList<SolrInputDocument>());
+
+    public int solrServerUpdate(SolrServer server) throws IOException, SolrServerException {
+        return solrServerUpdate(server, null);
+    }
+
+    public int solrServerUpdate(SolrServer server, List<SolrInputDocument> docs) throws IOException, SolrServerException {
+
+        UpdateRequest req = new UpdateRequest();
+        req.setAction(AbstractUpdateRequest.ACTION.COMMIT, false, false);
+
+        if (docs != null && docs.size() != 0) {
+            req.add(docs);
+        }
+
+        UpdateResponse rsp = req.process(server);
+        if (Constants.SolrResponseSuccess(rsp)) {
+            return solrServerCommit(server);
+        }
+        return Constants.SOLR_RESPONSE_CODE_ERROR;
+    }
+
+    public int solrServerCommit(SolrServer server) throws IOException, SolrServerException {
+        return server.commit().getStatus();
+    }
+
+    public int solrServerDeleteIndex(SolrServer server) throws IOException, SolrServerException {
+        return solrServerDeleteByField(server, "*", Arrays.asList("*"));
+    }
+
+    public int solrServerDeleteByField(SolrServer server, String field, String value) throws IOException, SolrServerException {
+        return solrServerDeleteByField(server, field, Arrays.asList(value));
+    }
+
+    public int solrServerDeleteByField(SolrServer server, String field, List<String> values) throws IOException, SolrServerException {
+        for(String value : values) {
+            server.deleteByQuery(field + ":" + value);
+        }
+        return solrServerUpdate(server);
+    }
+
+    public int solrServerDeleteById(SolrServer server, List<String> ids) throws IOException, SolrServerException {
+        return Constants.SolrResponseSuccess(server.deleteById(ids)) ? solrServerUpdate(server) : Constants.SOLR_RESPONSE_CODE_ERROR;
     }
 
     public CoreAdminResponse getCores() {
@@ -108,15 +139,7 @@ public class SolrServiceImpl implements SolrService {
     }
 
     public boolean coreNameExists(String coreName) {
-        CoreAdminResponse cores = getCores();
-        if (cores != null) {
-            for (int i = 0; i < cores.getCoreStatus().size(); i++) {
-                if (coreName.equals(cores.getCoreStatus().getName(i))) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return getCoreNames().contains(coreName);
     }
 
     public JSONArray getAllCoreData() {

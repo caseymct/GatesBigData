@@ -23,7 +23,7 @@ public interface SearchService {
 
     public List<String> getFieldsToWrite(SolrDocument originalDoc, String coreName, String viewType);
 
-    public List<String> getSolrFieldDateRange(String coreName, String field, String format);
+    public List<Date> getSolrFieldDateRange(String coreName, String field, boolean fieldIsDate);
 
     public JSONArray suggestUsingSeparateCore(String coreName, String userInput, int n);
 
@@ -55,6 +55,12 @@ public interface SearchService {
     public GroupResponse getGroupResponse(String coreName, String queryStr, String fq, int rows, String viewFields,
                                        String groupField, int groupLimit);
 
+    public boolean recordExists(String coreName, HashMap<String, String> fqList);
+
+    public boolean recordExists(String coreName, String id);
+
+    public boolean recordExists(String coreName, ExtendedSolrQuery query);
+
     public SolrDocument getRecord(String coreName, String id);
 
     public SolrDocument getRecord(String coreName, HashMap<String, String> queryParams, String booleanOperator);
@@ -68,6 +74,8 @@ public interface SearchService {
 
     // get value of facetFields, viewFields, tableFields, etc
     public String getCoreInfoFieldValue(String coreName, String fieldName);
+
+    public List<String> getCoreInfoFieldValues(String coreName, String fieldName);
 
     public String getRecordCoreTitle(String coreName);
 
