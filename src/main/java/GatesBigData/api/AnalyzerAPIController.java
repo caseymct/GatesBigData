@@ -1,12 +1,17 @@
 package GatesBigData.api;
 
-import GatesBigData.utils.Constants;
-import GatesBigData.utils.JsonParsingUtils;
+import GatesBigData.constants.Constants;
+import GatesBigData.constants.solr.Defaults;
+import GatesBigData.constants.solr.FieldNames;
+import GatesBigData.constants.solr.QueryParams;
+import GatesBigData.constants.solr.Solr;
+import GatesBigData.utils.JSONUtils;
 import GatesBigData.utils.SolrUtils;
 import GatesBigData.utils.Utils;
-import model.ExtendedSolrQuery;
 import model.SolrCollectionSchemaInfo;
+import model.SolrSchemaInfo;
 import model.WordTree;
+import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.response.Group;
@@ -28,8 +33,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import service.SearchService;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;
@@ -43,10 +46,12 @@ public class AnalyzerAPIController extends APIController {
 
     private static final Logger logger = Logger.getLogger(AnalyzerAPIController.class);
     private SearchService searchService;
+    private SolrSchemaInfo schemaInfo;
 
     @Autowired
-    public AnalyzerAPIController(SearchService searchService) {
+    public AnalyzerAPIController(SearchService searchService, SolrSchemaInfo schemaInfo) {
         this.searchService = searchService;
+        this.schemaInfo = schemaInfo;
     }
 
     public Map<String, HashMap<String, String>> reconfigureHighlighting(JSONObject hlJson) {
@@ -58,7 +63,7 @@ public class AnalyzerAPIController extends APIController {
 
             for(Object docKeyObj : docObj.names()) {
                 String field = docKeyObj.toString();
-                List<String> snippetStrings = JsonParsingUtils.convertJSONArrayToStringList(docObj.getJSONArray(field));
+                List<String> snippetStrings = JSONUtils.convertJSONArrayToStringList(docObj.getJSONArray(field));
 
                 HashMap<String, String> hlToIdMap = new HashMap<String, String>();
                 if (highlighting.containsKey(field)) {
@@ -108,8 +113,8 @@ public class AnalyzerAPIController extends APIController {
     }
 
     public List<WordTree> getWordTreeFromSearchResults(QueryResponse rsp) {
-        String hlPre  = SolrUtils.getResponseHeaderParam(rsp, Constants.SOLR_PARAM_HIGHLIGHT_PRE);
-        String hlPost = SolrUtils.getResponseHeaderParam(rsp, Constants.SOLR_PARAM_HIGHLIGHT_POST);
+        String hlPre  = SolrUtils.getResponseHeaderParam(rsp, QueryParams.HIGHLIGHT_PRE);
+        String hlPost = SolrUtils.getResponseHeaderParam(rsp, QueryParams.HIGHLIGHT_POST);
         Map<String, Map<String, List<String>>> highlighting = rsp.getHighlighting();
 
         HashMap<String, WordTree> wordTrees = new HashMap<String, WordTree>();
@@ -149,10 +154,10 @@ public class AnalyzerAPIController extends APIController {
         ObjectMapper mapper = new ObjectMapper();
         Map<String, Object> map = mapper.readValue(body, TypeFactory.mapType(HashMap.class, String.class, Object.class));
 
-        String hlResponse                   = (String) map.get(Constants.SOLR_PARAM_HIGHLIGHT);
+        String hlResponse                   = (String) map.get(QueryParams.HIGHLIGHT);
         JSONObject hlJson                   = JSONObject.fromObject(hlResponse);
-        String hlPre                        = (String) hlJson.remove(Constants.SOLR_PARAM_HIGHLIGHT_PRE);
-        String hlPost                       = (String) hlJson.remove(Constants.SOLR_PARAM_HIGHLIGHT_POST);
+        String hlPre                        = (String) hlJson.remove(QueryParams.HIGHLIGHT_PRE);
+        String hlPost                       = (String) hlJson.remove(QueryParams.HIGHLIGHT_POST);
 
         Map<String, HashMap<String, String>> highlighting = reconfigureHighlighting(hlJson);
 
@@ -177,30 +182,28 @@ public class AnalyzerAPIController extends APIController {
     @RequestMapping(value="/snippets/all", method = RequestMethod.GET)
     public ResponseEntity<String> analyzeAll(@RequestParam(value = PARAM_QUERY, required = true) String queryStr,
                                              @RequestParam(value = PARAM_FQ, required = false) String fq,
-                                             @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
+                                             @RequestParam(value = PARAM_CORE_NAME, required = true) String collection,
                                              @RequestParam(value = PARAM_ROWS, required = true) int rows,
                                              @RequestParam(value = PARAM_ANALYSIS_FIELD, required = false) String analysisField,
-                                             @RequestParam(value = PARAM_HIGHLIGHTING, required = true) boolean useHighlighting,
-                                             HttpServletRequest request)
+                                             @RequestParam(value = PARAM_HIGHLIGHTING, required = true) boolean useHighlighting)
             throws IOException {
 
-        HttpSession session = request.getSession();
         List<WordTree> wordTrees;
         StringWriter writer = new StringWriter();
-
-        SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, session);
-        fq = SolrUtils.composeFilterQuery(fq, schemaInfo);
+        SolrCollectionSchemaInfo info = schemaInfo.getSchema(collection);
+        fq = SolrUtils.composeFilterQuery(fq, info);
 
         if (useHighlighting) {
-            String wordTreeFields = searchService.getCoreInfoFieldValue(coreName, Constants.SOLR_FIELD_NAME_WORDTREE_FIELDS);
-            ExtendedSolrQuery query = searchService.buildHighlightQuery(coreName, queryStr, fq, Constants.SOLR_DEFAULT_VALUE_SORT_FIELD,
-                                                                        Constants.SOLR_DEFAULT_VALUE_SORT_ORDER, 0, rows, null, wordTreeFields);
-            QueryResponse rsp = searchService.execQuery(query, coreName);
+            JSONArray wordTreeArray = searchService.getCollectionInfoFieldValuesAsJSONArray(collection, FieldNames.WORDTREE_FIELDS);
+            String wordTreeFields = JSONUtils.convertJSONArrayToDelimitedString(wordTreeArray);
+            QueryResponse rsp = searchService.findSearchResults(collection, queryStr, null, null, 0, rows, fq, null,
+                    wordTreeFields, true, info);
+
             wordTrees = getWordTreeFromSearchResults(rsp);
         } else {
-            String field = schemaInfo.getCorrespondingFacetFieldIfExists(analysisField);
-            GroupResponse rsp = searchService.getGroupResponse(coreName, queryStr, fq, Constants.SOLR_ANALYSIS_ROWS_LIMIT,
-                                                               field, field, Constants.SOLR_ANALYSIS_GROUP_LIMIT);
+            String field = schemaInfo.getCorrespondingFacetFieldIfExists(collection, analysisField);
+            GroupResponse rsp = searchService.getGroupResponse(collection, queryStr, fq, 100,//ReportConstants.SOLR_ANALYSIS_ROWS_LIMIT,
+                                                               field, field, Defaults.ANALYSIS_GROUP_LIMIT);
             wordTrees = getWordTreesFromGroupResults(rsp);
         }
 

@@ -2,6 +2,7 @@ package service;
 
 
 import model.FacetFieldEntryList;
+import net.sf.json.JSONObject;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -31,7 +32,11 @@ public interface HDFSService {
 
     public Configuration getNutchConfiguration();
 
-    public HashMap<String, String> getInfoFilesContents(String coreName);
+    public JSONObject getInfoFileContents();
+
+    public JSONObject getInfoFileContents(String coreName);
+
+    public String getInfoFileFieldContents(String coreName, String fieldName);
 
     public boolean addFile(String remoteFilePath, String localFilePath);
 

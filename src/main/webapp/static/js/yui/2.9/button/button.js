@@ -620,7 +620,7 @@ version: 2.9.0
         
 
 
-        // Constants
+        // ReportConstants
 
         /**
         * @property CLASS_NAME_PREFIX
@@ -3942,7 +3942,7 @@ version: 2.9.0
         
         
         
-        // Constants
+        // ReportConstants
         
         
         /**

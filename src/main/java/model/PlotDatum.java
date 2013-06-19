@@ -1,6 +1,6 @@
 package model;
 
-import GatesBigData.utils.Constants;
+import GatesBigData.constants.Constants;
 import GatesBigData.utils.DateUtils;
 import GatesBigData.utils.Utils;
 

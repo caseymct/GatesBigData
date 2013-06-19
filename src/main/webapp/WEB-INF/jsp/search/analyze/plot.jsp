@@ -42,6 +42,12 @@
             nFoundCtrDivElName   = "n_found_container",    sliderTxtLblCSSClass = "slider_text_label",
             sliderSetValsButtonsCSSClass = "slider_set_val_buttons",
 
+            xAxisResponseKey     = 'xAxis',                yAxisResponseKey     = 'yAxis',
+            seriesResponseKey    = 'series',               xAxisDateResponseKey = 'xAxisIsDate',
+            yAxisDateResponseKey = 'yAxisIsDate',          xRangeResponseKey    = 'xRange',
+            yRangeResponseKey    = 'yRange',               allResponseKey       = 'all',
+            dataResponseKey      = 'data',                 uniqueXDatesResponseKey = 'uniqueXDates',
+
             xMaxTicks            = 10,                     yMaxTicks            = 10,
             maxWidth             = 1000,                   maxHeight            = 600,
             marginTop            = 20,                     marginRight          = 150,
@@ -68,9 +74,9 @@
             parseFullYearDate = d3.time.format("%b-%d-%Y").parse;
 
         buildHtml();
-        UI.initWait();
+        UI.initWait(baseUrl);
 
-        Connect.asyncRequest('GET', plotUrl + UI.util.constructRequestString(requestParams), {
+        Connect.asyncRequest('GET', plotUrl + UI.util.constructRequestString(requestParams) + '&maxplotpoints=1000', {
             success: function(o) {
                 UI.hideWait();
 
@@ -118,20 +124,20 @@
 
         function setGraphVariablesFromPlotData(responseJSON) {
             plotData         = responseJSON;
-            xAxisName        = plotData['xAxis'];
-            yAxisName        = plotData['yAxis'];
-            seriesFieldName  = plotData['series'];
-            xAxisIsDate      = plotData['xAxisIsDate'];
-            yAxisIsDate      = plotData['yAxisIsDate'];
-            gapX             = calculateRangeGap(xAxisIsDate, plotData['xRange']);
-            gapY             = calculateRangeGap(yAxisIsDate, plotData['yRange']);
-            minX             = adjust(plotData['xRange'], true,  xAxisIsDate);
-            maxX             = adjust(plotData['xRange'], false, xAxisIsDate);
-            minY             = adjust(plotData['yRange'], true,  yAxisIsDate);
-            maxY             = adjust(plotData['yRange'], false, yAxisIsDate);
-            seriesData       = plotData['data']['series'];
-            allData          = plotData['data']['all'];
-            uniqueXDates     = plotData['data']['uniqueXDates'];
+            xAxisName        = UI.util.specifyReturnValueIfUndefined(plotData[xAxisResponseKey], xAxisResponseKey);
+            yAxisName        = UI.util.specifyReturnValueIfUndefined(plotData[yAxisResponseKey], yAxisResponseKey);
+            seriesFieldName  = UI.util.specifyReturnValueIfUndefined(plotData[seriesResponseKey], seriesResponseKey);
+            xAxisIsDate      = UI.util.specifyReturnValueIfUndefined(plotData[xAxisDateResponseKey], false);
+            yAxisIsDate      = UI.util.specifyReturnValueIfUndefined(plotData[yAxisDateResponseKey], false);
+            gapX             = calculateRangeGap(xAxisIsDate, plotData[xRangeResponseKey]);
+            gapY             = calculateRangeGap(yAxisIsDate, plotData[yRangeResponseKey]);
+            minX             = adjust(plotData[xRangeResponseKey], true,  xAxisIsDate);
+            maxX             = adjust(plotData[xRangeResponseKey], false, xAxisIsDate);
+            minY             = adjust(plotData[yRangeResponseKey], true,  yAxisIsDate);
+            maxY             = adjust(plotData[yRangeResponseKey], false, yAxisIsDate);
+            seriesData       = UI.util.specifyReturnValueIfUndefined(plotData[dataResponseKey][seriesResponseKey], []);
+            allData          = UI.util.specifyReturnValueIfUndefined(plotData[dataResponseKey][allResponseKey], []);
+            uniqueXDates     = UI.util.specifyReturnValueIfUndefined(plotData[dataResponseKey][uniqueXDatesResponseKey], []);
 
             slidePoints      = allData['series1'].length < 8000;
             currPlotIsSeries = seriesData != undefined && Object.keys(seriesData).length > 0;
@@ -167,6 +173,30 @@
             return (px > bx && px < ex && py > by && py < ey) ? 1 : 0;
         }
 
+        function getDateTicksFromUniqueXDates(begin, end, maxTicks) {
+            var ticks = [], n = uniqueXDates.length, startIdx = -1, endIdx = n;
+            for(var i = 0; i < n; i++) {
+                if (startIdx == -1 && ((i == 0 && begin < uniqueXDates[0]) || (i > 0 && begin > uniqueXDates[i-1] && begin < uniqueXDates[i]))) {
+                    startIdx = i;
+                }
+                if (endIdx == n && end < uniqueXDates[i]) {
+                    endIdx = i;
+                }
+            }
+
+            for(i = startIdx; i < endIdx; i += Math.floor((endIdx - startIdx)/maxTicks)) {
+                ticks.push(new Date(uniqueXDates[i]));
+            }
+        }
+
+        function getDateTicksFromEvenDistribution(begin, end, maxTicks) {
+            var ticks = [];
+            for(var i = begin; i < end; i += Math.floor((end - begin)/maxTicks)) {
+                ticks.push(new Date(i));
+            }
+            return ticks;
+        }
+
         function getDateTicks(begin, end, maxTicks) {
             var format;
             var secs = (begin-end)/1000, mins = secs/60, hrs = mins/60, days = hrs/24, months = days/30, years = months/12;
@@ -179,18 +209,8 @@
                 format = d3.time.format("%b-%d-%Y");
             }
 
-            var addToTicks = false, n = uniqueXDates.length, ticks = [];
-            for(var i = 0; i < n; i++) {
-                if ((i == 0 && begin < uniqueXDates[0]) ||
-                    (i > 0 && begin > uniqueXDates[i-1] && begin < uniqueXDates[i])) addToTicks = true;
-                if (end < uniqueXDates[i] && addToTicks) addToTicks = false;
-                if (addToTicks) ticks.push(new Date(uniqueXDates[i]));
-            }
-
-            if (ticks.length > maxTicks) {
-                //prune
-            }
-
+            var ticks = (uniqueXDates.length > maxTicks) ? getDateTicksFromEvenDistribution(begin, end, maxTicks) :
+                                                           getDateTicksFromUniqueXDates(begin, end, maxTicks);
             return { format : format, ticks : ticks };
         }
 
@@ -367,9 +387,9 @@
 
             $(function() {
                 var min = xAxisIsDate ? minX.getTime() : minX,
-                    max = xAxisIsDate ? maxX.getTime() : maxX;
+                        max = xAxisIsDate ? maxX.getTime() : maxX;
 
-                 $("#" + xSliderElId).slider({
+                $("#" + xSliderElId).slider({
                     range : true, min : min, max : max, step: (max-min)/1000, values : [min, max],
                     slide  : function(event, ui) { zoom(true, slidePoints, ui.values[0], ui.values[1]); },
                     stop   : function(event, ui) { zoom(true, true, ui.values[0], ui.values[1]); },
@@ -402,7 +422,6 @@
                     return;
                 }
                 parsed = parsed.getTime();
-                debugger;
             } else {
                 parsed = parseFloat(val);
                 if (isNaN(parsed)) {

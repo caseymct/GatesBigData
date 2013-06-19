@@ -1,10 +1,11 @@
 package GatesBigData.api;
 
-import GatesBigData.utils.Constants;
-import GatesBigData.utils.SolrUtils;
+import GatesBigData.constants.Constants;
+import GatesBigData.constants.solr.FieldTypes;
+import GatesBigData.constants.solr.Solr;
 import GatesBigData.utils.Utils;
-import model.SolrCollectionSchemaInfo;
 import model.SolrRecord;
+import model.SolrSchemaInfo;
 import org.apache.log4j.Logger;
 import org.apache.solr.common.SolrDocument;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,13 +19,10 @@ import service.DocumentConversionService;
 import service.HDFSService;
 import service.SearchService;
 
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.*;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static java.util.Collections.singletonList;
 import static org.springframework.http.HttpStatus.OK;
@@ -47,24 +45,27 @@ public class DocumentAPIController extends APIController {
     private HDFSService hdfsService;
     private SearchService searchService;
     private DocumentConversionService documentConversionService;
+    private SolrSchemaInfo schemaInfo;
 
     private static final Logger logger = Logger.getLogger(DocumentAPIController.class);
 
     @Autowired
-    public DocumentAPIController(HDFSService hdfsService, DocumentConversionService documentConversionService, SearchService searchService) {
+    public DocumentAPIController(HDFSService hdfsService, DocumentConversionService documentConversionService,
+                                 SearchService searchService, SolrSchemaInfo schemaInfo) {
         this.hdfsService = hdfsService;
         this.documentConversionService = documentConversionService;
         this.searchService = searchService;
+        this.schemaInfo = schemaInfo;
     }
 
     public SolrRecord getSolrRecord(String coreName, String id, String segment, boolean structuredData) {
         SolrRecord record = null;
-        SolrDocument doc = searchService.getRecord(coreName, id);
+        SolrDocument doc = searchService.getRecordById(coreName, id);
 
         if (!Utils.nullOrEmpty(doc)) {
             // then this is a Solr record. Get contents.
             if (structuredData) {
-                record = new SolrRecord(doc, searchService.getFieldsToWrite(doc, coreName, Constants.VIEW_TYPE_FULLVIEW));
+                record = new SolrRecord(doc, searchService.getFieldsToWrite(doc, coreName, Solr.VIEW_TYPE_FULLVIEW));
             } else {
                 record = new SolrRecord(doc);
             }
@@ -82,14 +83,12 @@ public class DocumentAPIController extends APIController {
     @RequestMapping(value = "/save", method = RequestMethod.GET)
     public HttpServletResponse saveFile(@RequestParam(value = PARAM_HDFSSEGMENT, required = false) String segment,
                                         @RequestParam(value = PARAM_ID, required = true) String id,
-                                        @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
+                                        @RequestParam(value = PARAM_CORE_NAME, required = true) String collectionName,
                                         HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, request.getSession());
-        SolrRecord record = getSolrRecord(coreName, id, segment, schemaInfo.isStructuredData());
-
+        SolrRecord record = getSolrRecord(collectionName, id, segment, schemaInfo.isStructuredData(collectionName));
         response.setContentType(record.getContentType());
-        response.setHeader("Content-Disposition", "attachment; fileName=" + record.getFileName());
+        response.setHeader(Constants.CONTENT_DISP_HEADER, Constants.getContentDispositionFileAttachHeader(record.getFileName()));
 
         OutputStream outputStream = response.getOutputStream();
         outputStream.write(record.getContent());
@@ -140,26 +139,15 @@ public class DocumentAPIController extends APIController {
         return response;
     }
 
-    private String getViewType(String viewType) {
-
-        if (viewType != null) {
-            Matcher m = Constants.VIEW_TYPE_PATTERN.matcher(viewType);
-            if (m.matches()) {
-                return viewType;
-            }
-        }
-        return Constants.VIEW_TYPE_PREVIEW;
-    }
-
     @RequestMapping(value = "/content/get", method = RequestMethod.GET)
     public ResponseEntity<String> getFileContents(@RequestParam(value = PARAM_ID, required = true) String key,
-                                                  @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
-                                                  @RequestParam(value = PARAM_VIEWTYPE, required = false) String viewType,
-                                                  HttpServletRequest request) throws IOException {
+                                                  @RequestParam(value = PARAM_CORE_NAME, required = true) String collectionName,
+                                                  @RequestParam(value = PARAM_VIEWTYPE, required = false) String viewType)
+                                                  throws IOException {
         StringWriter writer = new StringWriter();
-        SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, request.getSession());
 
-        searchService.printRecord(coreName, key, getViewType(viewType), schemaInfo.isStructuredData(), writer);
+        searchService.printRecord(collectionName, key, Solr.getViewType(viewType),
+                schemaInfo.isStructuredData(collectionName), writer);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
@@ -168,14 +156,13 @@ public class DocumentAPIController extends APIController {
 
     @RequestMapping(value = "/writelocal", method = RequestMethod.GET)
     public ResponseEntity<String> writeLocalFile(@RequestParam(value = PARAM_ID, required = true) String id,
-                                                 @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
+                                                 @RequestParam(value = PARAM_CORE_NAME, required = true) String collectionName,
                                                  @RequestParam(value = PARAM_HDFSSEGMENT, required = false) String segment,
                                                  HttpServletRequest request) throws IOException {
 
-        SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, request.getSession());
         StringWriter writer = new StringWriter();
 
-        SolrRecord record = getSolrRecord(coreName, id, segment, schemaInfo.isStructuredData());
+        SolrRecord record = getSolrRecord(collectionName, id, segment, schemaInfo.isStructuredData(collectionName));
         documentConversionService.writeLocalCopy(record.getContent(), record.getFileName(), writer);
 
         HttpHeaders httpHeaders = new HttpHeaders();
@@ -185,12 +172,12 @@ public class DocumentAPIController extends APIController {
 
     @RequestMapping(value = "/thumbnail/get", method = RequestMethod.GET)
     public ResponseEntity<String> getThumbnail(@RequestParam(value = PARAM_ID, required = true) String id,
-                                               @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
-                                               HttpServletRequest request) throws IOException {
+                                               @RequestParam(value = PARAM_CORE_NAME, required = true) String collectionName)
+                                                throws IOException {
 
-        SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, request.getSession());
         StringWriter writer = new StringWriter();
-        searchService.printRecord(coreName, id, Constants.VIEW_TYPE_PREVIEW, schemaInfo.isStructuredData(), writer);
+        searchService.printRecord(collectionName, id, Solr.VIEW_TYPE_PREVIEW,
+                schemaInfo.isStructuredData(collectionName), writer);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));

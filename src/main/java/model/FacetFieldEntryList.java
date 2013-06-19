@@ -30,10 +30,27 @@ public class FacetFieldEntryList implements Iterable<FacetFieldEntry> {
         add(name, type, SolrUtils.schemaStringIndicatesMultiValued(schema));
     }
 
+    public void intersect(List<String> names, FacetFieldEntryList list) {
+        for(String facetField : names) {
+            if (!this.containsKey(facetField) && list.containsKey(facetField)) {
+                this.add(list.get(facetField));
+            }
+        }
+    }
 
     public void add(FacetFieldEntry entry) {
         facetFieldList.add(entry);
         names.add(entry.getFieldName());
+    }
+
+    public void addAll(FacetFieldEntryList facetFieldEntryList) {
+        for(FacetFieldEntry entry : facetFieldEntryList) {
+            String name = entry.getFieldName();
+            if (!this.names.contains(name)) {
+                this.facetFieldList.add(entry);
+                this.names.add(name);
+            }
+        }
     }
 
     public int size() {
@@ -48,6 +65,10 @@ public class FacetFieldEntryList implements Iterable<FacetFieldEntry> {
         int index = names.indexOf(name);
         FacetFieldEntry entry = facetFieldList.get(index);
         return entry.isMultiValued();
+    }
+
+    public boolean containsKey(String name) {
+        return names.indexOf(name) > -1;
     }
 
     public FacetFieldEntry get(String name) {

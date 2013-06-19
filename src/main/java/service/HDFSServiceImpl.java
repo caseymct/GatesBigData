@@ -1,8 +1,10 @@
 package service;
 
+import GatesBigData.constants.Constants;
+import GatesBigData.constants.HDFS;
 import GatesBigData.utils.*;
 import model.HDFSNutchCoreFileIterator;
-import model.ThreadCompleteListener;
+import net.sf.json.JSONObject;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.MapFile;
@@ -15,13 +17,11 @@ import org.apache.nutch.crawl.CrawlDatum;
 import org.apache.nutch.parse.ParseData;
 import org.apache.nutch.protocol.Content;
 import org.apache.nutch.util.NutchConfiguration;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URI;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -29,12 +29,11 @@ import java.util.regex.Pattern;
 @Service
 public class HDFSServiceImpl implements HDFSService {
 
-    private static final String HDFS_USERNAME   = "hdfs";
     private static final Logger logger = Logger.getLogger(HDFSServiceImpl.class);
 
     public FileSystem getHDFSFileSystem() {
         try {
-            return FileSystem.get(HDFSUtils.getHDFSURI(), new Configuration(), HDFS_USERNAME);
+            return FileSystem.get(HDFS.HDFS_URI, new Configuration(), HDFS.USERNAME);
         } catch (IOException e) {
             logger.error(e.getMessage());
         } catch (InterruptedException e) {
@@ -164,27 +163,24 @@ public class HDFSServiceImpl implements HDFSService {
         return new byte[0];
     }
 
-    public HashMap<String, String> getInfoFilesContents(String coreName) {
-        HashMap<String, String> infoFileContents = new HashMap<String, String>();
+    public JSONObject getInfoFileContents() {
+        String contents = getFileContents(HDFSUtils.getHDFSCollectionInfoFile());
+        return JSONUtils.convertStringToJSONObject(contents);
+    }
 
-        String contents = getFileContents(HDFSUtils.getHDFSFieldsCustomFile(coreName));
+    public JSONObject getInfoFileContents(String coreName) {
+        return JSONUtils.getJSONObjectValue(getInfoFileContents(), coreName);
+    }
 
-        if (!Utils.nullOrEmpty(contents)) {
-            for(String fieldString : contents.split("\n")) {
-                String[] fieldDataArray = fieldString.split("=");
-                if (fieldDataArray.length == 2) {
-                    infoFileContents.put(fieldDataArray[0], fieldDataArray[1]);
-                }
-            }
-        }
-        return infoFileContents;
+    public String getInfoFileFieldContents(String coreName, String field) {
+        return JSONUtils.getStringValue(getInfoFileContents(coreName), field);
     }
 
     public List<String> listFiles(Path path, boolean recurse, Pattern filter, FileSystem fs) {
         List<String> files = new ArrayList<String>();
 
         if (filter == null) {
-            filter = Constants.MATCH_ALL_PATTERN;
+            filter = HDFS.MATCH_ALL_PATTERN;
         }
 
         if (fs == null) {
@@ -196,7 +192,7 @@ public class HDFSServiceImpl implements HDFSService {
 
                 Matcher m = filter.matcher(child);
                 if (m.matches()) {
-                    files.add(HDFSUtils.removeHDFSURIFromString(child));
+                    files.add(HDFS.stripHDFSURI(child));
                 }
 
                 if (recurse && fs.isDirectory(status.getPath())) {

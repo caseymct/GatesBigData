@@ -1188,7 +1188,7 @@ function onDocFocus(event) {
 YAHOO.lang.extend(Menu, Overlay, {
 
 
-// Constants
+// ReportConstants
 
 
 /**
@@ -9209,7 +9209,7 @@ init: function(p_oElement, p_oConfig) {
 
 
 
-// Constants
+// ReportConstants
 
 
 /**
@@ -9711,7 +9711,7 @@ init: function(p_oObject, p_oConfig) {
 
 
 
-// Constants
+// ReportConstants
 
 
 /**

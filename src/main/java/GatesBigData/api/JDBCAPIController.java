@@ -1,11 +1,17 @@
 package GatesBigData.api;
 
-import GatesBigData.utils.Constants;
+import GatesBigData.constants.Constants;
+import GatesBigData.constants.JDBC;
+import GatesBigData.constants.solr.FieldNames;
+import GatesBigData.constants.solr.Operations;
+import GatesBigData.constants.solr.Response;
 import GatesBigData.utils.DateUtils;
 import GatesBigData.utils.Utils;
+import model.JDBCData;
+import model.SolrCollectionSchemaInfo;
+import model.SolrSchemaInfo;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.common.SolrInputDocument;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -19,15 +25,11 @@ import service.JDBCService;
 import service.SearchService;
 
 import java.io.*;
-import java.lang.reflect.Method;
-import java.sql.Date;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
+import java.util.Date;
 
 import static java.util.Collections.singletonList;
-import static org.springframework.http.HttpStatus.CONFLICT;
 import static org.springframework.http.HttpStatus.OK;
 
 @Controller
@@ -36,95 +38,43 @@ public class JDBCAPIController extends APIController {
 
     private static final Logger logger = Logger.getLogger(JDBCAPIController.class);
 
-    private static final int MAX_DOCS_BEFORE_COMMIT = 10;
-
     private JDBCService jdbcService;
     private CoreService coreService;
     private SearchService searchService;
     private HDFSService hdfsService;
+    private SolrSchemaInfo schemaInfo;
 
     @Autowired
-    public JDBCAPIController(JDBCService jdbcService, CoreService coreService, SearchService searchService, HDFSService hdfsService) {
+    public JDBCAPIController(JDBCService jdbcService, CoreService coreService, SearchService searchService, HDFSService hdfsService,
+                             SolrSchemaInfo schemaInfo) {
         this.jdbcService    = jdbcService;
         this.coreService    = coreService;
         this.searchService  = searchService;
         this.hdfsService    = hdfsService;
+        this.schemaInfo     = schemaInfo;
     }
 
-    public static Object formatColumnObject(Object val, String columnTypeName) {
-        if (columnTypeName.equals(Constants.SQL_TYPE_STRING) && val instanceof String) {
-            java.util.Date d = DateUtils.getDateFromDateString(val.toString());
-            return d != null ? new Date(d.getTime()) : val;
+    public static Object formatColumnObject(Object val, String schemaType) {
+        if (val == null || val.equals("null")) {
+            return null;
+        }
+        if (schemaType.equals("boolean")) {
+            String b = val.toString().toUpperCase();
+            return val instanceof Boolean ? val : b.startsWith("Y") || b.equals("TRUE");
+        }
+        if (schemaType.equals("int")) {
+            return val instanceof Integer ? val : Integer.parseInt(val.toString());
+        }
+        if (schemaType.equals("date")) {
+            return val instanceof Date ? val : DateUtils.getDateFromDateString(val.toString());
+        }
+        if (schemaType.equals("float")) {
+            return val instanceof Float ? val : Float.parseFloat(val.toString());
+        }
+        if (schemaType.equals("long")) {
+            return val instanceof Long ? val : Long.parseLong(val.toString());
         }
         return val;
-    }
-
-    public int updateCoreFromFile(String coreName, String fileName, String delimiter, boolean reindex,
-                                  Long maxRecords, int maxDocsBeforeCommit, StringWriter writer) {
-        File inputFile = new File(fileName);
-        if (!inputFile.exists()) {
-            writer.write("File " + fileName + " does not exist; can not update.");
-            return Constants.SOLR_RESPONSE_CODE_ERROR;
-        }
-
-        long nAdded = 0, nTotal = 0;
-        String errorMessage = "None";
-
-        writer.write("Update data stats for core " + coreName + ":\n");
-        writer.write("\t# documents processed: ");
-
-        try {
-            DataInputStream in = new DataInputStream(new FileInputStream(fileName));
-            BufferedReader br  = new BufferedReader(new InputStreamReader(in));
-            String line = br.readLine();
-            List<String> fields = Utils.getTokens(line, delimiter);
-
-            while ((line = br.readLine()) != null) {
-                List<String> fieldValues = Utils.getTokens(line, delimiter);
-                HashMap<String, Object> columnData  = new HashMap<String, Object>();
-                for(int i = 0; i < fieldValues.size(); i++) {
-                    columnData.put(fields.get(i), fieldValues.get(i));
-                }
-
-                if (reindex || !searchService.recordExists(coreName, columnData.get(Constants.SOLR_FIELD_NAME_ID).toString())) {
-                    int addSuccess = coreService.solrServerAdd(coreName, coreService.createSolrDocument(columnData));
-                    if (Constants.SolrResponseSuccess(addSuccess)) {
-                        nAdded++;
-                    }
-                }
-                nTotal++;
-                if (maxDocsBeforeCommit != -1 && nAdded > 0 && nAdded % maxDocsBeforeCommit == 0) {
-                    if (Constants.SolrResponseSuccess(coreService.update(coreName))) {
-                        writer.write(nAdded + "...");
-                    }
-                }
-                if (maxRecords != null && nTotal > maxRecords) break;
-                /*int firstIndex    = valueString.indexOf(":"), lastIndex = valueString.lastIndexOf(":");
-                String fieldName  = valueString.substring(0, firstIndex);
-                String fieldValue = valueString.substring(firstIndex + 1, lastIndex);
-                long count = Long.parseLong(valueString.substring(lastIndex + 1));
-
-                SolrInputDocument solrDoc = new SolrInputDocument();
-                solrDoc.addField(SOLR_KEY_ID, UUID.randomUUID());
-                solrDoc.addField(fieldName, fieldValue);
-                solrDoc.addField(SOLR_KEY_COUNT, count);
-
-                try {
-                    solrServer.add(solrDoc);
-                } */
-            }
-            in.close();
-        } catch (IOException e) {
-            errorMessage = e.getMessage();
-        } catch (SolrServerException e) {
-            errorMessage = e.getMessage();
-        }
-
-        writer.write("\t" + nTotal + " records retrieved\n ");
-        writer.write("\t" + nAdded + " added, " + (nTotal - nAdded) + " skipped as they already existed.\n");
-        writer.write("\tERRORS: " + errorMessage + "\n");
-
-        return coreService.doSolrOperation(coreName, Constants.SOLR_OPERATION_UPDATE, null, writer);
     }
 
     public HashMap<String, Object> getFileColumnData(String line, String delimiter, List<String> fields) {
@@ -136,27 +86,29 @@ public class JDBCAPIController extends APIController {
         return columnData;
     }
 
-    public HashMap<String, Object> getJDBCColumnData(ResultSet result) throws SQLException {
+    public HashMap<String, Object> getJDBCColumnData(ResultSet result, SolrCollectionSchemaInfo schemaInfo) throws SQLException {
         HashMap<String, Object> columnData  = new HashMap<String, Object>();
         List<String> columnNames = new ArrayList<String>();
+        List<String> columnValues = new ArrayList<String>();
+
         ResultSetMetaData metaData = result.getMetaData();
         int nCols = metaData.getColumnCount();
 
         for(int n = 1; n <= nCols; n++) {
             String colName  = metaData.getColumnName(n);
-            Object colValue = formatColumnObject(result.getObject(n), metaData.getColumnTypeName(n));
+            Object colValue = formatColumnObject(result.getObject(n), schemaInfo.getFieldType(colName));
             columnNames.add(colName);
             columnData.put(colName, colValue);
+            columnValues.add(colValue == null ? "null" : colValue.toString());
         }
 
-        String uuidString = jdbcService.constructUUIDStringFromRowEntry(columnNames, columnData);
-        columnData.put(Constants.SOLR_FIELD_NAME_ID, uuidString);
-
+        columnData.put(FieldNames.ID, jdbcService.constructUUIDStringFromRowEntry(columnValues));
         return columnData;
     }
 
     public int updateCore(String coreName, BufferedReader br, String delimiter, ResultSet result, boolean useJDBCResultSet,
-                          boolean reindex, Long maxRecords, Integer maxDocsBeforeCommit, StringWriter writer) {
+                          boolean reindex, Long maxRecords, Integer maxDocsBeforeCommit, SolrCollectionSchemaInfo schemaInfo,
+                          StringWriter writer) {
         long nAdded = 0, nTotal = 0;
         String line = "";
         List<String> fields = new ArrayList<String>();
@@ -173,18 +125,20 @@ public class JDBCAPIController extends APIController {
             }
 
             while (useJDBCResultSet ? result.next() : (line = br.readLine()) != null) {
-                HashMap<String, Object> docData = useJDBCResultSet ? getJDBCColumnData(result) :
+                HashMap<String, Object> docData = useJDBCResultSet ? getJDBCColumnData(result, schemaInfo) :
                                                                      getFileColumnData(line, delimiter, fields);
+                // incremental Sqoop import here
 
-                if (reindex || !searchService.recordExists(coreName, docData.get(Constants.SOLR_FIELD_NAME_ID).toString())) {
+                if (reindex || !searchService.recordExists(coreName, docData.get(FieldNames.ID).toString())) {
                     int addSuccess = coreService.solrServerAdd(coreName, coreService.createSolrDocument(docData));
-                    if (Constants.SolrResponseSuccess(addSuccess)) {
+                    if (Response.success(addSuccess)) {
                         nAdded++;
                     }
                 }
+
                 nTotal++;
                 if (maxDocsBeforeCommit != null && nAdded > 0 && nAdded % maxDocsBeforeCommit == 0) {
-                    if (Constants.SolrResponseSuccess(coreService.update(coreName))) {
+                    if (Response.success(coreService.update(coreName))) {
                         writer.write(nAdded + "...");
                     }
                 }
@@ -202,73 +156,7 @@ public class JDBCAPIController extends APIController {
         writer.write("\t" + nAdded + " added, " + (nTotal - nAdded) + " skipped as they already existed.\n");
         writer.write("\tERRORS: " + errorMessage + "\n");
 
-        return coreService.doSolrOperation(coreName, Constants.SOLR_OPERATION_UPDATE, null, writer);
-    }
-
-    public int updateCore(String coreName, ResultSet result, boolean reindex, Long maxRecords,
-                          Integer maxDocsBeforeCommit, StringWriter writer) {
-        long nAdded = 0, nTotal = 0;
-        String errorMessage = "None";
-
-        writer.write("Update data stats for core " + coreName + ":\n");
-        writer.write("\t# documents processed: ");
-
-        try {
-            ResultSetMetaData metaData = result.getMetaData();
-            int nCols = metaData.getColumnCount();
-
-            for(int n = 1; n <= nCols; n++) {
-                writer.write(metaData.getColumnName(n) + ",");
-            }
-            writer.write("\n");
-
-            while (result.next()) {
-                HashMap<String, Object> columnData = new HashMap<String, Object>();
-                List<String> columnNames = new ArrayList<String>();
-
-                for(int n = 1; n <= nCols; n++) {
-                    String colName  = metaData.getColumnName(n);
-                    Object colValue = formatColumnObject(result.getObject(n), metaData.getColumnTypeName(n));
-                    columnNames.add(colName);
-                    columnData.put(colName, colValue);
-                    String cvs = colValue == null ? "null" : colValue.toString();
-                    if (cvs.contains(",")) {
-                        cvs = "\"" + cvs.replaceAll(",", "\\,") + "\"";
-                    }
-                    writer.write(cvs + ",");
-                }
-                writer.write("\n");
-                /*
-                String uuidString = jdbcService.constructUUIDStringFromRowEntry(columnNames, columnData);
-                columnData.put(Constants.SOLR_FIELD_NAME_ID, uuidString);
-
-                if (reindex || !searchService.recordExists(coreName, columnData.get(Constants.SOLR_FIELD_NAME_ID).toString())) {
-                    int addSuccess = coreService.solrServerAdd(coreName, coreService.createSolrDocument(columnData));
-                    if (Constants.SolrResponseSuccess(addSuccess)) {
-                        nAdded++;
-                    }
-                }   */
-                nTotal++;
-                if (maxDocsBeforeCommit != null && nAdded > 0 && nAdded % maxDocsBeforeCommit == 0) {
-                    if (Constants.SolrResponseSuccess(coreService.update(coreName))) {
-                        writer.write(nAdded + "...");
-                    }
-                }
-                if (maxRecords != null && nTotal > maxRecords) break;
-            }
-        } catch (SQLException e) {
-            errorMessage = e.getMessage();
-        } catch (SolrServerException e) {
-            errorMessage = e.getMessage();
-        } catch (IOException e) {
-            errorMessage = e.getMessage();
-        }
-
-        writer.write("\t" + nTotal + " records retrieved\n ");
-        writer.write("\t" + nAdded + " added, " + (nTotal - nAdded) + " skipped as they already existed.\n");
-        writer.write("\tERRORS: " + errorMessage + "\n");
-
-        return 0;//coreService.doSolrOperation(coreName, Constants.SOLR_OPERATION_UPDATE, null, writer);
+        return coreService.doSolrOperation(coreName, Operations.OPERATION_UPDATE, null, writer);
     }
 
     @RequestMapping(value="/update/file", method = RequestMethod.GET)
@@ -281,7 +169,7 @@ public class JDBCAPIController extends APIController {
                                                           @RequestParam(value = PARAM_COMMIT_EVERY_N_DOCS, required = false) Integer maxDocsBeforeCommit) {
         StringWriter writer = new StringWriter();
         if (reindex) {
-            coreService.doSolrOperation(coreName, Constants.SOLR_OPERATION_DELETE, null, writer);
+            coreService.doSolrOperation(coreName, Operations.OPERATION_DELETE, null, writer);
         }
 
         File inputFile = new File(fileName);
@@ -295,12 +183,11 @@ public class JDBCAPIController extends APIController {
             List<String> fields = Utils.getTokens(line, delimiter);
 
             int updateSuccess = updateCore(coreName, br, delimiter, null, false, reindex, maxRecords,
-                                            maxDocsBeforeCommit, writer);
+                                            maxDocsBeforeCommit, null, writer);
 
-
-                if (Constants.SolrResponseSuccess(updateSuccess) && reindex) {
-                    HashMap<String, String> params = hdfsService.getInfoFilesContents(coreName);
-                    coreService.doSolrOperation(coreName, Constants.SOLR_OPERATION_ADD_INFOFILES, params, writer);
+                if (Response.success(updateSuccess) && reindex) {
+                    coreService.doSolrOperation(coreName, Operations.OPERATION_ADD_INFOFILES,
+                                                hdfsService.getInfoFileContents(coreName), writer);
                 }
             } catch (IOException e) {
                 writer.write("ERROR " + e.getMessage());
@@ -313,30 +200,29 @@ public class JDBCAPIController extends APIController {
     }
 
     @RequestMapping(value="/update/jdbc", method = RequestMethod.GET)
-    public ResponseEntity<String> updateSolrIndexFromJDBC(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
-                                          @RequestParam(value = PARAM_REINDEX, required = false) boolean reindex,
-                                          @RequestParam(value = PARAM_MAX_RECORDS, required = false) Long maxRecords,
-                                          @RequestParam(value = PARAM_COMMIT_EVERY_N_DOCS, required = false) Integer maxDocsBeforeCommit) {
+    public ResponseEntity<String> updateSolrIndexFromJDBC(  @RequestParam(value = PARAM_CORE_NAME, required = true) String collection,
+                                                            @RequestParam(value = PARAM_REINDEX, required = false) boolean reindex,
+                                                            @RequestParam(value = PARAM_MAX_RECORDS, required = false) Long maxRecords,
+                                                            @RequestParam(value = PARAM_COMMIT_EVERY_N_DOCS, required = false) Integer maxDocsBeforeCommit) {
         StringWriter writer = new StringWriter();
-
         if (reindex) {
-            coreService.doSolrOperation(coreName, Constants.SOLR_OPERATION_DELETE, null, writer);
+            coreService.doSolrOperation(collection, Operations.OPERATION_DELETE, null, writer);
         }
 
-        String updateStatement = jdbcService.getUpdateStatement(coreName);
-        if (updateStatement == null) {
-            writer.write("ERROR: no corresponding update statement for core " + coreName + "\n");
+        JDBCData jdbcData = JDBC.getJDBCData(collection);
+
+        if (jdbcData == null) {
+            writer.write("ERROR: no JDBC connection data for " + collection + "\n");
         } else {
             try {
-                ResultSet result = jdbcService.getJDBCResultSet(updateStatement);
-                int updateSuccess = updateCore(coreName, result, reindex, maxRecords, maxDocsBeforeCommit, writer);
+                jdbcData.setSQLStatmentToGetCounts();
+                ResultSet result = jdbcService.getJDBCResultSet(jdbcData);
+                int updateSuccess = updateCore(collection, null, null, result, true, reindex, maxRecords, maxDocsBeforeCommit,
+                        schemaInfo.getSchema(collection), writer);
 
-                //int updateSuccess = updateCore(coreName, BufferedReader br, String delimiter, ResultSet result, boolean useJDBCResultSet,
-                //boolean reindex, Long maxRecords, Integer maxDocsBeforeCommit, StringWriter writer)
-
-                if (Constants.SolrResponseSuccess(updateSuccess) && reindex) {
-                    HashMap<String, String> params = hdfsService.getInfoFilesContents(coreName);
-                    coreService.doSolrOperation(coreName, Constants.SOLR_OPERATION_ADD_INFOFILES, params, writer);
+                if (Response.success(updateSuccess) && reindex) {
+                    coreService.doSolrOperation(collection, Operations.OPERATION_ADD_INFOFILES,
+                            hdfsService.getInfoFileContents(collection), writer);
                 }
             } catch (SQLException e) {
                 writer.write("ERROR " + e.getMessage());

@@ -19,37 +19,38 @@
             AutoComplete = YAHOO.widget.AutoComplete, LocalDataSource = YAHOO.util.LocalDataSource,
             Json         = YAHOO.lang.JSON;
 
-        var infoElId         = 'info',              wordTreeElId              = 'wordtree',
-            wordTreeSelectId = 'wordtree_select',   wordTreeSelectContainerId = 'wordtree_select_container',
-            xAxisInputElId   = 'x_axis_field',      xAxisACElId               = 'x_axis_autocomplete',
-            xAxisToggleElId  = 'x_axis_toggle',     xAxisContainerElId        = 'x_axis_container',
-            yAxisInputElId   = 'y_axis_field',      yAxisACElId               = 'y_axis_autocomplete',
-            yAxisToggleElId  = 'y_axis_toggle',     yAxisContainerElId        = 'y_axis_container',
-            seriesInputElId  = 'series_field',      seriesACElId              = 'series_autocomplete',
-            seriesToggleElId = 'series_toggle',     seriesContainerElId       = 'series_container',
-            plotElId         = 'plot',              infoEl                    = Dom.get(infoElId),
-            warnDialogElName = 'warn_dialog',       warnDialogCSSClass        = 'yui-pe-content',
-            toggleCSSClass   = 'toggle',            toggleLabelCSSClass       = 'toggle_label',
-
-            CORE_KEY         = 'core',              QUERY_KEY                 = 'query',
-            FQ_KEY           = 'fq',                NUM_FOUND_KEY             = 'numfound',
-            INFO_FIELD_KEY   = 'infofield';
+        var infoElId             = 'info',              wordTreeElId              = 'wordtree',
+            wordTreeSelectId     = 'wordtree_select',   wordTreeSelectContainerId = 'wordtree_select_container',
+            xAxisInputElId       = 'x_axis_field',      xAxisACElId               = 'x_axis_autocomplete',
+            xAxisToggleElId      = 'x_axis_toggle',     xAxisContainerElId        = 'x_axis_container',
+            yAxisInputElId       = 'y_axis_field',      yAxisACElId               = 'y_axis_autocomplete',
+            yAxisToggleElId      = 'y_axis_toggle',     yAxisContainerElId        = 'y_axis_container',
+            seriesInputElId      = 'series_field',      seriesACElId              = 'series_autocomplete',
+            seriesToggleElId     = 'series_toggle',     seriesContainerElId       = 'series_container',
+            plotOptionsDivElId   = 'plot_options',      useDateRangeLimitElId     = 'use_date_range_limit',
+            maxPlotPointsElId    = 'max_plot_points',   useMaxPlotPointsElId      = 'use_max_plot_points',
+            infoEl               = Dom.get(infoElId),   noMaxPlotPointsElId       = 'no_max_plot_points',
+            plotElId             = 'plot',              dateRangeLimitSelectElId  = 'date_range_limit_select',
+            maxPlotPoints        = 5000,                dateRangeLimitNElId       = 'date_range_limit_n',
+            warnDialogElName     = 'warn_dialog',       warnDialogCSSClass        = 'yui-pe-content',
+            toggleCSSClass       = 'toggle',            toggleLabelCSSClass       = 'toggle_label';
 
         var wordTreeSelected = null,                warnDlg                   = null,
             xAxisSelected    = {},                  yAxisSelected             = {},
             seriesSelected   = {};
 
-        var requestParams = UI.util.getRequestParameters();
+        var requestParams = UI.util.getRequestParameters(),
+            plotRequestParams = [UI.util.REQUEST_CORE_KEY, UI.util.REQUEST_QUERY_KEY, UI.util.REQUEST_FQ_KEY, UI.util.REQUEST_NUM_FOUND_KEY];
 
         var href                = window.location.href,
             urlRequestStr       = href.substring(href.indexOf("?")),
             baseUrl             = '<c:url value="/" />',
             infoFieldsUrl       = baseUrl + "search/infofields",
             wordTreeUrl         = baseUrl + "search/analyze/wordtree" + urlRequestStr,
-            plotUrl             = baseUrl + "search/analyze/plot" + UI.util.constructRequestString(requestParams, [CORE_KEY, QUERY_KEY, FQ_KEY, NUM_FOUND_KEY]);
+            plotUrl             = baseUrl + "search/analyze/plot" + UI.util.constructRequestString(requestParams, plotRequestParams);
 
         /* Code to execute */
-        buildInfoHtml();
+        UI.buildInfoHtml(infoEl, requestParams);
         buildWordTreeHTML();
         createSelect(wordTreeSelectContainerId, wordTreeSelectId);
 
@@ -104,8 +105,9 @@
 
         function createAutoComplete(field, acInputElName, acContainerElName, acToggleElId) {
             var countsKey = (field == UI.INFO_FIELDS_SERIES_FIELDS_KEY) ? 'separatefieldcounts' : 'nonnullcounts';
-            var url = infoFieldsUrl + UI.util.constructRequestString(requestParams, [CORE_KEY, QUERY_KEY, FQ_KEY],
-                    [ { key : INFO_FIELD_KEY, value : field }, { key : countsKey, value : true }]);
+            var url = infoFieldsUrl + UI.util.constructRequestString(requestParams,
+                    [UI.util.REQUEST_CORE_KEY, UI.util.REQUEST_QUERY_KEY, UI.util.REQUEST_FQ_KEY],
+                    [ { key : UI.util.REQUEST_INFO_FIELD_KEY, value : field }, { key : countsKey, value : true }]);
 
             Connect.asyncRequest('GET', url, {
                 success: function(o) {
@@ -128,8 +130,8 @@
                 this.set("label", ("<em class=\"yui-button-label\">" + wordTreeSelected + "</em>"));
             };
 
-            var url = infoFieldsUrl + UI.util.constructRequestString(requestParams, [CORE_KEY],
-                        [{ key : INFO_FIELD_KEY, value : UI.INFO_FIELDS_WORD_TREE_FIELDS_KEY }]);
+            var url = infoFieldsUrl + UI.util.constructRequestString(requestParams, [UI.util.REQUEST_CORE_KEY],
+                        [{ key : UI.util.REQUEST_INFO_FIELD_KEY, value : UI.INFO_FIELDS_WORD_TREE_FIELDS_KEY }]);
             Connect.asyncRequest('GET', url, {
                 success: function(o) {
                     var response = Json.parse(o.responseText);
@@ -150,18 +152,6 @@
                     return select;
                 }
             });
-        }
-
-        function buildInfoHtml() {
-            var div = UI.addDomElementChild('div', infoEl);
-
-            var keys = Object.keys(requestParams);
-            for(var i = 0; i < keys.length; i++) {
-                var midDiv = UI.addDomElementChild('div', div);
-                UI.addDomElementChild('div', midDiv, { innerHTML : keys[i] }, { "class" : "info_div"});
-                UI.addDomElementChild('div', midDiv, { innerHTML : decodeURIComponent(requestParams[keys[i]]) }, { float : "left"} );
-                UI.addClearBothDiv(midDiv);
-            }
         }
 
         function buildWordTreeHTML() {
@@ -187,6 +177,44 @@
             UI.addDomElementChild('input', acDiv, { id : inputElId,  type : "text"});
             UI.addDomElementChild('input', acDiv, { id : toggleElId, type : "button", name : toggleElId, value: "Show" }, { 'class' : toggleCSSClass });
             UI.addDomElementChild('div',   acDiv, { id : containerElId });
+        }
+
+        function populateDateSelect(sel) {
+            var ops = ["DAYS", "MONTHS", "YEARS"];
+            for(var i = 0; i < ops.length; i++) {
+                sel.options[sel.options.length] = new Option(ops[i], ops[i]);
+            }
+            sel.selectedIndex = 1;
+        }
+
+        function buildPlotOptions(parentDiv) {
+            var nfound = requestParams[UI.util.REQUEST_NUM_FOUND_KEY], largeDataSet = nfound > maxPlotPoints;
+
+            var d = UI.addDomElementChild('div', parentDiv, {id : plotOptionsDivElId });
+            var limitDiv = UI.addDomElementChild('div', d);
+            UI.addDomElementChild('input', limitDiv, { id : useMaxPlotPointsElId, type : 'checkbox' });
+            UI.addDomElementChild('label', limitDiv, { for: useMaxPlotPointsElId, innerHTML : 'Limit # of plotted points to: '});
+            UI.addDomElementChild('input', limitDiv, { id : maxPlotPointsElId, type : 'text', value : maxPlotPoints });
+
+            var s = 'Plot all ' + nfound + ' points' + (largeDataSet ? ' (not recommended)' : ' ');
+
+            var nolimitDiv = UI.addDomElementChild('div', d);
+            UI.addDomElementChild('input', nolimitDiv, { id : noMaxPlotPointsElId, type : 'checkbox' });
+            UI.addDomElementChild('label', nolimitDiv, { for: noMaxPlotPointsElId, innerHTML : s}, { width : '400px'});
+
+            if (largeDataSet) {
+                Dom.get(useMaxPlotPointsElId).checked = true;
+            } else {
+                Dom.get(noMaxPlotPointsElId).checked = true;
+            }
+
+            var dateLimitDiv = UI.addDomElementChild('div', d);
+            UI.addDomElementChild('input', dateLimitDiv, { id : useDateRangeLimitElId, type : 'checkbox' });
+            UI.addDomElementChild('label', dateLimitDiv, { for: useDateRangeLimitElId, innerHTML : 'Limit dates to bucket size: '});
+            UI.addDomElementChild('input', dateLimitDiv, { id : dateRangeLimitNElId, type : 'text', value : 1, size: 3});
+
+            var sel = UI.addDomElementChild('select', dateLimitDiv, { id : dateRangeLimitSelectElId });
+            populateDateSelect(sel);
         }
 
         function initWarnDlg() {
@@ -226,6 +254,9 @@
             buildACContainer(div, yAxisInputElId, yAxisACElId, yAxisToggleElId, yAxisContainerElId, "Y axis field: ");
             buildACContainer(div, seriesInputElId, seriesACElId, seriesToggleElId, seriesContainerElId, "Series field: ");
             buildWarnDlgHTML(div);
+
+            UI.addClearBothDiv(div);
+            buildPlotOptions(div);
 
             UI.addClearBothDiv(div);
             UI.addDomElementChild('a', fieldset, { id: plotElId, innerHTML: "Plot" }, { "class" :  "button small" });

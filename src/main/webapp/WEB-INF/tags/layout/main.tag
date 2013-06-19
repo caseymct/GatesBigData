@@ -76,10 +76,10 @@
 
             var structuredElId              = "structured",
                 unstructuredElId            = "unstructured",
-                structuredDataResponseKey   = "structuredData",
+                structuredDataResponseKey   = "structured",
                 titleResponseKey            = "title",
-                nameResponseKey             = "core",
-                coresResponseKey            = "cores";
+                nameResponseKey             = "collection",
+                coresResponseKey            = "collections";
 
             var itemData = {
                 id      : "search",
@@ -95,7 +95,7 @@
                 lazyload: false
             });
 
-            Connect.asyncRequest('GET', '<c:url value="/solr/corenames" />' , {
+            Connect.asyncRequest('GET', '<c:url value="/solr/collection/names" />' , {
                 success : function(o) {
                     var entry, i,
                         response = Json.parse(o.responseText),
@@ -107,12 +107,13 @@
                         entry = { text: cores[i][titleResponseKey],
                                   url: "<c:url value="/search/" />" + cores[i][nameResponseKey] };
 
-                        if (cores[i]['structuredData'] == 'true') {
+                        if (cores[i][structuredDataResponseKey]) {
                             structuredItemDataSubMenu.push(entry);
                         } else {
                             unstructuredItemDataSubMenu.push(entry);
                         }
                     }
+
                     itemData.itemdata[0].submenu.itemdata = structuredItemDataSubMenu;
                     itemData.itemdata[1].submenu.itemdata = unstructuredItemDataSubMenu;
 

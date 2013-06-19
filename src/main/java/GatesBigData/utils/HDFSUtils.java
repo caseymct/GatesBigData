@@ -1,5 +1,7 @@
 package GatesBigData.utils;
 
+import GatesBigData.constants.Constants;
+import GatesBigData.constants.HDFS;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.MapFile;
 import org.apache.hadoop.io.Text;
@@ -11,7 +13,6 @@ import org.apache.nutch.crawl.CrawlDatum;
 import org.apache.nutch.crawl.CrawlDb;
 import org.apache.nutch.metadata.HttpHeaders;
 import org.apache.nutch.metadata.Metadata;
-import org.apache.nutch.net.URLNormalizers;
 import org.apache.nutch.parse.ParseData;
 import org.apache.nutch.parse.ParseText;
 import org.apache.nutch.protocol.Content;
@@ -26,20 +27,6 @@ import java.util.regex.Pattern;
 
 public class HDFSUtils {
 
-    private static final String FIELDS_HDFSFILENAME         = "fields.csv";
-    private static final String AUDITFIELDS_HDFSFILENAME    = "auditfields.csv";
-    private static final String PREVIEWFIELDS_HDFSFILENAME  = "previewfields.csv";
-    private static final String TABLEFIELDS_HDFSFILENAME    = "tablefields.csv";
-    private static final String HDFS_USERNAME               = "hdfs";
-    private static final String HDFS_URI                    = "hdfs://denlx006.dn.gates.com:8020";
-
-    private static final String USER_HDFS_DIR   = "user/" + HDFS_USERNAME;
-    private static final String CRAWL_DIR       = "crawl";
-    private static final String SEGMENTS_DIR    = "segments";
-    private static final String CRAWLDB_DIR     = URLNormalizers.SCOPE_CRAWLDB;
-    private static final String DATA_DIR        = "data";
-    private static final String INDEX_DIR       = "index";
-
     private static final Logger logger = Logger.getLogger(HDFSUtils.class);
 
     private static final String FILE_DOES_NOT_EXIST_METADATA_KEY = "FILE_DOES_NOT_EXIST";
@@ -52,20 +39,16 @@ public class HDFSUtils {
     }
 
     public static URI getHDFSURI() {
-        return URI.create(HDFS_URI);
-    }
-
-    public static String removeHDFSURIFromString(String s) {
-        return s.startsWith(HDFS_URI) ? s.substring(HDFS_URI.length()) : s;
+        return URI.create(HDFS.HDFS_URI_STRING);
     }
 
     public static Pattern getDataDirPattern(String nutchTypeDirName, boolean isData) {
-        String endFileName = isData ? DATA_DIR : INDEX_DIR;
+        String endFileName = isData ? HDFS.DATA_DIR : HDFS.INDEX_DIR;
         return Pattern.compile(".*" + nutchTypeDirName + "\\/part-[0-9]+\\/" + endFileName + "$");
     }
 
     public static Pattern getCrawlDbCurrentIndexFilesPattern() {
-        return getDataDirPattern(CRAWLDB_DIR + "\\/" + CrawlDb.CURRENT_NAME, false);
+        return getDataDirPattern(HDFS.CRAWLDB_DIR + "\\/" + CrawlDb.CURRENT_NAME, false);
     }
 
     public static Pattern getContentDataDirPattern() {
@@ -84,16 +67,20 @@ public class HDFSUtils {
         return getDataDirPattern(ParseText.DIR_NAME, true);
     }
 
+    public static Path getHDFSUserDirectory(Boolean includeURI) {
+        return new Path(includeURI ? HDFS.USER_DIR_URI : HDFS.USER_DIR);
+    }
+
     public static Path getHDFSCoreDirectory(Boolean includeURI, String coreName) {
-        return new Path((includeURI ? HDFS_URI : "") + "/" + USER_HDFS_DIR, coreName);
+        return new Path(getHDFSUserDirectory(includeURI), coreName);
     }
 
     public static Path getHDFSCrawlDirectory(Boolean includeURI, String coreName) {
-        return new Path(getHDFSCoreDirectory(includeURI, coreName), CRAWL_DIR);
+        return new Path(getHDFSCoreDirectory(includeURI, coreName), HDFS.CRAWL_DIR);
     }
 
     public static Path getHDFSSegmentsDirectory(Boolean includeURI, String coreName) {
-        return new Path(getHDFSCrawlDirectory(includeURI, coreName), SEGMENTS_DIR);
+        return new Path(getHDFSCrawlDirectory(includeURI, coreName), HDFS.SEGMENTS_DIR);
     }
 
     public static Path getHDFSSegmentDirectory(Boolean includeURI, String coreName, String segment) {
@@ -117,15 +104,15 @@ public class HDFSUtils {
     }
 
     public static Path getHDFSCrawlDBDir(Boolean includeURI, String coreName) {
-        return new Path(getHDFSCrawlDirectory(includeURI, coreName), CRAWLDB_DIR);
+        return new Path(getHDFSCrawlDirectory(includeURI, coreName), HDFS.CRAWLDB_DIR);
     }
 
     public static Path getHDFSCrawlDBCurrentDir(Boolean includeURI, String coreName) {
         return new Path(getHDFSCrawlDBDir(includeURI, coreName), CrawlDb.CURRENT_NAME);
     }
 
-    public static Path getHDFSFieldsCustomFile(String coreName) {
-        return new Path(getHDFSCoreDirectory(true, coreName), FIELDS_HDFSFILENAME);
+    public static Path getHDFSCollectionInfoFile() {
+        return new Path(getHDFSUserDirectory(true), HDFS.COLLECTIONINFO_FILE);
     }
 
     public static Content fileDoesNotExistContent() {

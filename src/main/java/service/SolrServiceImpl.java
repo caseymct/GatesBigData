@@ -1,9 +1,10 @@
 package service;
 
-import GatesBigData.utils.Constants;
-import GatesBigData.utils.JsonParsingUtils;
-import GatesBigData.utils.SolrUtils;
-import net.sf.json.JSONArray;
+import GatesBigData.constants.Constants;
+import GatesBigData.constants.solr.Response;
+import GatesBigData.constants.solr.Solr;
+import GatesBigData.utils.*;
+import net.sf.json.JSONObject;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -16,7 +17,6 @@ import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.CoreAdminParams;
-import org.apache.solr.common.util.NamedList;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -28,14 +28,21 @@ public class SolrServiceImpl implements SolrService {
     public static final Logger logger = Logger.getLogger(SolrServiceImpl.class);
 
     public SolrServer getSolrServer() {
-        return getHttpSolrServer();
+        return getSolrServer(null);
     }
 
-    public SolrServer getCloudSolrServer() {
+    public SolrServer getSolrServer(String collectionName) {
+        return Solr.USE_CLOUD_SOLR_SERVER ? getCloudSolrServer(collectionName) : getHttpSolrServer(collectionName);
+    }
+
+    public SolrServer getCloudSolrServer(String collectionName) {
         try {
-            CloudSolrServer solrServer = new CloudSolrServer(Constants.ZOOKEEPER_SERVER);
-            solrServer.setZkClientTimeout(Constants.ZK_CLIENT_TIMEOUT);
-            solrServer.setZkConnectTimeout(Constants.ZK_CONNECT_TIMEOUT);
+            CloudSolrServer solrServer = new CloudSolrServer(Solr.ZOOKEEPER_SERVER);
+            solrServer.setZkClientTimeout(Solr.ZK_CLIENT_TIMEOUT);
+            solrServer.setZkConnectTimeout(Solr.ZK_CONNECT_TIMEOUT);
+
+            if (!Utils.nullOrEmpty(collectionName)) solrServer.setDefaultCollection(collectionName);
+
             return solrServer;
 
         } catch (MalformedURLException e) {
@@ -44,8 +51,20 @@ public class SolrServiceImpl implements SolrService {
         return null;
     }
 
+    public SolrServer getHttpSolrServer(String coreName) {
+        return new HttpSolrServer(SolrUtils.getSolrServerURI(coreName));
+    }
+
     public SolrServer getHttpSolrServer() {
-        return new HttpSolrServer(SolrUtils.getSolrServerURI(null));
+        return getHttpSolrServer(null);
+    }
+
+    public List<SolrServer> getCloudSolrServers() {
+        List<SolrServer> servers = new ArrayList<SolrServer>();
+        for(String cloudSolrServer : Solr.CLOUD_SOLR_SERVERS) {
+            servers.add(new HttpSolrServer(cloudSolrServer));
+        }
+        return servers;
     }
 
     public int solrServerAdd(SolrServer server, SolrInputDocument doc) throws IOException, SolrServerException {
@@ -55,18 +74,6 @@ public class SolrServiceImpl implements SolrService {
     public int solrServerAdd(SolrServer server, List<SolrInputDocument> docs) throws IOException, SolrServerException {
         return server.add(docs).getStatus();
     }
-
-    public int solrServerAddAndCommit(SolrServer server, SolrInputDocument doc) throws IOException, SolrServerException {
-        return solrServerAddAndCommit(server, Arrays.asList(doc));
-    }
-
-    public int solrServerAddAndCommit(SolrServer server, List<SolrInputDocument> docs) throws IOException, SolrServerException {
-        if (Constants.SolrResponseSuccess(solrServerCommit(server))) {
-            return solrServerUpdate(server, docs);
-        }
-        return Constants.SOLR_RESPONSE_CODE_ERROR;
-    }
-
 
     public int solrServerUpdate(SolrServer server) throws IOException, SolrServerException {
         return solrServerUpdate(server, null);
@@ -82,14 +89,18 @@ public class SolrServiceImpl implements SolrService {
         }
 
         UpdateResponse rsp = req.process(server);
-        if (Constants.SolrResponseSuccess(rsp)) {
+        if (Response.success(rsp)) {
             return solrServerCommit(server);
         }
-        return Constants.SOLR_RESPONSE_CODE_ERROR;
+        return Response.CODE_ERROR;
     }
 
     public int solrServerCommit(SolrServer server) throws IOException, SolrServerException {
         return server.commit().getStatus();
+    }
+
+    public int solrServerOptimize(SolrServer server) throws IOException, SolrServerException {
+        return server.optimize().getStatus();
     }
 
     public int solrServerDeleteIndex(SolrServer server) throws IOException, SolrServerException {
@@ -108,14 +119,14 @@ public class SolrServiceImpl implements SolrService {
     }
 
     public int solrServerDeleteById(SolrServer server, List<String> ids) throws IOException, SolrServerException {
-        return Constants.SolrResponseSuccess(server.deleteById(ids)) ? solrServerUpdate(server) : Constants.SOLR_RESPONSE_CODE_ERROR;
+        return Response.success(server.deleteById(ids)) ? solrServerUpdate(server) : Response.CODE_ERROR;
     }
 
     public CoreAdminResponse getCores() {
         try {
             CoreAdminRequest request = new CoreAdminRequest();
             request.setAction(CoreAdminParams.CoreAdminAction.STATUS);
-            return request.process(getSolrServer());
+            return request.process(getHttpSolrServer());
 
         } catch (SolrServerException e) {
             System.out.println(e.getMessage());
@@ -125,34 +136,20 @@ public class SolrServiceImpl implements SolrService {
         return null;
     }
 
-    public List<String> getCoreNames() {
-        List<String> coreList = new ArrayList<String>();
+    public JSONObject getCollectionInfo() {
+        String clusterStateStr = HttpClientUtils.httpGetRequest(SolrUtils.getSolrClusterStateURI());
+        JSONObject clusterStateJson = JSONUtils.convertStringToJSONObject(clusterStateStr);
 
-        CoreAdminResponse cores = getCores();
-        if (cores != null) {
-            for (int i = 0; i < cores.getCoreStatus().size(); i++) {
-                coreList.add(cores.getCoreStatus().getName(i));
-            }
-        }
-        Collections.sort(coreList);
-        return coreList;
+        return (JSONObject) JSONUtils.extractJSONProperty(clusterStateJson, Arrays.asList("znode", "data"),
+                JSONObject.class, null);
     }
 
-    public boolean coreNameExists(String coreName) {
-        return getCoreNames().contains(coreName);
-    }
-
-    public JSONArray getAllCoreData() {
-        JSONArray coreInfo = new JSONArray();
-
-        CoreAdminResponse cores = getCores();
-        if (cores != null) {
-            for (Object o : cores.getCoreStatus()) {
-                Map.Entry coreData = (Map.Entry) o;
-                coreInfo.add(JsonParsingUtils.constructJSONObjectFromNamedList((NamedList) coreData.getValue()));
-            }
+    public List<String> getCollectionNames() {
+        JSONObject clusterState = getCollectionInfo();
+        if (Utils.nullOrEmpty(clusterState)) {
+            return new ArrayList<String>();
         }
 
-        return coreInfo;
+        return JSONUtils.convertJSONArrayToStringList(clusterState.names());
     }
 }

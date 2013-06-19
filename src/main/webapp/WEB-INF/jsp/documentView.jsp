@@ -26,18 +26,23 @@
             viewButtonGrpName  = "view",                saveButtonElId         = "save",
             saveButtonCSSClass = "button save";
 
+        var baseUrl         = '<c:url value="/" />',
+            saveDocUrl      = baseUrl + 'document/save',
+            getDocUrl       = baseUrl + 'document/content/get',
+            coreDocViewUrl  = baseUrl + '/core/document/view';
+
         var id              = YAHOO.deconcept.util.getRequestParameter("id"),
             coreName        = YAHOO.deconcept.util.getRequestParameter("core"),
             viewType        = YAHOO.deconcept.util.getRequestParameter("view"),
             urlParams       = "?core=" + coreName + "&id=" + id + "&view=" + viewType,
-            saveDoc         = '<c:url value="/document/save"/>' + urlParams;
+            saveDoc         = saveDocUrl + urlParams;
 
         buildHtml();
 
-        UI.initWait();
+        UI.initWait(baseUrl);
         UI.showWait();
 
-        Connect.asyncRequest('GET', '<c:url value="/document/content/get" />' + urlParams, {
+        Connect.asyncRequest('GET', getDocUrl + urlParams, {
             success : function(o) {
                 var result = o.responseText;
                 UI.hideWait();
@@ -76,7 +81,7 @@
 
             viewButtonGroup.on("checkedButtonChange", function (o) {
                 urlParams = urlParams.replace(/view=.*view/, "view=" + o.newValue.get("value"));
-                window.open('<c:url value="/core/document/view" />' + urlParams, "_self");
+                window.open(coreDocViewUrl + urlParams, "_self");
             });
 
             Event.addListener(saveButtonElId, "click", function(e) {

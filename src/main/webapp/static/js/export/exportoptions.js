@@ -26,7 +26,7 @@ EXPORTOPTIONS.util = {};
     var urlStr          = window.location.href.substring(window.location.href.indexOf("?") + 1),
         requestParams   = UI.util.getRequestParameters(),
         requestKeys     = Object.keys(requestParams),
-        coreName        = UI.util.getRequestParamDisplayString(requestParams, UI.util.REQUEST_CORE_KEY);
+        collection      = UI.util.getRequestParamDisplayString(requestParams, UI.util.REQUEST_CORE_KEY);
 
     EXPORTOPTIONS.init = function(vars) {
         urls = vars[UI.URLS_KEY];
@@ -77,7 +77,7 @@ EXPORTOPTIONS.util = {};
     }
 
     function initVars() {
-        Connect.asyncRequest('GET', urls[UI.AUDIT_FIELD_NAMES_URL_KEY] + coreName, {
+        Connect.asyncRequest('GET', urls[UI.AUDIT_FIELD_NAMES_URL_KEY] + collection, {
             success : function(o) {
                 var fields = Json.parse(o.responseText);
                 auditFields = UI.util.specifyReturnValueIfUndefined(fields[UI.INFO_FIELDS_AUDIT_FIELDS_KEY], []);
@@ -106,7 +106,7 @@ EXPORTOPTIONS.util = {};
         Event.addListener(exportButtonElName, "click", function(e) {
             Event.stopEvent(e);
 
-            var urlParams = "?type=csv&file=" + Dom.get(exportInputFileElName).value + "&" + urlStr;
+            var urlParams = "?type=csv&file=" + Dom.get(exportInputFileElName).value + "&" + urlStr + '&collection=' + collection;
             var exportFields = getAllCheckedFields();
             if (exportFields != "") {
                 urlParams += "&fields=" + exportFields;
@@ -118,7 +118,8 @@ EXPORTOPTIONS.util = {};
     }
 
     function changeCheckboxLabelColor(checkboxId, status) {
-        Dom.setStyle(getCheckboxLabelElName(checkboxId), "color", status ? "black" : "gray");
+        //$('#' + getCheckboxLabelElName(checkboxId)).css('color', status ? 'black' : 'gray');
+        UI.setStyleOnElementId(getCheckboxLabelElName(checkboxId), "color", status ? "black" : "gray");
     }
 
     function changeAllCheckedStatus(status, nameFilters) {
@@ -195,7 +196,7 @@ EXPORTOPTIONS.util = {};
     }
 
     function buildFieldsHtml() {
-        Connect.asyncRequest('GET', urls[UI.FIELD_NAMES_URL_KEY] + "?core=" + coreName, {
+        Connect.asyncRequest('GET', urls[UI.FIELD_NAMES_URL_KEY] + "?core=" + collection, {
             success : function(o) {
                 var names = Json.parse(o.responseText).names, i;
                 var currOverlay = null, currCheckboxParent = null;

@@ -220,7 +220,7 @@ version: 2.9.0
                         switch (property) {
                             case 'opacity':
                                 // remove filter if unsetting or full opacity
-                                if (val === '' || val === null || val === 1) {
+                                if (val === '' || val === null || val === 1 || val === 'NaNpx') {
                                     el.style.removeAttribute('filter');
                                 } else if ( lang.isString(el.style.filter) ) { // in case not appended
                                     el.style.filter = 'alpha(opacity=' + val * 100 + ')';

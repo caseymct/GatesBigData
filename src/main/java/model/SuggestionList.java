@@ -1,6 +1,6 @@
 package model;
 
-import GatesBigData.utils.JsonParsingUtils;
+import GatesBigData.utils.JSONUtils;
 import net.sf.json.JSONArray;
 
 import java.util.*;
@@ -54,11 +54,11 @@ public class SuggestionList implements Iterable<Suggestion> {
     }
 
     public JSONArray getSortedFormattedSuggestionJSONArray() {
-        return JsonParsingUtils.convertStringListToJSONArray(getSortedFormattedSuggestionList());
+        return JSONUtils.convertCollectionToJSONArray(getSortedFormattedSuggestionList());
     }
 
     public JSONArray getFormattedSuggestionJSONArray() {
-        return JsonParsingUtils.convertStringListToJSONArray(getFormattedSuggestionList());
+        return JSONUtils.convertCollectionToJSONArray(getFormattedSuggestionList());
     }
 
     public int size() {

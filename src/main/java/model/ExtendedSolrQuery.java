@@ -1,7 +1,10 @@
 package model;
 
-import GatesBigData.utils.Constants;
+import GatesBigData.constants.solr.Defaults;
+import GatesBigData.constants.solr.Operations;
+import GatesBigData.constants.solr.QueryParams;
 import GatesBigData.utils.DateUtils;
+import GatesBigData.utils.SolrUtils;
 import GatesBigData.utils.Utils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.solr.client.solrj.SolrQuery;
@@ -11,13 +14,13 @@ import java.util.*;
 
 public class ExtendedSolrQuery extends SolrQuery {
 
-    public static final int GROUP_UNLIMITED         = -1;
     public static final int FACET_LIMIT_DEFAULT     = 20;
     public static final int FACET_MINCOUNT_DEFAULT  = 1;
 
     public ExtendedSolrQuery() {
         super();
-        this.add(Constants.SOLR_PARAM_WT, Constants.SOLR_DEFAULT_VALUE_WT);
+        this.setQuery(Defaults.QUERY);
+        this.add(QueryParams.WT, Defaults.WT);
     }
 
     public ExtendedSolrQuery(String queryString) {
@@ -27,7 +30,7 @@ public class ExtendedSolrQuery extends SolrQuery {
 
     public ExtendedSolrQuery(HashMap<String, String> queryParams) {
         this();
-        this.setQuery(constructQueryString(queryParams, Constants.SOLR_BOOLEAN_DEFAULT));
+        this.setQuery(constructQueryString(queryParams, Operations.BOOLEAN_DEFAULT));
     }
 
     public ExtendedSolrQuery(HashMap<String, String> queryParams, String op) {
@@ -45,7 +48,7 @@ public class ExtendedSolrQuery extends SolrQuery {
     }
 
     public void setHighlightField(String field) {
-        this.add(Constants.SOLR_PARAM_HIGHLIGHT_FIELDLIST, field);
+        this.add(QueryParams.HIGHLIGHT_FIELDLIST, field);
     }
 
     public void setHighlightFields(List<String> fields) {
@@ -55,15 +58,23 @@ public class ExtendedSolrQuery extends SolrQuery {
     }
 
     public void setHighlightQuery(String queryString, String fq) {
-        this.add(Constants.SOLR_PARAM_HIGHLIGHT_QUERY, queryString + (fq != null ? " " + fq : ""));
+        this.add(QueryParams.HIGHLIGHT_QUERY, queryString + (fq != null ? " " + fq : ""));
     }
 
     public void setHighlightDefaults() {
         this.setHighlight(true);
-        this.setHighlightSimplePre(Constants.SOLR_DEFAULT_VALUE_HIGHLIGHT_PRE);
-        this.setHighlightSimplePost(Constants.SOLR_DEFAULT_VALUE_HIGHLIGHT_POST);
-        this.setHighlightSnippets(Constants.SOLR_DEFAULT_VALUE_HIGHLIGHT_SNIPPETS);
-        this.setHighlightFragsize(Constants.SOLR_DEFAULT_VALUE_HIGHLIGHT_FRAGSIZE);
+        this.setHighlightSimplePre(Defaults.HIGHLIGHT_PRE);
+        this.setHighlightSimplePost(Defaults.HIGHLIGHT_POST);
+        this.setHighlightSnippets(Defaults.HIGHLIGHT_SNIPPETS);
+        this.setHighlightFragsize(Defaults.HIGHLIGHT_FRAGSIZE);
+    }
+
+    public void setQueryStart(Integer start) {
+        this.setStart(start == null ? Defaults.START : start);
+    }
+
+    public void setQueryRows(Integer rows) {
+        this.setRows(rows == null ? Defaults.ROWS : rows);
     }
 
     public void setFilterQuery(String fq) {
@@ -78,35 +89,69 @@ public class ExtendedSolrQuery extends SolrQuery {
         }
     }
 
+    public void setStatsFields(List<String> statsFields) {
+        this.setGetFieldStatistics(true);
+        for(String s : statsFields) {
+            this.setGetFieldStatistics(s);
+        }
+    }
+
     public void setFacetDefaults() {
         this.setFacet(true);
         this.setFacetMissing(true);
-        this.setFacetLimit(FACET_LIMIT_DEFAULT);
-        this.setFacetMinCount(FACET_MINCOUNT_DEFAULT);
+        this.setFacetLimit(Defaults.FACET_LIMIT);
+        this.setFacetMinCount(Defaults.FACET_MINCOUNT);
+    }
+
+    public void addFacetFields(List<String> facetFields) {
+        for(String facetField : facetFields) {
+            this.addFacetField(facetField);
+        }
+    }
+
+    public void addQueryFacets(FacetFieldEntryList facetFields, SolrCollectionSchemaInfo info) {
+        if (Utils.nullOrEmpty(facetFields)) {
+            return;
+        }
+
+        setFacetDefaults();
+
+        for(FacetFieldEntry field : facetFields) {
+            String f = field.getFieldName();
+            if (field.fieldTypeIsDate() && !field.isMultiValued()) {
+                this.setDateRangeFacet(f, info.getDateRangeStart(f), info.getDateRangeEnd(f), 10);
+            } else {
+                this.addFacetField(f);
+            }
+        }
     }
 
     public void setGroupField(String field) {
-        this.add(Constants.SOLR_PARAM_GROUP_FIELD, field);
+        this.add(QueryParams.GROUP_FIELD, field);
     }
 
     public void setGroupSort(String sort) {
-        this.add(Constants.SOLR_PARAM_GROUP_SORT, sort);
+        this.add(QueryParams.GROUP_SORT, sort);
     }
 
     public void setGroupSortDefault() {
-        this.add(Constants.SOLR_PARAM_GROUP_SORT, Constants.SOLR_DEFAULT_VALUE_GROUP_SORT);
+        this.add(QueryParams.GROUP_SORT, Defaults.GROUP_SORT);
     }
 
     public void setGroupLimit(int limit) {
-        this.add(Constants.SOLR_PARAM_GROUP_LIMIT, "" + limit);
+        this.add(QueryParams.GROUP_LIMIT, "" + limit);
     }
 
     public void setGroupLimitUnlimited() {
-        this.add(Constants.SOLR_PARAM_GROUP_LIMIT, "" + Constants.SOLR_GROUP_LIMIT_UNLIMITED);
+        this.add(QueryParams.GROUP_LIMIT, "" + Defaults.GROUP_LIMIT_UNLIMITED);
     }
 
     public void setGroup(boolean groupsOn) {
-        this.add(Constants.SOLR_PARAM_GROUP, groupsOn + "");
+        this.add(QueryParams.GROUP, groupsOn + "");
+    }
+
+    public void showGroupNGroups() {
+        this.add(QueryParams.GROUP_NGROUPS, Boolean.toString(true));
     }
 
     public void setGroupingDefaults(String groupField) {
@@ -119,10 +164,28 @@ public class ExtendedSolrQuery extends SolrQuery {
         if (startDate == null || endDate == null) {
             return;
         }
-        this.add(Constants.SOLR_PARAM_FACET_DATE_FIELD, fieldName);
-        this.add(Constants.SOLR_FACET_DATE_START(fieldName), DateField.formatExternal(startDate));
-        this.add(Constants.SOLR_FACET_DATE_END(fieldName), DateField.formatExternal(endDate));
-        this.add(Constants.SOLR_FACET_DATE_GAP(fieldName), DateUtils.getDateGapString(startDate, endDate, buckets));
+        this.add(QueryParams.FACET_DATE_FIELD, fieldName);
+        this.add(QueryParams.fieldFacetDateStartParam(fieldName), DateField.formatExternal(startDate));
+        this.add(QueryParams.fieldFacetDateEndParam(fieldName), DateField.formatExternal(endDate));
+        this.add(QueryParams.fieldFacetDateGapParam(fieldName), DateUtils.getDateGapString(startDate, endDate, buckets));
+    }
+
+    public void addSortClause(String sortField, String order) {
+        this.addSortClause(sortField, SolrUtils.getSortOrder(order));
+    }
+
+    public void addSortClause(String sortField, ORDER order) {
+        this.addSort(new SortClause(sortField, order));
+    }
+
+    public void addSortClauses(List<SortClause> clauses) {
+        if (Utils.nullOrEmpty(clauses)) {
+            this.addSortClause(Defaults.SORT_FIELD, Defaults.SORT_ORDER);
+        } else {
+            for(SortClause clause : clauses) {
+                this.addSort(clause);
+            }
+        }
     }
 }
 

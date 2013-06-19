@@ -25,6 +25,18 @@ a.button {
     -moz-border-radius: 2px;
     margin-right: 10px;
 }
+
+a.button.disabled {
+    color: lightgray;
+}
+
+a.button.disabled:hover {
+    color: lightgray;
+    border-color: lightgray;
+    -moz-box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2) -webkit-box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
 a.button:hover {
     color: #333;
     border-color: #999;
@@ -81,7 +93,6 @@ a.add {
     padding-left: 30px;
 }
 a.delete {
-    /* background: url(../images/sprite.png)  10px -61px no-repeat #f3f3f3;     */
     background: url(../images/delete.png) 5px 5px no-repeat #f3f3f3;
     padding-left: 30px;
     background-size: 10px;

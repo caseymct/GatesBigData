@@ -1,6 +1,7 @@
 package service;
 
-import GatesBigData.utils.Constants;
+import GatesBigData.constants.Constants;
+import GatesBigData.constants.solr.FieldNames;
 import GatesBigData.utils.SolrUtils;
 import GatesBigData.utils.Utils;
 import model.InMemoryOutputStream;
@@ -35,9 +36,9 @@ public class ExportZipServiceImpl extends ExportService {
 
             for(Map.Entry<String, String> entry : docsWithNullContent.entrySet()) {
                 headerStringBuilder.append("\t");
-                headerStringBuilder.append(Constants.SOLR_FIELD_NAME_TITLE).append(" : ").append(entry.getValue());
+                headerStringBuilder.append(FieldNames.TITLE).append(" : ").append(entry.getValue());
                 headerStringBuilder.append(Constants.DEFAULT_DELIMETER).append(" ");
-                headerStringBuilder.append(Constants.SOLR_FIELD_NAME_ID).append(" : ").append(entry.getKey());
+                headerStringBuilder.append(FieldNames.ID).append(" : ").append(entry.getKey());
                 headerStringBuilder.append(Constants.DEFAULT_NEWLINE);
             }
         }
@@ -48,13 +49,13 @@ public class ExportZipServiceImpl extends ExportService {
         HashMap<String, String> docsWithNullContent = new HashMap<String, String>();
 
         for(SolrDocument doc : docs) {
-            String contentStr = SolrUtils.getFieldStringValue(doc, Constants.SOLR_FIELD_NAME_CONTENT, "");
-            String title      = SolrUtils.getFieldStringValue(doc, Constants.SOLR_FIELD_NAME_TITLE, "No title");
+            String contentStr = SolrUtils.getFieldStringValue(doc, FieldNames.CONTENT, "");
+            String title      = SolrUtils.getFieldStringValue(doc, FieldNames.TITLE, "No title");
 
             if (!Utils.nullOrEmpty(contentStr)) {
                 writeToZipOutputStream(contentStr.getBytes(), title);
             } else {
-                docsWithNullContent.put(SolrUtils.getFieldStringValue(doc, Constants.SOLR_FIELD_NAME_ID, ""), title);
+                docsWithNullContent.put(SolrUtils.getFieldStringValue(doc, FieldNames.ID, ""), title);
             }
         }
 

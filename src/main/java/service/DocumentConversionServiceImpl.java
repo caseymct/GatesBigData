@@ -1,17 +1,13 @@
 package service;
 
-import GatesBigData.utils.Constants;
+import GatesBigData.constants.Constants;
 import GatesBigData.utils.HttpClientUtils;
 import GatesBigData.utils.Utils;
 
-import org.apache.commons.net.util.Base64;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
 import org.apache.nutch.protocol.Content;
 import org.springframework.stereotype.Service;
 
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -22,7 +18,7 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
 
     private static final String TEST_PRIZM_CONVERT_URL     = "http://localhost:18680/convert2swf";
     private static final String TEST_TMP_DIRECTORY         = "C:/tmp/";
-    private static final String PROD_PRIZM_CONVERT_URL     = "http://denlx006.dn.gates.com:18880/convert2swf";
+    private static final String PROD_PRIZM_CONVERT_URL     = "http://denlx014.dn.gates.com:18880/convert2swf";
     private static final String PROD_TMP_DIRECTORY         = "/tmp/prizm/";
     private static String TMP_DIRECTORY = Utils.runningOnProduction() ? PROD_TMP_DIRECTORY : TEST_TMP_DIRECTORY;
     private static String CONVERT_URL = Utils.runningOnProduction() ? PROD_PRIZM_CONVERT_URL : TEST_PRIZM_CONVERT_URL;

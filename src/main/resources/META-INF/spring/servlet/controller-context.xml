@@ -16,15 +16,16 @@
 
 	<mvc:annotation-driven />
     <mvc:view-controller path="/" view-name="index" />
-    <mvc:view-controller path="/index.html"              view-name="index" />
-    <mvc:view-controller path="/search/AP_data"          view-name="search/cores/AP_data" />
-    <mvc:view-controller path="/search/AR_data"          view-name="search/cores/AR_data" />
-    <mvc:view-controller path="/search/dnmsfp1"          view-name="search/cores/dnmsfp1" />
-    <mvc:view-controller path="/search/test2_data"       view-name="search/cores/test2_data" />
-    <mvc:view-controller path="/search/analyze"          view-name="search/analyze/analysis_chooser" />
-    <mvc:view-controller path="/search/analyze/plot"     view-name="search/analyze/plot" />
-    <mvc:view-controller path="/search/analyze/wordtree" view-name="search/analyze/wordtree" />
-    <mvc:view-controller path="/core/document/view"      view-name="documentView" />
-    <mvc:view-controller path="/core/document/prizmview" view-name="prizmview" />
-    <mvc:view-controller path="/core/export/structured"  view-name="export/structured_data_export" />
+    <mvc:view-controller path="/index.html"                         view-name="index" />
+    <mvc:view-controller path="/search/AP_data_collection"          view-name="search/cores/AP_data_collection" />
+    <mvc:view-controller path="/search/AR_data_collection"          view-name="search/cores/AR_data_collection" />
+    <mvc:view-controller path="/search/Inventory_data_collection"   view-name="search/cores/Inventory_data_collection" />
+    <mvc:view-controller path="/search/dnmsfp1_collection"          view-name="search/cores/dnmsfp1_collection" />
+    <mvc:view-controller path="/search/analyze"                     view-name="search/analyze/analysis_chooser" />
+    <mvc:view-controller path="/search/analyze/plot"                view-name="search/analyze/plot" />
+    <mvc:view-controller path="/search/analyze/wordtree"            view-name="search/analyze/wordtree" />
+    <mvc:view-controller path="/core/document/view"                 view-name="documentView" />
+    <mvc:view-controller path="/core/document/prizmview"            view-name="prizmview" />
+    <mvc:view-controller path="/core/export/structured"             view-name="export/structured_data_export" />
+    <mvc:view-controller path="/search/reports"                     view-name="search/reports/report_generator" />
 </beans>

@@ -1,5 +1,6 @@
 package model;
 
+import GatesBigData.constants.Constants;
 import GatesBigData.utils.*;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -184,11 +185,11 @@ public class SeriesPlot {
         }
 
         if (this.xAxisIsDate) {
-            data.put(RESPONSE_KEY_UNIQUE_X_DATES, JsonParsingUtils.convertCollectionToJSONArray(this.uniqueXDateData));
+            data.put(RESPONSE_KEY_UNIQUE_X_DATES, JSONUtils.convertCollectionToJSONArray(this.uniqueXDateData));
         }
 
         if (this.yAxisIsDate) {
-            data.put(RESPONSE_KEY_UNIQUE_Y_DATES, JsonParsingUtils.convertCollectionToJSONArray(this.uniqueYDateData));
+            data.put(RESPONSE_KEY_UNIQUE_Y_DATES, JSONUtils.convertCollectionToJSONArray(this.uniqueYDateData));
         }
 
         JSONObject allDataJsonObject = new JSONObject();

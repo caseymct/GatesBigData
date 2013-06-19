@@ -1,5 +1,10 @@
 package service;
 
+import GatesBigData.constants.Constants;
+import GatesBigData.constants.solr.FieldNames;
+import GatesBigData.constants.solr.Operations;
+import GatesBigData.constants.solr.Response;
+import GatesBigData.constants.solr.Solr;
 import GatesBigData.utils.*;
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbException;
@@ -11,9 +16,6 @@ import org.apache.nutch.metadata.Metadata;
 import org.apache.nutch.parse.ParseData;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.CloudSolrServer;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
-import org.apache.solr.client.solrj.response.CoreAdminResponse;
 import org.apache.solr.common.SolrInputDocument;
 
 import org.apache.solr.schema.DateField;
@@ -27,21 +29,8 @@ import java.util.*;
 public class CoreServiceImpl implements CoreService {
 
     private SolrService solrService;
-
-
-
     private NtlmPasswordAuthentication auth;
-    private static final Logger logger = Logger.getLogger(CoreServiceImpl.class);
-
-    HashMap<String, String> mapMetadataToSolrFields = new HashMap<String, String>() {{
-        put("Last-Save-Date",   Constants.SOLR_FIELD_NAME_LAST_MODIFIED);
-        put("Creation-Date",    Constants.SOLR_FIELD_NAME_CREATE_DATE);
-        put("Last-Author",      Constants.SOLR_FIELD_NAME_LAST_AUTHOR);
-        put("Application-Name", Constants.SOLR_FIELD_NAME_APPLICATION_NAME);
-        put("Author",           Constants.SOLR_FIELD_NAME_AUTHOR);
-        put("Company",          Constants.SOLR_FIELD_NAME_COMPANY);
-        put("title",            Constants.SOLR_FIELD_NAME_TITLE);
-    }};
+    private static final Logger logger = Logger.getLogger(CoreServiceImpl.class);    
 
     @Autowired
     public void setServices(SolrService solrService) {
@@ -55,25 +44,8 @@ public class CoreServiceImpl implements CoreService {
         return this.auth;
     }
 
-    public SolrServer getCloudSolrServer(String collectionName) {
-        try {
-            CloudSolrServer solrServer = new CloudSolrServer(Constants.ZOOKEEPER_SERVER);
-            solrServer.setDefaultCollection(collectionName);
-            solrServer.setZkClientTimeout(Constants.ZK_CLIENT_TIMEOUT);
-            solrServer.setZkConnectTimeout(Constants.ZK_CONNECT_TIMEOUT);
-            return solrServer;
-        } catch (MalformedURLException e) {
-            logger.error(e.getMessage());
-        }
-        return null;
-    }
-
-    public SolrServer getHttpSolrServer(String coreName) {
-        return new HttpSolrServer(SolrUtils.getSolrServerURI(coreName));
-    }
-
     public SolrServer getSolrServer(String collectionName) {
-        return getHttpSolrServer(collectionName);
+        return solrService.getSolrServer(collectionName);
     }
 
     public int solrServerAdd(String coreName, List<SolrInputDocument> docs) throws IOException, SolrServerException {
@@ -82,6 +54,10 @@ public class CoreServiceImpl implements CoreService {
 
     public int solrServerAdd(String coreName, SolrInputDocument doc) throws IOException, SolrServerException {
         return solrService.solrServerAdd(getSolrServer(coreName), doc);
+    }
+
+    public int optimizeIndex(String collection) throws IOException, SolrServerException {
+        return solrService.solrServerOptimize(getSolrServer(collection));
     }
 
     public int deleteIndex(String coreName) throws IOException, SolrServerException{
@@ -122,32 +98,34 @@ public class CoreServiceImpl implements CoreService {
         return doc;
     }
 
-    public int addInfoFiles(String coreName, HashMap<String, String> hdfsInfoFileContents) throws IOException, SolrServerException {
+    public int addInfoFiles(String coreName, JSONObject contents) throws IOException, SolrServerException {
         List<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
         List<String> fieldsToDelete = new ArrayList<String>();
 
-        for(Map.Entry<String, String> entry : hdfsInfoFileContents.entrySet()) {
-            final String title   = entry.getKey();
-            final String content = entry.getValue();
+        Iterator<?> keys = contents.keys();
+
+        while (keys.hasNext()) {
+            final String title   = (String) keys.next();
+            final String content = contents.getString(title);
             fieldsToDelete.add(title);
 
             HashMap<String, Object> params = new HashMap<String, Object>() {{
                 put(title, content);
-                put(Constants.SOLR_FIELD_NAME_TITLE, title);
-                put(Constants.SOLR_FIELD_NAME_ID, UUID.nameUUIDFromBytes(title.getBytes()));
-                put(Constants.SOLR_FIELD_NAME_URL, title);
+                put(FieldNames.TITLE, title);
+                put(FieldNames.ID, UUID.nameUUIDFromBytes(title.getBytes()));
+                put(FieldNames.URL, title);
             }};
             docs.add(createSolrDocument(params));
         }
 
-        deleteByField(coreName, Constants.SOLR_FIELD_NAME_TITLE, fieldsToDelete);
+        deleteByField(coreName, FieldNames.TITLE, fieldsToDelete);
         return update(coreName, docs);
     }
 
 
     private HashMap<String, Object> addParseMeta(HashMap<String, Object> params, Metadata metadata) {
         List<String> names = Arrays.asList(metadata.names());
-        for (Map.Entry<String,String> entry : mapMetadataToSolrFields.entrySet()) {
+        for (Map.Entry<String,String> entry : FieldNames.METADATA_TO_SOLRFIELDS.entrySet()) {
             if (names.contains(entry.getKey())) {
                 params.put(entry.getValue(), metadata.get(entry.getKey()));
             }
@@ -156,15 +134,15 @@ public class CoreServiceImpl implements CoreService {
     }
 
     private HashMap<String, Object> addSMBDates(HashMap<String, Object> params, String url) {
-        boolean addLastModified = !params.containsKey(Constants.SOLR_FIELD_NAME_LAST_MODIFIED);
-        boolean addCreateTime   = !params.containsKey(Constants.SOLR_FIELD_NAME_CREATE_DATE);
+        boolean addLastModified = !params.containsKey(FieldNames.LAST_MODIFIED);
+        boolean addCreateTime   = !params.containsKey(FieldNames.CREATE_DATE);
 
         if (addCreateTime || addLastModified) {
             try {
                 SmbFile file = new SmbFile(url, getAuth());
                 if (file.exists()) {
-                    if (addLastModified) params.put(Constants.SOLR_FIELD_NAME_LAST_MODIFIED, DateField.formatExternal(new Date(file.getLastModified())));
-                    if (addCreateTime)   params.put(Constants.SOLR_FIELD_NAME_CREATE_DATE, DateField.formatExternal(new Date(file.createTime())));
+                    if (addLastModified) params.put(FieldNames.LAST_MODIFIED, DateField.formatExternal(new Date(file.getLastModified())));
+                    if (addCreateTime)   params.put(FieldNames.CREATE_DATE, DateField.formatExternal(new Date(file.createTime())));
                 }
             } catch (SmbException e) {
                 logger.error(e.getMessage());
@@ -181,13 +159,13 @@ public class CoreServiceImpl implements CoreService {
             return null;
         }
         HashMap<String, Object> params = new HashMap<String, Object>() {{
-            put(Constants.SOLR_FIELD_NAME_HDFSKEY, urlString);
-            put(Constants.SOLR_FIELD_NAME_HDFSSEGMENT, segment);
-            put(Constants.SOLR_FIELD_NAME_BOOST, 1.0);
-            put(Constants.SOLR_FIELD_NAME_ID, urlString);
-            put(Constants.SOLR_FIELD_NAME_URL, urlString);
-            put(Constants.SOLR_FIELD_NAME_TIMESTAMP, DateField.formatExternal(Calendar.getInstance().getTime()));
-            put(Constants.SOLR_FIELD_NAME_CONTENT_TYPE, contentType);
+            put(FieldNames.HDFSKEY, urlString);
+            put(FieldNames.HDFSSEGMENT, segment);
+            put(FieldNames.BOOST, 1.0);
+            put(FieldNames.ID, urlString);
+            put(FieldNames.URL, urlString);
+            put(FieldNames.TIMESTAMP, DateField.formatExternal(Calendar.getInstance().getTime()));
+            put(FieldNames.CONTENT_TYPE, contentType);
         }};
         params = addParseMeta(params, parseData.getParseMeta());
 
@@ -195,15 +173,15 @@ public class CoreServiceImpl implements CoreService {
             params = addSMBDates(params, urlString);
         }
 
-        if (!params.containsKey(Constants.SOLR_FIELD_NAME_TITLE)) {
+        if (!params.containsKey(FieldNames.TITLE)) {
             String[] urlItems = urlString.split("/");
-            params.put(Constants.SOLR_FIELD_NAME_TITLE, urlItems[urlItems.length - 1]);
+            params.put(FieldNames.TITLE, urlItems[urlItems.length - 1]);
         }
 
         if (contentType.equals(Constants.JSON_CONTENT_TYPE)) {
             params = addFieldsFromJsonObject(params, content, "");
         } else if (!Utils.nullOrEmpty(content)) {
-            params.put(Constants.SOLR_FIELD_NAME_CONTENT, content);
+            params.put(FieldNames.CONTENT, content);
         }
 
         return createSolrDocument(params);
@@ -236,29 +214,44 @@ public class CoreServiceImpl implements CoreService {
         return params;
     }
 
-    public JSONObject getCoreInfo(String coreName) {
-        CoreAdminResponse coreAdminResponse = solrService.getCores();
-        return JsonParsingUtils.constructJSONObjectFromNamedList(coreAdminResponse.getCoreStatus(coreName));
+    public String getSchemaXML(String collectionName) {
+        if (Utils.nullOrEmpty(collectionName)) return "";
+
+        String uri = SolrUtils.getSolrZkSchemaURI(collectionName);
+        String schemaStr = HttpClientUtils.httpGetRequest(uri);
+        JSONObject schema = JSONUtils.convertStringToJSONObject(schemaStr);
+        return (String) JSONUtils.extractJSONProperty(schema, Arrays.asList(Solr.ZK_NODE, "data"), String.class, "");
     }
 
-    public int doSolrOperation(String coreName, int operation, HashMap<String, String> params, StringWriter writer) {
-        int success = Constants.SOLR_RESPONSE_CODE_ERROR;
-        String msg = Constants.SOLR_OPERATION_MSGS.get(operation);
+    public JSONObject getCollectionInfo(String collectionName) {
+        JSONObject collectionInfo = solrService.getCollectionInfo();
+        return JSONUtils.getJSONObjectValue(collectionInfo, collectionName);
+    }
 
-        writer.write("Performing operation " + msg.toLowerCase() + " on core " + coreName + ".\n");
+    public int doSolrOperation(String collection, int operation, JSONObject infoFieldParams, StringWriter writer) {
+        int success = Response.CODE_ERROR;
+        String msg = Operations.OPERATION_MSGS.get(operation);
+
+        writer.write("Performing operation " + msg.toLowerCase() + " on core " + collection + ".\n");
 
         try {
-            if (operation == Constants.SOLR_OPERATION_UPDATE) {
-                success = update(coreName);
-            } else if (operation == Constants.SOLR_OPERATION_DELETE) {
-                success = deleteIndex(coreName);
-            } else if (operation == Constants.SOLR_OPERATION_ADD_INFOFILES) {
-                success = addInfoFiles(coreName, params);
+            if (operation == Operations.OPERATION_UPDATE) {
+                success = update(collection);
+            } else if (operation == Operations.OPERATION_DELETE) {
+                success = deleteIndex(collection);
+            } else if (operation == Operations.OPERATION_ADD_INFOFILES) {
+                if (infoFieldParams != null) {
+                    success = addInfoFiles(collection, infoFieldParams);
+                } else {
+                    writer.write("Did not update info field parameters for " + collection + "\n");
+                }
+            } else if (operation == Operations.OPERATION_OPTIMIZE) {
+                success = optimizeIndex(collection);
             } else {
                 writer.write("Invalid operation code: " + operation + "\n");
             }
 
-            writer.write("\t" + msg + " success: " + Constants.SolrResponseSuccess(success) + "\n");
+            writer.write("\t" + msg + " success: " + Response.success(success) + "\n");
         } catch (SolrServerException e) {
             writer.write("\t" + msg + " failed with SolrServerException: " + e.getMessage() + "\n");
         } catch (IOException e) {

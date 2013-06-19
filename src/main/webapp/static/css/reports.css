@@ -1,0 +1,189 @@
+.info_div_header {
+    font-weight: bold;
+    margin-bottom:5px;
+    border: none;
+}
+
+.info_div_value {
+    width:380px;
+}
+
+.info_row {
+    padding: 4px 0;
+    border: 1px solid gray;
+}
+
+.info_row_hdr {
+    background: lightgray;
+}
+
+.metrics_info_div {
+    float : left;
+    text-align : center;
+    padding-right : 3px;
+    width: 115px;
+    font-weight : normal;
+    border-bottom: 1px solid sienna;
+}
+
+.metrics_info_div_first_col {
+    text-align: left;
+}
+
+.metrics_info_div_header {
+    font-weight : bold;
+}
+
+.metrics_info_div_wide {
+    width : 150px;
+}
+
+.metrics_info_container_div {
+    padding: 3px 0;
+}
+
+.accordion_hdr span {
+    display: inline-block;
+    padding-right: 6px;
+}
+
+#info {
+    padding-bottom: 30px;
+}
+
+#buttons {
+    float: left;
+    padding-bottom: 5px;
+    padding-top: 10px;
+    clear: both;
+}
+
+#buttons div {
+    width: 100%;
+    float: left;
+    padding: 5px;
+}
+
+#required_filter_div, #optional_filter_div, #sort_filter_div {
+    float: left;
+    width: 100%;
+    padding-bottom : 5px;
+}
+
+#required_filter_overlay {
+    visibility: hidden;
+    background: white;
+    border: 1px solid gray;
+    border-radius: 2px;
+    padding: 5px;
+}
+
+#filter_div select {
+    float: left;
+    padding: 2px;
+    margin: 3px 20px 3px 3px;
+    width: 200px;
+}
+
+#filter_div label {
+    float: left;
+    padding: 4px 4px;
+    width: 100px;
+    margin: 3px;
+    text-align: right;
+}
+
+#applied_filter_div span, #filter_div span {
+    float: left;
+    font-weight: bold;
+    background-color: lightsteelblue;
+    padding: 3px 10px;
+    margin: 3px;
+    border-radius: 3px;
+    border: 1px solid steelblue;
+    width: 130px;
+    text-align:center;
+}
+
+#filter_div fieldset, #metrics_div fieldset {
+    border: 1px solid gray;
+    border-radius: 5px;
+    padding: 10px 0 10px 20px;
+    margin: 10px 10px 20px 10px;
+    min-height: 40px;
+}
+
+#metrics_div fieldset {
+    margin: 10px 0 20px 0;
+}
+
+#filter_div legend, #metrics_div legend {
+    padding: 0 10px;
+}
+
+#current_filters, #sort_filters {
+    float:left;
+    min-height: 40px;
+    margin-bottom: 10px;
+    margin-left:30px;
+}
+
+#current_filters div, #sort_filters div {
+    float:left;
+}
+
+#current_filters a, #sort_filters a {
+    margin: 0 5px 5px 0;
+}
+
+#current_filters_container {
+    margin-top:10px;
+}
+
+#search_options_fieldset span {
+    float: left;
+    background-color: whitesmoke;
+    padding: 3px 10px;
+    border-radius: 3px;
+    border: 1px solid gray;
+    width: 100px;
+    margin: 3px;
+}
+
+#num_found {
+    margin: 10px 0;
+}
+
+#sort_order_select {
+    width: 70px;
+}
+
+#apply {
+    margin: 3px;
+}
+
+#date_filter_from_to_div {
+    float: left;
+    width: 337px;
+}
+
+#date_filter_from_to_div div {
+    float:left;
+}
+
+#date_filter_from_to_div label {
+    margin-top: 0;
+}
+
+#date_filter_from, #date_filter_to {
+    margin-left:2px;
+    padding: 2px 7px;
+    width: 185px;
+}
+
+#rows_input {
+    margin-left: 117px;
+    margin-top: 3px;
+    padding: 3px 5px;
+    width: 186px;
+}

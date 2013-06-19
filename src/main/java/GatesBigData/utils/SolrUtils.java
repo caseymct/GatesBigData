@@ -1,15 +1,16 @@
 package GatesBigData.utils;
 
+import GatesBigData.constants.Constants;
+import GatesBigData.constants.solr.*;
 import model.FacetFieldEntry;
 import model.FacetFieldEntryList;
 import model.SolrCollectionSchemaInfo;
+import model.SolrSchemaInfo;
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.fs.Path;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
-import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.util.SimpleOrderedMap;
 
 import java.util.*;
@@ -18,64 +19,31 @@ import java.util.regex.Pattern;
 
 public class SolrUtils {
 
-    public static final String SOLR_ENDPOINT         = "solr";
-    public static final String SOLR_SELECT_ENDPOINT  = "select";
-    public static final String ADMIN_FILE_ENDPOINT   = "admin/file";
-
     public static final String FACET_FIELD_REQ_DELIM            = "<field>";
     public static final String FACET_VALUES_REQ_DELIM           = "<values>";
     public static final String FACET_VALUE_OPTS_REQ_DELIM       = "<op>";
     public static final String FACET_DATE_RANGE_REQ_DELIM       = "<to>";
 
-    public static final String[] SOLR_CHARS_TO_ENCODE   = {  "-", "\\+", "\\[", "\\]", "\\(", "\\)",   ":"};
-    public static final String[] SOLR_CHARS_ENCODED_VAL = {"%96", "%2B", "%5B", "%5D", "%28", "%29", "%3A"};
+    public static final String SORT_FIELD_REQ_DELIM             = "<sortfield>";
+    public static final String SORT_ORDER_REQ_DELIM             = "<sortorder>";
 
-    static Pattern FIELDNAMES_TOIGNORE = Pattern.compile("^(attr|_).*|.*(version|batch|body|text_all|" +
-                                                         "HDFSKey|boost|digest|host|segment|tstamp).*");
+    public static Pattern SORT_PATTERN = Pattern.compile("(.*?)" + SORT_ORDER_REQ_DELIM + "(.*)");
 
-
-    static Pattern VIEW_FIELD_NAMES_TOIGNORE = Pattern.compile("^(attr|_).*|.*(version|batch|body|text_all|content|coreTitle|" +
-            "HDFSKey|HDFSSegment|structuredData|title|content_type|id|timestamp|url|cache|" +
-            "tstamp|signatureField|lang|boost|digest|host|segment|tstamp|Prefix|Suggest|facet).*");
-
-    static Pattern SUGGESTION_FIELDNAMES_TOIGNORE = Pattern.compile(Constants.SOLR_FIELD_NAME_ID + "|" +
-            Constants.SOLR_FIELD_NAME_CONTENT + "|" + Constants.SOLR_FIELD_NAME_COUNT + "|" +
-            Constants.SOLR_FIELD_NAME_TIMESTAMP + "|" + Constants.SOLR_FIELD_NAME_VERSION);
-
-    static Pattern SOLR_INFOFIELDS_PATTERN = Pattern.compile(StringUtils.join(Constants.SOLR_INFO_FIELD_NAMES, "|"));
 
     public static String getRelevantSuggestionField(SolrDocument doc) {
-        String field = (String) doc.getFieldNames().toArray()[2];
-        Matcher m = SUGGESTION_FIELDNAMES_TOIGNORE.matcher(field);
-        if (!m.matches()) return field;
-
         for(String name : doc.getFieldNames()) {
-           m = SUGGESTION_FIELDNAMES_TOIGNORE.matcher(name);
-           if (!m.matches()) {
-               return field;
+           if (!FieldNames.ignoreSuggestionFieldName(name)) {
+               return name;
            }
         }
         return "";
-    }
-
-    public static boolean ignoreFieldName(String fieldName) {
-        return VIEW_FIELD_NAMES_TOIGNORE.matcher(fieldName).matches();
-    }
-
-    public static boolean validFieldName(String fieldName, boolean isFacetField) {
-        Matcher m = FIELDNAMES_TOIGNORE.matcher(fieldName);
-        return (!isFacetField && fieldName.equals(Constants.SOLR_FIELD_NAME_HDFSKEY)) || !m.matches();
-    }
-
-    public static boolean nameIsInfoField(String name) {
-        return SOLR_INFOFIELDS_PATTERN.matcher(name.toUpperCase()).matches();
     }
 
     public static List<String> getAllViewFields(SolrDocument doc) {
         List<String> viewFields = new ArrayList<String>();
 
         for(String field : doc.getFieldNames()) {
-            if (!ignoreFieldName(field)) {
+            if (!FieldNames.ignoreFieldName(field)) {
                 viewFields.add(field);
             }
         }
@@ -85,19 +53,12 @@ public class SolrUtils {
     }
 
     private static String fieldQueryPartialString(String field, String word) {
-        boolean hasSpecialChars = word.matches(".*(" + StringUtils.join(SOLR_CHARS_TO_ENCODE, "|") + ").*");
+        boolean hasSpecialChars = Solr.hasCharsToEncode(word);
         if (hasSpecialChars) {
-            word = escapeSolrChars(word);
+            word = Solr.escape(word);
         }
 
         return "+" + field + ":" + word + (hasSpecialChars ? "" : "*");
-    }
-
-    public static String escapeSolrChars(String word) {
-        for(int i = 0; i < SOLR_CHARS_TO_ENCODE.length; i++) {
-            word = word.replaceAll(SOLR_CHARS_TO_ENCODE[i], SOLR_CHARS_ENCODED_VAL[i]);
-        }
-        return word;
     }
 
     public static String getSuggestionQuery(String field, String userInput) {
@@ -121,11 +82,11 @@ public class SolrUtils {
         return s.replaceAll(hlPre + "|" + hlPost, "");
     }
 
-    public static List<String> getValidFieldNamesSubset(Collection<String> fieldNames, boolean isFacetField) {
+    public static List<String> getValidFieldNamesSubset(Collection<String> fieldNames) {
         List<String> fieldNamesSubset = new ArrayList<String>();
 
         for(String fieldName : fieldNames) {
-            if (validFieldName(fieldName, isFacetField)) {
+            if (FieldNames.validFieldName(fieldName)) {
                 fieldNamesSubset.add(fieldName);
             }
         }
@@ -133,48 +94,62 @@ public class SolrUtils {
         return fieldNamesSubset;
     }
 
-    public static String getSolrServerURI(String coreName) {
-        return Utils.addToUrlIfNotEmpty(Constants.SOLR_SERVER + "/" + SOLR_ENDPOINT, coreName);
+    public static String getSolrServerURI(String collection) {
+        return Utils.constructAddress(Solr.SOLR_SERVER, collection);
     }
 
-    public static String getSolrSelectURI(String coreName) {
-        return new Path(getSolrServerURI(coreName), SOLR_SELECT_ENDPOINT).toString();
+    public static String getSolrZkConfigsDirURI() {
+        HashMap<String, String> urlParams = new HashMap<String, String>() {{
+            put("path", "/configs");
+        }};
+
+        return Utils.constructAddress(Solr.SOLR_SERVER_ZK_ENDPOINT, urlParams);
     }
 
-    public static String getSolrSchemaURI(String coreName) {
-        HashMap<String, String> urlParams = new HashMap<String, String>();
-        urlParams.put(Constants.CONTENT_TYPE_HEADER, Constants.XML_CONTENT_TYPE);
-        urlParams.put(Constants.CHARSET_ENC_KEY, Constants.UTF8);
-        urlParams.put(Constants.SOLR_PARAM_FILE, Constants.SOLR_SCHEMA_DEFAULT_FILE_NAME);
-
-        return new Path(getSolrServerURI(coreName), ADMIN_FILE_ENDPOINT).toString() + Utils.constructUrlParams(urlParams);
+    public static String getSolrLukeURI(String collection) {
+        HashMap<String, String> urlParams = new HashMap<String, String>() {{
+            put("wt", "json");
+        }};
+        String lukeAddress = Utils.constructAddress(getSolrServerURI(collection), Solr.LUKE_ENDPOINT);
+        return Utils.constructAddress(lukeAddress, urlParams);
     }
 
-    public static String getSolrCreateCollectionURI(String coreName, String name, int numShards, int replicationFactor) {
-        HashMap<String, String> urlParams = new HashMap<String, String>();
-        urlParams.put("action", "CREATE");
-        urlParams.put("name", name);
-        urlParams.put("numShards", numShards + "");
-        urlParams.put("replicationFactor", replicationFactor + "");
+    public static String getSolrZkSchemaURI(final String collectionName) {
+        HashMap<String, String> urlParams = new HashMap<String, String>() {{
+            put("detail", "true");
+            put("path", "/configs/" + collectionName + "/" + Solr.SOLR_SCHEMA_FILE);
+        }};
 
-        return getSolrServerURI(coreName) + "/admin/collections" + Utils.constructUrlParams(urlParams);
+        return Utils.constructAddress(Solr.SOLR_SERVER_ZK_ENDPOINT, urlParams);
+    }
+
+    public static String getSolrSchemaURI(String collection) {
+        HashMap<String, String> urlParams = new HashMap<String, String>() {{
+            put(Constants.CONTENT_TYPE_HEADER, Constants.XML_CONTENT_TYPE);
+            put(Constants.CHARSET_ENC_KEY, Constants.UTF8);
+            put(QueryParams.FILE, Solr.SOLR_SCHEMA_FILE);
+        }};
+
+        return Utils.constructAddress(Solr.SOLR_SERVER, Arrays.asList(collection, "admin", "file"), urlParams);
+    }
+
+    public static String getSolrClusterStateURI() {
+        HashMap<String, String> params = new HashMap<String, String>() {{
+            put("detail", "true");
+            put("path", "/" + Solr.ZK_CLUSTERSTATE_FILE);
+        }};
+       return Utils.constructAddress(Solr.SOLR_SERVER_ZK_ENDPOINT, params);
     }
 
     public static SolrQuery.ORDER getSortOrder(String sortOrder) {
-        return sortOrder.equals("asc") ? SolrQuery.ORDER.asc : SolrQuery.ORDER.desc;
+        if (sortOrder == null) {
+            return Defaults.SORT_ORDER;
+        }
+        return sortOrder.equals(SolrQuery.ORDER.asc.toString()) ? SolrQuery.ORDER.asc : SolrQuery.ORDER.desc;
     }
 
     public static String getDocumentContentType(SolrDocument doc) {
-        String contentType = (String) getFieldValue(doc, Constants.SOLR_FIELD_NAME_CONTENT_TYPE);
-        return !Utils.nullOrEmpty(contentType) ? contentType : Constants.TEXT_CONTENT_TYPE;
-    }
-
-    public static List<String> getFieldsFromInfoString(String infoString) {
-        List<String> fieldList = new ArrayList<String>();
-        for(String fullField : infoString.split(",")) {
-            fieldList.add(fullField.split(":")[0].trim());
-        }
-        return fieldList;
+        return getFieldStringValue(doc, FieldNames.CONTENT_TYPE, Constants.TEXT_CONTENT_TYPE);
     }
 
     public static Object getFieldValue(SolrDocument doc, String fieldName) {
@@ -182,36 +157,37 @@ public class SolrUtils {
     }
 
     public static String getFieldStringValue(SolrDocument doc, String fieldName, String defaultValue) {
-        if (doc == null || !doc.containsKey(fieldName)) {
+        Object val = getFieldValue(doc, fieldName);
+        if (val == null) {
             return defaultValue;
         }
-        Object val = doc.get(fieldName);
-        return (val instanceof ArrayList) ? StringUtils.join((ArrayList) val, ",") : val.toString();
+
+        return val instanceof ArrayList ? StringUtils.join((ArrayList) val, ",") : val.toString();
+    }
+
+    public static Date getFieldDateValue(SolrDocument doc, String fieldName) {
+        Object val = getFieldValue(doc, fieldName);
+        if (val == null) {
+            return null;
+        }
+        if (val instanceof Date) {
+            return (Date) val;
+        }
+        return DateUtils.getDateFromDateString(val.toString());
     }
 
     public static String getResponseHeaderParam(QueryResponse rsp, String param) {
-        SimpleOrderedMap paramMap = (SimpleOrderedMap) rsp.getHeader().get(Constants.SOLR_RESPONSE_HEADER_PARAMS_KEY);
+        SimpleOrderedMap paramMap = (SimpleOrderedMap) rsp.getHeader().get(Response.HEADER_PARAMS_KEY);
         String paramValue = (String) paramMap.get(param);
         return paramValue != null ? paramValue : "";
     }
 
-    public static String getSuggestionCoreName(String coreName) {
-        return coreName + Constants.SOLR_SUGGEST_CORE_SUFFIX;
-    }
-
-    public static String getFacetDisplayName(String name) {
-        if (name.endsWith(Constants.SOLR_FIELD_TYPE_FACET_SUFFIX)) {
-            return name.substring(0, name.lastIndexOf(Constants.SOLR_FIELD_TYPE_FACET_SUFFIX));
-        }
-        return name;
-    }
-
     public static boolean isLocalDirectory(SolrDocument doc) {
-        if (doc.containsKey(Constants.SOLR_FIELD_NAME_TITLE)) {
-            Object title = doc.get(Constants.SOLR_FIELD_NAME_TITLE);
+        if (doc.containsKey(FieldNames.TITLE)) {
+            Object title = doc.get(FieldNames.TITLE);
             String titleContents = "";
             if (title instanceof ArrayList) {
-                titleContents = (String) ((ArrayList) doc.get(Constants.SOLR_FIELD_NAME_TITLE)).get(0);
+                titleContents = (String) ((ArrayList) doc.get(FieldNames.TITLE)).get(0);
             } else if (title instanceof String) {
                 titleContents = (String) title;
             }
@@ -239,17 +215,23 @@ public class SolrUtils {
     private static String composeFQString(HashMap<String, Set<String>> fqComponents) {
         String fqStr = "";
         for(Map.Entry<String, Set<String>> entry : fqComponents.entrySet()) {
-            String value = StringUtils.join(entry.getValue(), " OR ");
-            if (entry.getValue().size() > 1) {
-                value = "(" + value + ")";
+            Set<String> values = entry.getValue();
+            if (values.remove(FieldTypes.NULL_STRING)) {
+                fqStr += "-" + entry.getKey() + ":[* TO *] ";
             }
-            fqStr += "+" + entry.getKey() + ":" + value + " ";
+            if (values.size() > 0) {
+                String value = StringUtils.join(values, " OR ");
+                if (values.size() > 1) {
+                    value = "(" + value + ")";
+                }
+                fqStr += "+" + entry.getKey() + ":" + value + " ";
+            }
         }
 
         return fqStr.trim();
     }
 
-    public static String composeFilterQuery(String fq, SolrCollectionSchemaInfo schemaInfo) {
+    public static String composeFilterQuery(String fq, SolrCollectionSchemaInfo info) {
         if (Utils.nullOrEmpty(fq)) {
             return null;
         }
@@ -264,18 +246,62 @@ public class SolrUtils {
             HashSet<String> values    = new HashSet<String>();
 
             for(String value : fqComponentArray[1].split(FACET_VALUE_OPTS_REQ_DELIM)) {
-                if (schemaInfo.fieldTypeIsNumber(field)) {
+                if (info.fieldTypeIsNumber(field)) {
                     values.add(value);
-                } else if (schemaInfo.fieldTypeIsDate(field)) {
+                } else if (info.fieldTypeIsDate(field)) {
                     values.add(getFQDateString(value));
                 } else {
-                    values.add("\"" + value + "\"");
+                    values.add(quoteStringIfNotNull(value));
                 }
             }
             fqComponents = setFQValues(fqComponents, field, values);
         }
 
         return composeFQString(fqComponents);
+    }
+
+    private static String quoteStringIfNotNull(String s) {
+        return s.equals(FieldTypes.NULL_STRING) ? FieldTypes.NULL_STRING : "\"" + s + "\"";
+    }
+
+    public static List<SolrQuery.SortClause> getSortClauses(String sortInfo, String sortOrder) {
+        if (sortInfo == null) {
+            return null;
+        }
+        if (sortOrder == null || sortInfo.contains(SORT_FIELD_REQ_DELIM)) {
+            return getSortClauses(sortInfo);
+        }
+        List<SolrQuery.SortClause> sortClauses = new ArrayList<SolrQuery.SortClause>();
+        sortClauses.add(new SolrQuery.SortClause(sortInfo, sortOrder));
+        return sortClauses;
+    }
+
+    public static List<SolrQuery.SortClause> getSortClauses(String sortInfo) {
+        List<SolrQuery.SortClause> sortClauses = new ArrayList<SolrQuery.SortClause>();
+
+        if (sortInfo == null) {
+            sortClauses.add(Defaults.SORT_CLAUSE);
+        } else {
+            for(String sortClauseData : sortInfo.split(SORT_FIELD_REQ_DELIM)) {
+                if (Utils.nullOrEmpty(sortClauseData)) continue;
+
+                Matcher m = SORT_PATTERN.matcher(sortClauseData);
+                if (m.matches()) {
+                    sortClauses.add(new SolrQuery.SortClause(m.group(1), getSortOrder(m.group(2))));
+                }
+            }
+        }
+        return sortClauses;
+    }
+
+    public static List<SolrQuery.SortClause> createSortClauseList(String sortField, String sortOrder) {
+        return createSortClauseList(sortField, getSortOrder(sortOrder));
+    }
+
+    public static List<SolrQuery.SortClause> createSortClauseList(String sortField, SolrQuery.ORDER sortOrder) {
+        sortField = Utils.returnIfNotNull(sortField, Defaults.SORT_FIELD);
+        sortOrder = Utils.returnIfNotNull(sortOrder, Defaults.SORT_ORDER);
+        return Arrays.asList(new SolrQuery.SortClause(sortField, sortOrder));
     }
 
     public static String getFacetFieldDisplayString(FacetField.Count count, boolean isDate) {
@@ -297,35 +323,20 @@ public class SolrUtils {
         return facetFieldDisplayStr + " (" + count.getCount() + ")";
     }
 
-    public static FacetFieldEntryList constructFacetFieldEntryList(String facetFieldInfo, SolrCollectionSchemaInfo schemaInfo) {
-        FacetFieldEntryList facetFieldEntryList = new FacetFieldEntryList();
-
-        if (Utils.nullOrEmpty(facetFieldInfo)) {
-            return schemaInfo.getFacetFieldEntryList();
+    public static FacetFieldEntryList constructFacetFieldEntryList(Collection facetFields, FacetFieldEntryList allFacetFields) {
+        if (Utils.nullOrEmpty(facetFields)) {
+            return allFacetFields;
         }
 
-        FacetFieldEntryList allFacetFields = schemaInfo.getFacetFieldEntryList();
+        FacetFieldEntryList facetFieldEntryList = new FacetFieldEntryList();
 
-        for(String ret : facetFieldInfo.split(",")) {
-            String[] n = ret.split(":");
-            FacetFieldEntry entry = allFacetFields.get(n[0]);
+        for(Object facetField : facetFields) {
+            FacetFieldEntry entry = allFacetFields.get(facetField.toString());
             if (entry != null) {
                 facetFieldEntryList.add(entry);
             }
         }
 
         return facetFieldEntryList;
-    }
-
-    public static HashMap<String, List<String>> getSegmentToFilesMap(SolrDocumentList docs) {
-        HashMap<String, List<String>> segToFileMap = new HashMap<String, List<String>>();
-
-        for (SolrDocument doc : docs) {
-            String hdfsSeg = (String) doc.getFieldValue(Constants.SOLR_FIELD_NAME_HDFSSEGMENT);
-            List<String> fileNames = segToFileMap.containsKey(hdfsSeg) ? segToFileMap.get(hdfsSeg) : new ArrayList<String>();
-            fileNames.add((String) doc.getFieldValue(Constants.SOLR_FIELD_NAME_HDFSKEY));
-            segToFileMap.put(hdfsSeg, fileNames);
-        }
-        return segToFileMap;
     }
 }

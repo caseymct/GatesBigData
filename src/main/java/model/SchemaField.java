@@ -1,6 +1,9 @@
 package model;
 
-import GatesBigData.utils.Constants;
+import GatesBigData.constants.Constants;
+import GatesBigData.constants.solr.FieldNames;
+import GatesBigData.constants.solr.FieldTypes;
+import org.apache.james.mime4j.dom.field.FieldName;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
@@ -54,15 +57,23 @@ public class SchemaField {
     }
 
     public boolean isCoreTitleField() {
-        return this.name.equals(Constants.SOLR_FIELD_NAME_CORE_TITLE);
+        return this.name.equals(FieldNames.CORE_TITLE);
     }
 
     public boolean isSuggestionCoreField() {
-        return this.name.equals(Constants.SOLR_FIELD_NAME_SUGGESTION_CORE);
+        return this.name.equals(FieldNames.SUGGESTION_CORE);
     }
 
     public boolean isStructuredDataField() {
-        return this.name.equals(Constants.SOLR_FIELD_NAME_STRUCTURED_DATA);
+        return this.name.equals(FieldNames.STRUCTURED_DATA);
+    }
+
+    public boolean isPrefixTokenType() {
+        return FieldTypes.isPrefixTokenType(this.type);
+    }
+
+    public boolean isDateType() {
+        return FieldTypes.isDateType(this.type);
     }
 
     public String getName() {

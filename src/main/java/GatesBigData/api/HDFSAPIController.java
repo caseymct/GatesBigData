@@ -1,7 +1,12 @@
 package GatesBigData.api;
 
-import GatesBigData.utils.Constants;
+import GatesBigData.constants.Constants;
 import net.sf.json.JSONObject;
+import org.apache.avro.Schema;
+import org.apache.avro.file.DataFileReader;
+import org.apache.avro.generic.GenericDatumReader;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.io.DatumReader;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.log4j.Logger;
@@ -14,9 +19,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import service.HDFSService;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.HashMap;
 import java.util.List;
 
 import static java.util.Collections.singletonList;
@@ -73,6 +78,23 @@ public class HDFSAPIController extends APIController {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(StringUtils.join(files, "\n"), httpHeaders, OK);
+    }
+
+    @RequestMapping(value = "/getfields", method = RequestMethod.GET)
+    public ResponseEntity<String> getFields() {
+        String hdfsFile = "/user/hdfs/AP_data_collection/gcca.gcca_ariba_alltables_data/part-m-00000.avro";
+
+        DatumReader<GenericRecord> datumReader = new GenericDatumReader<GenericRecord>();
+        try {
+            DataFileReader<GenericRecord> dataFileReader = new DataFileReader<GenericRecord>(new File(hdfsFile), datumReader);
+            Schema schema = dataFileReader.getSchema();
+            int a = 10;
+        } catch (IOException e) {
+            logger.error(e.getMessage());
+        }
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
+        return new ResponseEntity<String>("", httpHeaders, OK);
     }
 
     @RequestMapping(value = "/nutch/listincrawl", method = RequestMethod.GET)

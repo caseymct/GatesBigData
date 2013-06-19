@@ -1,6 +1,6 @@
 package GatesBigData.api;
 
-import GatesBigData.utils.Constants;
+import GatesBigData.constants.Constants;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpHeaders;

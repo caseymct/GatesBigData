@@ -1,5 +1,7 @@
 package GatesBigData.utils;
 
+import GatesBigData.constants.Constants;
+import GatesBigData.constants.solr.Solr;
 import model.ValueComparator;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.httpclient.util.URIUtil;
@@ -30,7 +32,7 @@ public class Utils {
             logger.error(e.getMessage());
         }
 
-        return Constants.PRODUCTION_SERVER.contains(localhost);
+        return Solr.SOLR_SERVER.contains(localhost);
     }
 
     public static List<String> getTokens(String d, String delimiter) {
@@ -76,6 +78,30 @@ public class Utils {
         return s.replaceAll("&amp;", "&");
     }
 
+    public static <T> Object returnIfFieldExists(Map m, String field) {
+        return m.containsKey(field) ? m.get(field) : null;
+    }
+
+    public static <T> Object returnValueIfFieldExists(Map m, String field) {
+        return m.containsKey(field) ? m.get(field) : null;
+    }
+
+    public static <T> Object returnValueIfFieldExists(Map m, String field, Object defaultValue) {
+        return m.containsKey(field) ? m.get(field) : defaultValue;
+    }
+
+    public static boolean returnBoolValueIfExists(Map m, String field) {
+        return Boolean.parseBoolean(returnStringValueIfFieldExists(m, field, "false"));
+    }
+
+    public static String returnStringValueIfFieldExists(Map m, String field) {
+        return returnStringValueIfFieldExists(m, field, "");
+    }
+
+    public static String returnStringValueIfFieldExists(Map m, String field, String defaultValue) {
+        return returnValueIfFieldExists(m, field, defaultValue).toString();
+    }
+
     public static <T> boolean nullOrEmpty(T t) {
         if (t == null) return true;
 
@@ -109,8 +135,38 @@ public class Utils {
         return file.endsWith(ext);
     }
 
-    public static String addToUrlIfNotEmpty(String url, String endpoint) {
-        return nullOrEmpty(endpoint) ? url : url + "/" + endpoint;
+    public static String constructAddress(String protocol, String server, int port) {
+        return protocol + server + ":" + port;
+    }
+
+    public static String constructAddress(String protocol, String server, int port, String endpoint) {
+        return constructAddress(protocol, server, port, Arrays.asList(endpoint));
+    }
+
+    public static String constructAddress(String protocol, String server, int port, List<String> endpoints) {
+        String uri = constructAddress(protocol, server, port);
+        return constructAddress(uri, endpoints);
+    }
+
+    public static String constructAddress(String uri, String endpoint) {
+        return constructAddress(uri, Arrays.asList(endpoint));
+    }
+
+    public static String constructAddress(String uri, List<String> endpoints) {
+        for(String endpoint : endpoints) {
+            if (!nullOrEmpty(endpoint)) {
+                uri += "/" + endpoint.replaceAll("^/|/$", "");
+            }
+        }
+        return uri;
+    }
+
+    public static String constructAddress(String uri, List<String> endpoints, HashMap<String, String> params) {
+        return constructAddress(uri, endpoints) + constructUrlParams(params);
+    }
+
+    public static String constructAddress(String uri, HashMap<String, String> params) {
+        return uri + constructUrlParams(params);
     }
 
     private static List<String> getParamListFromHashMap(HashMap<String, String> params) {
@@ -187,6 +243,14 @@ public class Utils {
         }
     }
 
+    public static void writeJSONArray(String key, List values, JsonGenerator g) throws IOException {
+        g.writeArrayFieldStart(key);
+        for(Object o : values) {
+            writeValueByType(o, g);
+        }
+        g.writeEndArray();
+    }
+
     public static void writeValueByType(String key, Object value, JsonGenerator g) throws IOException {
         if (value == null) {
             g.writeNullField(key);
@@ -201,6 +265,13 @@ public class Utils {
                 g.writeNumberField(key, (Float) value);
             } else if (value instanceof Long) {
                 g.writeNumberField(key, (Long) value);
+            }
+        } else if (value instanceof ArrayList) {
+            ArrayList c = (ArrayList) value;
+            if (c.size() == 1) {
+                g.writeStringField(key, new String(c.get(0).toString().getBytes(), Charset.forName(Constants.UTF8)));
+            } else {
+                writeJSONArray(key, c, g);
             }
         } else {
             g.writeStringField(key, new String(value.toString().getBytes(), Charset.forName(Constants.UTF8)));
@@ -223,7 +294,7 @@ public class Utils {
                 g.writeNumber((Long) value);
             }
         } else {
-            g.writeString(new String(value.toString().getBytes(), Charset.forName("UTF-8")));
+            g.writeString(new String(value.toString().getBytes(), Charset.forName(Constants.UTF8)));
         }
     }
 

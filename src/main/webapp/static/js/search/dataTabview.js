@@ -112,7 +112,9 @@ var DATA_TABVIEW = {};
     }
 
     function getFilterQueryString() {
-        return FACET.util.getFacetFilterQueryString() + DATEPICK.util.getDateConstraintFilterQueryString();
+        return UI.getFilterOptionsQueryString(UI.FACET.FACET_OPTIONS_DIV_EL_NAME,
+                                              UI.combineFacetValues, UI.formatFacetString) +
+               DATEPICK.util.getDateConstraintFilterQueryString();
     }
 
     function search() {

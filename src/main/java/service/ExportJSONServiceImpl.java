@@ -16,13 +16,6 @@ public class ExportJSONServiceImpl extends ExportService {
 
     private JsonGenerator g;
 
-    /*
-    private HDFSService hdfsService;
-    @Autowired
-    public void setServices(HDFSService hdfsService) {
-        this.hdfsService = hdfsService;
-    } */
-
     public void beginExportWrite(Writer writer) throws IOException {
         JsonFactory f = new JsonFactory();
         g = f.createJsonGenerator(writer);

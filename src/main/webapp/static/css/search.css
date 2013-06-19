@@ -364,12 +364,46 @@ form div.fieldset_row_button_div {
     overflow: hidden;
     float: right;
     width: 400px;
-    /*height: 400px;*/
+    margin-top:18px;
+}
+
+#preview_container span {
+    margin-left: 5px;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+#preview_container a {
+    float:right;
+}
+
+#preview_image {
+    font-size: 10px;
+}
+
+#preview_records {
+    padding: 5px;
+    margin-left: 5px
+}
+
+#preview_container img {
+    height: 400px;
+    width: 400px;
 }
 
 #constrain_by_date {
     padding: 10px;
     width: 600px;
+}
+
+#preview_row {
+    float: left;
+    padding:2px;
+}
+
+#preview_row div {
+    float: left;
+    width: 190px;
 }
 
 #date_begin, #date_end {

@@ -81,3 +81,34 @@
     float: left;
     width: 100%;
 }
+
+#plot_options input[type = 'checkbox'] {
+    margin-top:6px;
+    float:left;
+}
+
+#plot_options input[type = 'text'] {
+    padding: 2px;
+    float: left;
+    margin-top: 2px;
+}
+
+#plot_options label {
+    padding: 3px;
+    float: left;
+    width: 230px;
+}
+
+#plot_options select {
+    margin-left: 5px;
+    float: left;
+    margin-top: 2px;
+    padding: 1px;
+    width: 100px;
+}
+
+#plot_options div {
+    width: 100%;
+    float: left;
+    padding: 5px;
+}

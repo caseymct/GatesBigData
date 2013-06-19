@@ -227,8 +227,8 @@ public class WordTree {
         g.writeArrayFieldStart(SOLR_IDS_KEY);
         for(String solrId : curr.getSolrIds()) {
             g.writeStartObject();
-            Utils.writeValueByType(Constants.SOLR_FIELD_NAME_ID, solrId, g);
-            Utils.writeValueByType(Constants.SOLR_FIELD_NAME_TITLE, Utils.getObjectIfExists(solrIDToTitleMap, solrId, ""), g);
+            Utils.writeValueByType(ReportConstants.SOLR_FIELD_NAME_ID, solrId, g);
+            Utils.writeValueByType(ReportConstants.SOLR_FIELD_NAME_TITLE, Utils.getObjectIfExists(solrIDToTitleMap, solrId, ""), g);
             g.writeEndObject();
         }
         g.writeEndArray();    */

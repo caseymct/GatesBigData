@@ -10,61 +10,25 @@
 
     <div id="solr_cores"></div>
 
-    <!--
-    <form id="create_core_form">
-        <div id="create_new_core_div">
-            <h4 id="create_new_core_header">Create new core</h4>
-            <div class="index_row">
-                <label for="new_core_name" id = "new_core_name_label" class="index_label"><span class="red">*</span>Name: </label>
-                <input id="new_core_name" type="text" class="index_input"/>
-            </div>
-            <div class="index_row">
-                <label for="instance_dir" id = "instance_dir_label" class="index_label">Instance directory: </label>
-                <input id="instance_dir" type="text" class="index_input" value="solr/{name}"/>
-            </div>
-            <div class="index_row">
-                <label for="data_dir" id = "data_dir_label" class="index_label">Data directory: </label>
-                <input id="data_dir" type="text" class="index_input" value="solr/{name}/data"/>
-            </div>
-            <div class="index_row">
-                <label for="config_file_name" id = "config_file_name_label" class="index_label">Config file: </label>
-                <input id="config_file_name" type="text" value="solrconfig.xml" class="index_input"/>
-            </div>
-            <div class="index_row">
-                <label for="schema_file_name" id = "schema_file_name_label" class="index_label">Schema file: </label>
-                <input id="schema_file_name" type="text" value="schema.xml" class="index_input"/>
-            </div>
-
-            <div class="buttons index_buttons">
-                <a href="#" class="button small" id="create">Create</a>
-            </div>
-            <div class = "index_row"></div>
-        </div>
-    </form> -->
-
     <script type="text/javascript">
     (function() {
-        var     Dom = YAHOO.util.Dom,              Event = YAHOO.util.Event,
-            Connect = YAHOO.util.Connect,           Json = YAHOO.lang.JSON,
-           Overlay = YAHOO.widget.Overlay,  SimpleDialog = YAHOO.widget.SimpleDialog;
+        var Dom     = YAHOO.util.Dom,        Event        = YAHOO.util.Event,
+            Connect = YAHOO.util.Connect,    Json         = YAHOO.lang.JSON,
+            Overlay = YAHOO.widget.Overlay,  SimpleDialog = YAHOO.widget.SimpleDialog;
 
         var REINDEX = 0, EMPTY = 1, THUMB = 2;
         
-        var solrCoresDiv              = Dom.get("solr_cores"),
-            coreData                  = "",
-            dlgCSSClass               = "yui-pe-content",
-            overlayClearBothDomElName = "overlay_clearboth",
-            contentContainerDivElName = "content_container",
-            buttonDownOverlayCSSClass = "button down-big-overlay",
-            buttonUpOverlayCSSClass   = "button up-big-overlay",
-            reindexPrefix             = "reindex_",
-            emptyPrefix               = "empty_",
-            thumbPrefix               = "thumb_",
-            dlgDivSubstr              = "dlg_div_",
-            reindexDlgDivPrefix       = reindexPrefix + dlgDivSubstr,
-            emptyDlgDivPrefix         = emptyPrefix + dlgDivSubstr,
-            thumbDlgDivPrefix         = thumbPrefix + dlgDivSubstr,
-            contentContainer          = Dom.get(contentContainerDivElName);
+        var solrCoresDiv              = Dom.get("solr_cores"),          dlgCSSClass               = "yui-pe-content",
+            overlayClearBothDomElName = "overlay_clearboth",            contentContainerDivElName = "content_container",
+            buttonDownOverlayCSSClass = "button down-big-overlay",      buttonUpOverlayCSSClass   = "button up-big-overlay",
+            reindexPrefix             = "reindex_",                     emptyPrefix               = "empty_",
+            thumbPrefix               = "thumb_",                       dlgDivSubstr              = "dlg_div_",
+            reindexDlgDivPrefix       = reindexPrefix + dlgDivSubstr,   emptyDlgDivPrefix         = emptyPrefix + dlgDivSubstr,
+            thumbDlgDivPrefix         = thumbPrefix + dlgDivSubstr,     contentContainer          = Dom.get(contentContainerDivElName),
+            structuredDataKey         = 'structuredData';
+
+        var collectionData = {},
+            collectionNames = [];
 
         function getOverlayName(coreName)           { return "overlay_" + coreName; }
         function getOverlayShowButtonName(coreName) { return "show_overlay_" + coreName; }
@@ -162,22 +126,26 @@
 
         }
 
-        function buildOverlayHTML(parentNode, coreInfo) {
-            var i, d, allDataStrings = recursiveGetKeys(coreInfo, "", []),
-                name = coreInfo.name;
+        function buildOverlayHTML(parentNode, name) {
+            var i, d, structured = collectionData[name][structuredDataKey];
 
-            for(i = 0; i < allDataStrings.length; i+=2) {
-                d = UI.addDomElementChild('div', parentNode, null, { float: "left", width: "100%" });
-                UI.addDomElementChild('p', d, { innerHTML: allDataStrings[i++]}, { float: "left", width: "340px" });
-                if (i < allDataStrings.length) UI.addDomElementChild('p', d, { innerHTML: allDataStrings[i]}, { float: "left" });
-            }
-
-            d = UI.addDomElementChild('div', parentNode, null, { id: name + "_info_div", float: "left", width: "100%", "padding-top": "30px" });
-            UI.addDomElementChild('p', d, { id: name + "_ops_div", innerHTML: "Operations: "}, { "font-weight" : "bold", float: "left", width: "100%" });
+            d = UI.addDomElementChild('div', parentNode, null, { id: name + "_info_div", float: "left", width: "100%"});
+            UI.addDomElementChild('p', d, { id: name + "_ops_div", innerHTML: "Operations: "},
+                    { "font-weight" : "bold", float: "left", width: "100%", 'margin-top' : '10px' });
 
             UI.addDomElementChild('input', d, { id: getButtonId(name, REINDEX), type: "button", value: "Reindex Solr Core from HDFS"}, { padding: "5px" });
             UI.addDomElementChild('input', d, { id: getButtonId(name, EMPTY), type: "button", value: "Empty Index"}, { padding: "5px", "margin-left": "10px" });
-            UI.addDomElementChild('input', d, { id: getButtonId(name, THUMB), type: "button", value: "Create Thumbnails"}, { padding: "5px", "margin-left": "10px" });
+
+            if (structured == 'false') {
+                UI.addDomElementChild('input', d, { id: getButtonId(name, THUMB), type: "button", value: "Create Thumbnails"},
+                    { padding: "5px", "margin-left": "10px" });
+            }
+
+            var s = collectionData[name]['shards'];
+            d = UI.addDomElementChild('div', parentNode, null, { float: "left", width: "100%", 'margin-top' : '30px' });
+            UI.addDomElementChild('p', d, { innerHTML: "Collection information: " }, { float: "left", width: "100%", 'font-weight' : 'bold' });
+            UI.addDomElementChild('p', d, { innerHTML: UI.util.jsonSyntaxHighlight(s)}, { float: "left", width: "340px" });
+
 
             buildReindexDlgHtml(parentNode, name);
             //UI.insertDomElementAfter('div', parentNode, { id: getDlgDivId(name, REINDEX)});
@@ -188,18 +156,21 @@
             var emptyDlg = UI.createSimpleDlg(getDlgDivId(name, EMPTY), "Confirm", "Empty core " + name + "?", empty);
             Event.addListener(getButtonId(name, EMPTY), "click", function(e) { emptyDlg.show(); });
 
-            UI.insertDomElementAfter('div', parentNode, { id: getDlgDivId(name, THUMB)});
-            var thumbDlg = UI.createSimpleDlg(getDlgDivId(name, THUMB), "Confirm", "Create thumbnails for core " + name + "?", createThumbnail);
-            Event.addListener(getButtonId(name, THUMB), "click", function(e) { thumbDlg.show(); });
+            if (structured == 'false') {
+                UI.insertDomElementAfter('div', parentNode, { id: getDlgDivId(name, THUMB)});
+                var thumbDlg = UI.createSimpleDlg(getDlgDivId(name, THUMB), "Confirm", "Create thumbnails for core " + name + "?", createThumbnail);
+                Event.addListener(getButtonId(name, THUMB), "click", function(e) { thumbDlg.show(); });
+            }
         }
 
         // edit core page? http://localhost:8080/LucidWorksApp/core/empty?core=collection1
         Connect.asyncRequest('GET', '<c:url value="/solr/info/all" />' , {
             success : function(o) {
-                coreData = Json.parse(o.responseText);
+                collectionData = Json.parse(o.responseText);
+                collectionNames = Object.keys(collectionData);
 
-                for(var i = 0; i < coreData.length; i++) {
-                    var name = coreData[i].name;
+                for(var i = 0; i < collectionNames.length; i++) {
+                    var name = collectionNames[i];
                     var d = UI.addDomElementChild('div_' + name, solrCoresDiv, {}, { float: "left", width: "100%", "padding-bottom" : "30px" });
                     UI.addDomElementChild('a', d, {id: getOverlayShowButtonName(name), innerHTML: "Show Core " + name},
                             {class : buttonDownOverlayCSSClass} );
@@ -207,9 +178,9 @@
                             { visibility: "hidden", background:"white", border: "1px solid gray", "border-radius": "2px", padding: "5px"});
                     UI.addDomElementChild('div', d, null, {class: "clearboth"});
 
-                    buildOverlayHTML(overlay, coreData[i]);
+                    buildOverlayHTML(overlay, name);
                 }
-                UI.addDomElementChild('div', solrCoresDiv, { id: overlayClearBothDomElName}, {class: "clearboth"});
+                UI.addDomElementChild('div', solrCoresDiv, { id: overlayClearBothDomElName }, { class: "clearboth"});
             },
             failure : function (o) {
                 alert("Could not retrieve core information.");
@@ -217,8 +188,8 @@
         });
 
         Event.onContentReady(overlayClearBothDomElName, function() {
-            for(var i = 0; i < coreData.length; i++) {
-                var name = coreData[i].name,
+            for(var i = 0; i < collectionNames.length; i++) {
+                var name = collectionNames[i],
                     overlayDivElName = getOverlayName(name),
                     showOverlayButtonElName = getOverlayShowButtonName(name);
 
@@ -239,25 +210,6 @@
                 }, [overlay, showOverlayButtonElName], true);
             }
 
-        });
-
-        Event.addListener("create", "click", function(e) {
-            Event.stopEvent(e);
-
-            var newcoreinfo =  { "corename" : Dom.get("new_core_name").value };
-
-            Connect.initHeader('Content-Type', 'application/json');
-            Connect.setDefaultPostHeader('application/json');
-            Connect.asyncRequest('POST', '<c:url value="/core/create" />' , {
-                success: function (o) {
-                    if (!UI.alertErrors(o)) {
-                        window.location.reload();
-                    }
-                },
-                failure: function (e) {
-                    alert("Could not create new collection");
-                }
-            }, YAHOO.lang.JSON.stringify(newcoreinfo));
         });
 
     })();

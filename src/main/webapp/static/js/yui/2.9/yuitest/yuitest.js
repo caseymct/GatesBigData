@@ -397,7 +397,7 @@ YAHOO.tool.TestRunner = (function(){
     YAHOO.lang.extend(TestRunner, YAHOO.util.EventProvider, {
     
         //-------------------------------------------------------------------------
-        // Constants
+        // ReportConstants
         //-------------------------------------------------------------------------
          
         /**

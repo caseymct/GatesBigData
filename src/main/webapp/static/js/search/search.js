@@ -19,12 +19,12 @@ SEARCH.util = {};
         Connect = YAHOO.util.Connect,   LocalDS     = YAHOO.util.LocalDataSource,
         Button  = YAHOO.widget.Button,  Panel       = YAHOO.widget.Panel;
 
-    var colStringMaxChars     = 20,                  colDateStringMaxChars       = 30,
-        rowsPerPage           = 10,                  queryDefaultValue           = '*:*',
+    var rowsPerPage           = 10,                  queryDefaultValue           = '*:*',
 
         // button IDs
         submitButtonElId      = 'submit',            resetButtonElId             = 'reset',
         exportButtonElId      = 'export',            analyzeButtonElId           = 'analyze',
+        reportsButtonElId     = 'reports',
 
         // other DOM IDs
 		previewDataId         = 'preview_image',     showQueryElId               = 'show_query',
@@ -33,18 +33,13 @@ SEARCH.util = {};
         sortByDivElId         = 'sort_by_div',       searchResultsElId           = 'search_results',
         previewContainerElId  = 'preview_container', sortBySelectElId            = 'sort_date_label',
         showQueryElIdBody     = 'show_query_text',   showQueryButtonElId         = 'show_query_button',
-        showQueryCloseElId    = 'show_query_close',
+        previewZoomInElId     = 'preview_zoom_in',   previewZoomOutElId          = 'preview_zoom_out',
+        previewRecordRowDivElId = 'preview_row',     previewRecordsElId          = 'preview_records',
 
         // solr
-        solrResponseKey       = 'response',          solrResponseFacetKey        = 'facet_counts',
-        solrResponseDocsKey   = 'docs',              solrResponseNumFoundKey     = 'num_found',
-        solrDocIdFieldName    = 'id',                solrResponseHighlightingKey = 'highlighting',
+        solrDocIdFieldName    = 'id',
         solrDocContentsKey    = 'content',           solrDocContentTypeKey       = 'content_type',
         thumbnailKey          = 'thumbnail',         thumbnailTypeKey            = 'thumbnail_type',
-        solrDocTxtContentType = 'text/html',         solrDocImageContentType     = 'image/png',
-                                                     solrDocJSONContentType      = 'application/json',
-        //request
-        numFoundRequestParam  = 'numfound',
 
         //preview
         noPreviewText         = "No preview available",
@@ -52,7 +47,8 @@ SEARCH.util = {};
         // CSS variables
         searchResultSubheadingCSSClass  = 'search_subheading',      searchResultElWidthStructured   = '56%',
         searchResultDivCSSClass         = 'search_result_div',      searchResultElWidthUnstructured = '100%',   
-        yuiButtonLabelCSSClass          = 'yui-button-label',       previewDivCSSClass              = 'preview_result_div';
+        yuiButtonLabelCSSClass          = 'yui-button-label',       previewDivCSSClass              = 'preview_result_div',
+        buttonZoomOutCSSClass           = 'button zoom_out',        buttonZoomInCSSClass           = 'button zoom_in';
 
     var searchInputEls                  = [],       dataSourceFields                = [],
         thumbnailData                   = {},       initialSelectIndex              = 0,
@@ -61,7 +57,7 @@ SEARCH.util = {};
 
         // URLs
         loadingImgUrl = "", thumbnailUrl  = "", analyzeUrl = "",
-        viewDocUrl    = "", searchUrl     = "",
+        viewDocUrl    = "", searchUrl     = "", reportsUrl = "",
 
         // set in init
         unstructuredData                = false,    displayName                     = "",
@@ -110,6 +106,7 @@ SEARCH.util = {};
         thumbnailUrl  = urls[UI.THUMBNAIL_URL_KEY];
         searchUrl     = urls[UI.SEARCH_URL_KEY];
         analyzeUrl    = urls[UI.ANALYZE_URL_KEY];
+        reportsUrl    = urls[UI.REPORTS_URL_KEY];
 
         initialSelectIndex = UI.util.returnIfDefined(initialSelectIndex, names[UI.SEARCH.INITIAL_SELECT_INDEX_KEY]);
         if (names[UI.SEARCH.TOOLTIP_EL_NAME_KEY] !== undefined) {
@@ -163,6 +160,7 @@ SEARCH.util = {};
         UI.addDomElementChild('a', el, { id: resetButtonElId,   innerHTML: "Reset",   href: "#"}, { "class" :  "button small"});
         UI.addDomElementChild('a', el, { id: exportButtonElId,  innerHTML: "Export",  href: "#"}, { "class" :  "button small"});
         UI.addDomElementChild('a', el, { id: analyzeButtonElId, innerHTML: "Analyze", href: "#"}, { "class" :  "button small"});
+        UI.addDomElementChild('a', el, { id: reportsButtonElId, innerHTML: "Reports", href: "#"}, { "class" :  "button small"});
 
         UI.insertDomElementAfter('div', el, null, { "class" :  "row" });
 
@@ -202,22 +200,6 @@ SEARCH.util = {};
         }
     };
 
-    /* Formatters for the search results table */
-    SEARCH.ui.formatLink = function(el, record, column, data) {
-        var max = (column.label.match(/ Date/) != null) ? colDateStringMaxChars : colStringMaxChars;
-        if (data == undefined) {
-            data = "<i>No value</i>";
-        } else if (data.length > max) {
-            data = data.substring(0, max) + " ...";
-        }
-        el.innerHTML = '<a href="#">' + data + '</a>';
-    };
-
-    SEARCH.ui.formatDate = function(el, record, column, data) {
-        data = (data == undefined) ? "<i>No value</i>" : YAHOO.util.Date.format(data, {format: "%I:%M:%S %p %Y-%m-%d %Z"});
-        el.innerHTML = '<a href="#">' + data + '</a>';
-    };
-
     function updateDocsFromLastSearch(docs) {
         var i, docId, doc;
         docsFromLastSearch = {};
@@ -233,12 +215,12 @@ SEARCH.util = {};
     var searchSuccessCallback = function(o) {
         UI.hideWait();
         var result = Json.parse(o.responseText);
-        facetsFromLastSearch = result[solrResponseKey][solrResponseFacetKey];
+        facetsFromLastSearch = UI.util.getSolrResponseFacets(result);   //result[solrResponseKey][solrResponseFacetKey];
         buildSearchResultHtmlFn(result);
 
         updateSolrQueryDiv(decodeURIComponent(result.response.q));
-        updateDocsFromLastSearch(result[solrResponseKey][solrResponseDocsKey]);
-        updateNumFound(result[solrResponseKey][solrResponseNumFoundKey], 1);
+        updateDocsFromLastSearch(UI.util.getSolrResponseDocs(result));  //result[solrResponseKey][solrResponseDocsKey]);
+        updateNumFound(UI.util.getSolrResponseNumFound(result), 1);     //result[solrResponseKey][solrResponseNumFoundKey], 1);
         updatePaginatorAfterSearch();
 
         if (numFound > 0 && updateFacetFn != null) {
@@ -266,7 +248,7 @@ SEARCH.util = {};
     };
 
     SEARCH.ui.getUrlSearchParams = function() {
-        return (urlSearchParams == "") ? "" : urlSearchParams + "&" + numFoundRequestParam + "=" + numFound;
+        return (urlSearchParams == "") ? "" : urlSearchParams + "&" + UI.util.REQUEST_NUM_FOUND_KEY + "=" + numFound;
     };
 
     function initControlButtonListeners() {
@@ -285,6 +267,11 @@ SEARCH.util = {};
             var url = analyzeUrl + (unstructuredData ? "/wordtree" + SEARCH.ui.getUrlSearchParams() :
                                                        SEARCH.ui.getUrlSearchParams() + '&structured=true');
             window.open(url, "_blank");
+        });
+
+        Event.addListener(reportsButtonElId, "click", function (e) {
+            Event.stopEvent(e);
+            window.open(reportsUrl + SEARCH.ui.getUrlSearchParams(), "_blank");
         });
     }
 
@@ -334,59 +321,67 @@ SEARCH.util = {};
     }
 
     /* Preview container code */
-    function getPreviewHtmlTitleString(title) {
-        var titleString = (title == undefined) ? "<b>Search result preview</b>" : "Document: <b>" + title + "</b>";
-        return "<span style='margin-left: 5px; font-size: 10px'>" + titleString +
-                "<a style='float: right' class='button zoom_out' id='previewzoomout'></a>" +
-                "<a style='float: right' class='button zoom_in' id='previewzoomin'></a>" +
-                "</span><hr>";
+    function changeFontSize(f) {
+        var px = UI.util.getNPixels(Dom.getStyle(previewDataId, 'font-size'));
+        UI.setStyleOnElementId(previewDataId, 'font-size', (px + f) + 'px');
+    }
+
+    function imageZoom(f) {
+        UI.setStyleOnElementId(previewDataId, 'zoom', Math.max(parseInt(Dom.getStyle(previewDataId, 'zoom')) + f, 1));
+    }
+
+    function addPreviewTitleString(title) {
+        var titleString = 'Document ' + UI.util.returnEmptyIfUndefined(title) + ' preview';
+        var span = UI.addDomElementChild('span', currPreviewContainerEl, { innerHTML : titleString });
+        UI.addDomElementChild('a', span, { id : previewZoomOutElId }, { 'class' : buttonZoomOutCSSClass });
+        UI.addDomElementChild('a', span, { id : previewZoomOutElId }, { 'class' : buttonZoomInCSSClass });
+        UI.addDomElementChild('hr', currPreviewContainerEl);
     }
 
     function setPreviewContainerImageData(title, dataStr) {
-        var htmlStr = getPreviewHtmlTitleString(title);
-        htmlStr += "<img src='" + dataStr + "' height='400px' width='400px' id='" + previewDataId + "'>";
-        currPreviewContainerEl.innerHTML = htmlStr;
+        addPreviewTitleString(title);
+        UI.addDomElementChild('img', currPreviewContainerEl, { src : dataStr, id: previewDataId }, { zoom : 2 });
 
-        Dom.setStyle(previewDataId, 'zoom', 2);
-        Event.addListener('previewzoomin', 'click', function(e) {
-            Dom.setStyle(previewDataId, 'zoom', parseInt(Dom.getStyle(previewDataId, 'zoom')) + 1);
-        });
-
-        Event.addListener('previewzoomout', 'click', function(e) {
-            var zoom = parseInt(Dom.getStyle(previewDataId, 'zoom'));
-            Dom.setStyle(previewDataId, 'zoom', (zoom > 1) ? zoom - 1 : zoom);
-        });
+        Event.addListener(previewZoomInElId, 'click', function(e) { imageZoom(1)  });
+        Event.addListener(previewZoomInElId, 'click', function(e) { imageZoom(-1) });
     }
 
     function setPreviewContainerTextData(title, dataStr) {
-        var htmlStr = getPreviewHtmlTitleString(title);
-        var dispStr = (dataStr != noPreviewText) ? UI.util.jsonSyntaxHighlight(dataStr) :
-            "<span style='font-weight: bold; font-size: 12px; margin-left: 10px'>" + dataStr + "</span>";
-        htmlStr += "<div id='" + previewDataId + "'>" + dispStr + "</div>";
-        currPreviewContainerEl.innerHTML = htmlStr;
+        addPreviewTitleString(title);
 
-        Dom.setStyle(previewDataId, 'font-size', '10px');
-        Event.addListener('previewzoomin', 'click', function(e) {
-            var px = UI.util.getNPixels(Dom.getStyle(previewDataId, 'font-size'));
-            Dom.setStyle(previewDataId, 'font-size', (px + 1) + 'px');
-        });
+        var d = UI.addDomElementChild('div', currPreviewContainerEl, { id: previewDataId });
+        var d2 = UI.addDomElementChild('div', d, { id: previewRecordsElId });
+        if (dataStr == noPreviewText) {
+            d.innerHTML = dataStr;
+        } else {
+            var keys = Object.keys(dataStr);
+            for(var i = 0; i < keys.length; i++) {
+                var key = keys[i], val = dataStr[keys[i]];
 
-        Event.addListener('previewzoomout', 'click', function(e) {
-            var px = UI.util.getNPixels(Dom.getStyle(previewDataId, 'font-size'));
-            Dom.setStyle(previewDataId, 'font-size', (px - 1) + 'px');
-        });
+                var d3 = UI.addDomElementChild('div', d2, { id : previewRecordRowDivElId });
+                UI.addDomElementChild('div', d3, { innerHTML : key });
+                UI.addDomElementChild('div', d3, { innerHTML : val },
+                    { 'class' : isNaN(Number(val)) ? (val.match(/true|false/) ? 'boolean' : 'string') : 'number' });
+
+            }
+            UI.addClearBothDiv(d2);
+        }
+
+        Event.addListener(previewZoomInElId,  'click', changeFontSize(1) );
+        Event.addListener(previewZoomOutElId, 'click', function() { changeFontSize(-1); });
     }
 
     function setPreviewContainerData(title, dataStr, dataType) {
-        Dom.setStyle(currPreviewContainerEl, "border", "1px solid gray");
-        Dom.setStyle(currPreviewContainerEl, "background-image", "none");
+        UI.removeDivChildNodes(currPreviewContainerEl);
+        UI.setStyleOnElementId(currPreviewContainerEl, "border", "1px solid gray");
+        UI.setStyleOnElementId(currPreviewContainerEl, "background-image", "none");
 
         if (dataStr == "" || dataStr == undefined) {
             dataType = "text";
             dataStr  = noPreviewText;
         }
 
-        if (dataType == solrDocImageContentType) {
+        if (dataType == UI.util.CONTENT_TYPES.image) {
             //console.log(arguments.callee.caller.toString());
             setPreviewContainerImageData(title, dataStr);
         } else {
@@ -396,13 +391,13 @@ SEARCH.util = {};
 
     function setPreviewContainerLoadingImage() {
         currPreviewContainerEl.innerHTML = "";
-        Dom.setStyle(currPreviewContainerEl, "background-image", "url(\"" + loadingImgUrl + "\")");
-        Dom.setStyle(currPreviewContainerEl, "background-position", "50% 10%");
-        Dom.setStyle(currPreviewContainerEl, "background-repeat", "no-repeat");
+        UI.setStyleOnElement(currPreviewContainerEl, "background-image", "url(\"" + loadingImgUrl + "\")");
+        UI.setStyleOnElement(currPreviewContainerEl, "background-position", "50% 10%");
+        UI.setStyleOnElement(currPreviewContainerEl, "background-repeat", "no-repeat");
     }
 
     function clearPreviewContainerImage() {
-        Dom.setStyle(currPreviewContainerEl, "border", "none");
+        UI.setStyleOnElement(currPreviewContainerEl, "border", "none");
         currPreviewContainerEl.innerHTML = "";
     }
 
@@ -417,7 +412,14 @@ SEARCH.util = {};
 
     function getQueryTerms() {
         var val = searchInputEls[getSearchTabActiveIndex()].value;
-        return (searchTab == null || val == "") ? queryDefaultValue : val.encodeForRequest();
+        if (searchTab == null || val == "") {
+            return queryDefaultValue
+        }
+        var match = val.match(/(.*:")(.*?)"$/);
+        if (match != null) {
+            val = match[1] + match[2].replace(/"/g, '\\"') + '"';
+        }
+        return val;//.encodeForRequest();
     }
 
     /* Sort order button code */
@@ -495,7 +497,7 @@ SEARCH.util = {};
 
                 var result = Json.parse(o.responseText);
                 buildSearchResultHtmlFn(result);
-                updateDocsFromLastSearch(result[solrResponseKey][solrResponseDocsKey]);
+                updateDocsFromLastSearch(UI.util.getSolrResponseDocs(result)); //result[solrResponseKey][solrResponseDocsKey]);
             }
         });
 
@@ -509,7 +511,7 @@ SEARCH.util = {};
                 s.push(paramArgs[i] + '<br>');
             }
         }
-        Dom.setStyle(Dom.get(showQueryButtonElId), "visibility", "visible");
+        UI.changeVisibility(showQueryButtonElId, true);
         Dom.get(showQueryElIdBody).innerHTML = s.join('&');
     }
 
@@ -538,7 +540,7 @@ SEARCH.util = {};
 
         if (data[thumbnailKey] == undefined) {
             dataTable.updateCell(record, thumbnailKey, docsFromLastSearch[dataId]);
-            dataTable.updateCell(record, thumbnailTypeKey, solrDocJSONContentType);
+            dataTable.updateCell(record, thumbnailTypeKey, UI.util.CONTENT_TYPES.json);
         }
 
         setPreviewContainerData(data.title, data[thumbnailKey], data[thumbnailTypeKey]);
@@ -554,25 +556,10 @@ SEARCH.util = {};
         });
 
         var dataTable = new DataTable(searchResultsElId, selectDataColumnDefs, dataSource, { width:"100%" });
-
-        /*dataTable.subscribe("sortedByChange", function(e) {
-            var sortField = e.newValue.column.key;
-            var index = -1;
-            for(var i = 0; i < selectData.length; i++) {
-                if (selectData[i].value.replace(/\.facet$/, "") == sortField) {
-                    index = i;
-                    break;
-                }
-            }
-            sortBySelect.set("selectedMenuItem", sortBySelect.getMenu().getItem(index));
-            paginator.setStartIndex(0);
-            SEARCH.ui.search();
-        }); */
-
         dataTable.subscribe("cellClickEvent", function (e) {
             Event.stopEvent(e.event);
-            var data = this.getRecord(e.target).getData();
 
+            var data = this.getRecord(e.target).getData();
             var urlParams = "?core=" + SEARCH.ui.coreName + "&id=" + data.id + "&view=preview";
             window.open(viewDocUrl + urlParams, "_blank");
         });
@@ -622,8 +609,8 @@ SEARCH.util = {};
         var searchResultsEl = Dom.get(searchResultsElId);
         searchResultsEl.innerHTML = "";
 
-        var docs      = result[solrResponseKey][solrResponseDocsKey],
-            highlight = result[solrResponseKey][solrResponseHighlightingKey];
+        var docs      = UI.util.getSolrResponseDocs(result),
+            highlight = UI.util.getSolrResponseHighlighting(result);
 
         for(var i = 0; i < docs.length; i++) {
             var doc               = docs[i],

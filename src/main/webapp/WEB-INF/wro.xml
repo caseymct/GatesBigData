@@ -2,12 +2,18 @@
     <group name="default">
         <group-ref>yui</group-ref>
         <group-ref>jsdatepick</group-ref>
+        <group-ref>jquery</group-ref>
         <css>/static/css/default.css</css>
         <js>/static/js/default.js</js>
     </group>
 
-    <group name="yui">
+    <group name="jquery">
+        <css>/static/css/jquery/jquery-ui.css</css>
+        <js>/static/js/jquery/jquery-1.9.1.js</js>
+        <js>/static/js/jquery/jquery-ui.js</js>
+    </group>
 
+    <group name="yui">
         <css>/static/js/yui/2.9/fonts/fonts-min.css</css>
         <css>/static/js/yui/2.9/container/assets/skins/sam/container.css</css>
         <css>/static/js/yui/2.9/reset/reset-min.css</css>
@@ -43,6 +49,8 @@
         <js>/static/js/yui/2.9/dragdrop/dragdrop-min.js</js>
         <js>/static/js/yui/2.9/slider/slider-min.js</js>
     </group>
+
+
 
     <group name="jsdatepick">
         <css>/static/css/jsdatepick/jsDatePick_ltr.min.css</css>

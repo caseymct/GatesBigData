@@ -1,9 +1,17 @@
 package GatesBigData.api;
 
-import GatesBigData.utils.Constants;
+import GatesBigData.constants.Constants;
+import GatesBigData.constants.solr.Operations;
+import GatesBigData.constants.solr.Solr;
 import GatesBigData.utils.DateUtils;
+import GatesBigData.utils.SolrUtils;
 import model.SolrCollectionSchemaInfo;
-import net.sf.json.JSONObject;
+import model.SolrSchemaInfo;
+import org.apache.commons.lang.StringUtils;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.ConcurrentUpdateSolrServer;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrInputDocument;
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -20,7 +28,6 @@ import service.CoreService;
 import service.HDFSService;
 import service.SearchService;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
@@ -36,19 +43,21 @@ public class CoreAPIController extends APIController {
     private CoreService coreService;
     private SearchService searchService;
     private HDFSService hdfsService;
+    private SolrSchemaInfo schemaInfo;
 
     @Autowired
-    public CoreAPIController(CoreService coreService, SearchService searchService, HDFSService hdfsService) {
+    public CoreAPIController(CoreService coreService, SearchService searchService,
+                             HDFSService hdfsService, SolrSchemaInfo schemaInfo) {
         this.coreService = coreService;
         this.searchService = searchService;
         this.hdfsService = hdfsService;
+        this.schemaInfo = schemaInfo;
     }
 
     @RequestMapping(value="/fieldnames", method = RequestMethod.GET)
-    public ResponseEntity<String> getFieldNames(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
-                                                HttpServletRequest request) throws IOException {
+    public ResponseEntity<String> getFieldNames(@RequestParam(value = PARAM_CORE_NAME, required = true) String collectionName)
+            throws IOException {
 
-        SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, request.getSession());
         StringWriter writer = new StringWriter();
         JsonFactory f = new JsonFactory();
         JsonGenerator g = f.createJsonGenerator(writer);
@@ -56,7 +65,7 @@ public class CoreAPIController extends APIController {
         g.writeStartObject();
         g.writeArrayFieldStart("names");
 
-        for(String name : schemaInfo.getViewFieldNames()) {
+        for(String name : schemaInfo.getViewFieldNames(collectionName)) {
             g.writeString(name);
         }
 
@@ -74,14 +83,46 @@ public class CoreAPIController extends APIController {
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
-        return new ResponseEntity<String>(coreService.getCoreInfo(coreName).toString(), httpHeaders, OK);
+        return new ResponseEntity<String>(coreService.getCollectionInfo(coreName).toString(), httpHeaders, OK);
+    }
+
+    @RequestMapping(value="/update", method = RequestMethod.GET)
+    public ResponseEntity<String> updateDoc(@RequestParam(value = PARAM_COLLECTION, required = true) String collection) {
+        String id = "de7b3c36-3990-3592-ba5a-b559cafeeb8a";
+        SolrDocument oldDoc = searchService.getRecordById(collection, id);
+
+        List<String> values = new ArrayList<String>();
+        for(String key : Arrays.asList("SEGMENT1","SEGMENT2","SEGMENT3","SEGMENT4","SEGMENT5","SEGMENT6","SEGMENT7")) {
+            values.add(SolrUtils.getFieldStringValue(oldDoc, key, ""));
+        }
+        String newAcct = StringUtils.join(values, ".");
+
+        Map<String,String> oper = new HashMap<String,String>();
+        oper.put("set", newAcct);
+        SolrInputDocument doc = new SolrInputDocument();
+        doc.addField("id", id);
+        doc.addField("ACCOUNT", oper);
+        ConcurrentUpdateSolrServer server = new ConcurrentUpdateSolrServer(Solr.SOLR_SERVER + "/" + collection, 200, 4);
+        try {
+            server.add(doc);
+            server.commit();
+        } catch (SolrServerException e) {
+            e.printStackTrace();
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
+        return new ResponseEntity<String>("", httpHeaders, OK);
     }
 
     @RequestMapping(value="/empty", method = RequestMethod.GET)
     public ResponseEntity<String> deleteIndex(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) {
 
         StringWriter writer = new StringWriter();
-        coreService.doSolrOperation(coreName, Constants.SOLR_OPERATION_DELETE, null, writer);
+        coreService.doSolrOperation(coreName, Operations.OPERATION_DELETE, null, writer);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
@@ -92,8 +133,8 @@ public class CoreAPIController extends APIController {
     public ResponseEntity<String> addFacetFields(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName) {
 
         StringWriter writer = new StringWriter();
-        coreService.doSolrOperation(coreName, Constants.SOLR_OPERATION_ADD_INFOFILES,
-                                    hdfsService.getInfoFilesContents(coreName), writer);
+        coreService.doSolrOperation(coreName, Operations.OPERATION_ADD_INFOFILES,
+                                    hdfsService.getInfoFileContents(coreName), writer);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
@@ -119,7 +160,7 @@ public class CoreAPIController extends APIController {
         //curl 'http://localhost:8984/solr/admin/collections?action=CREATE&name=$name&numShards=$nshards&repl
         //icationFactor=0'
 
-        String coreName = (String) newDataSource.get("coreName");
+        String coreName = (String) newDataSource.get("collectionName");
         int nShards = (Integer) newDataSource.get("nShards");
         int replicationFactor = (Integer) newDataSource.get("replicationFactor");
 
@@ -138,13 +179,11 @@ public class CoreAPIController extends APIController {
     }
 
     @RequestMapping(value="/field/daterange", method = RequestMethod.GET)
-    public ResponseEntity<String> dateRange(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
-                                            @RequestParam(value = PARAM_FIELD_NAME, required = true) String field,
-                                            HttpServletRequest request) {
+    public ResponseEntity<String> dateRange(@RequestParam(value = PARAM_CORE_NAME, required = true) String collection,
+                                            @RequestParam(value = PARAM_FIELD_NAME, required = true) String field) {
 
-        SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, request.getSession());
-
-        List<Date> dateRange = searchService.getSolrFieldDateRange(coreName, field, schemaInfo.fieldTypeIsDate(field));
+        SolrCollectionSchemaInfo info = schemaInfo.getSchema(collection);
+        List<Date> dateRange = searchService.getSolrFieldDateRange(collection, field, info);
         String dateString = DateUtils.getFormattedDateString(dateRange.get(0), DateUtils.SHORT_DATE_FORMAT) + " to " +
                             DateUtils.getFormattedDateString(dateRange.get(1), DateUtils.SHORT_DATE_FORMAT);
 

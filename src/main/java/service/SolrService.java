@@ -1,6 +1,7 @@
 package service;
 
 import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.CoreAdminResponse;
@@ -13,9 +14,7 @@ public interface SolrService {
 
     public SolrServer getSolrServer();
 
-    public SolrServer getCloudSolrServer();
-
-    public SolrServer getHttpSolrServer();
+    public SolrServer getSolrServer(String collectionName);
 
     public int solrServerAdd(SolrServer server, List<SolrInputDocument> docs) throws IOException, SolrServerException;
 
@@ -27,9 +26,7 @@ public interface SolrService {
 
     public int solrServerUpdate(SolrServer server, List<SolrInputDocument> docs) throws IOException, SolrServerException;
 
-    public int solrServerAddAndCommit(SolrServer server, List<SolrInputDocument> docs) throws IOException, SolrServerException;
-
-    public int solrServerAddAndCommit(SolrServer server, SolrInputDocument doc) throws IOException, SolrServerException;
+    public int solrServerOptimize(SolrServer server) throws IOException, SolrServerException;
 
     public int solrServerDeleteByField(SolrServer server, String field, List<String> values) throws IOException, SolrServerException;
 
@@ -41,9 +38,7 @@ public interface SolrService {
 
     public CoreAdminResponse getCores();
 
-    public List<String> getCoreNames();
+    public List<String> getCollectionNames();
 
-    public boolean coreNameExists(String coreName);
-
-    public JSONArray getAllCoreData();
+    public JSONObject getCollectionInfo();
 }

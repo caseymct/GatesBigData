@@ -58,7 +58,7 @@
                 responseObject = Json.parse(o.responseText);
                 fields = Object.keys(responseObject).sort();
 
-                populateSelect(fields, selectWordTreeElId, getFieldSelectName, getFieldSelectValue);
+                UI.populateSelect(fields, selectWordTreeElId, getFieldSelectName, getFieldSelectValue);
             }
         });
 
@@ -73,7 +73,7 @@
             Event.addListener(searchClickElId, 'click', function(e) {
                 Event.stopEvent(e);
                 var searchResults = WORDTREE.search(Dom.get(searchInputElId).value, Dom.get(searchOnlySelElId).checked);
-                populateSelect(searchResults, searchResultsElId, getSearchSelectName, getSearchSelectValue);
+                UI.populateSelect(searchResults, searchResultsElId, getSearchSelectName, getSearchSelectValue);
             });
 
             Event.addListener(searchResultsElId, 'focus', function(e) {
@@ -119,25 +119,16 @@
             return Dom.getChildrenBy(Dom.get(graphElId), function(node) { return node.tagName == "svg"; })[0];
         }
 
-        function getFieldSelectName(field) {
+        function getFieldSelectName(field, i) {
             if (structured) {
                 var p = responseObject[field][PREFIX_KEY];
                 return p[SENTENCE_KEY].split(" ")[0] + ' (' + p[COUNT_KEY] + ')';
             }
             return field;
         }
-        function getFieldSelectValue(field) { return field; }
-        function getSearchSelectName(node)  { return node.dsc; }
-        function getSearchSelectValue(node) { return (node.prefixTree ? 'L' : 'R') + '_' + node.id; }
-
-        function populateSelect(nodes, selectElId, nameFn, valueFn) {
-            var select = Dom.get(selectElId);
-            select.options.length = 0;
-
-            for(var i = 0; i < nodes.length; i++) {
-                select.options[select.options.length] = new Option(nameFn(nodes[i]), valueFn(nodes[i]));
-            }
-        }
+        function getFieldSelectValue(field, i) { return field; }
+        function getSearchSelectName(node, i)  { return node.dsc; }
+        function getSearchSelectValue(node, i) { return (node.prefixTree ? 'L' : 'R') + '_' + node.id; }
 
         function buildResponseHtml(field) {
             var graphContentEl = Dom.get(graphContentElId);

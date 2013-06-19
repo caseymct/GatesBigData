@@ -1,17 +1,21 @@
 package GatesBigData.api;
 
-import GatesBigData.utils.Constants;
-import GatesBigData.utils.JsonParsingUtils;
+import GatesBigData.constants.Constants;
+import GatesBigData.constants.solr.Defaults;
+import GatesBigData.constants.solr.FieldNames;
+import GatesBigData.constants.solr.Response;
+import GatesBigData.utils.JSONUtils;
 import GatesBigData.utils.SolrUtils;
 import GatesBigData.utils.Utils;
 import model.FacetFieldEntryList;
 import model.SeriesPlot;
 import model.SolrCollectionSchemaInfo;
+import model.SolrSchemaInfo;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.apache.commons.lang.StringUtils;
-import org.codehaus.jackson.JsonFactory;
-import org.codehaus.jackson.JsonGenerator;
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.common.SolrDocumentList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +25,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import service.HDFSService;
 import service.SearchService;
-import service.SolrService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
@@ -38,51 +41,47 @@ public class SearchAPIController extends APIController {
     public static final String SESSION_HDFSDIR_TOKEN               = "currentHDFSDir";
     public static final String SESSION_VIEWFIELDS_TOKEN            = "viewFields";
     public static final String SESSION_FACETFIELDS_TOKEN           = "facetFields";
-    public static final String SESSION_SUGGESTION_CORE_NAME_TOKEN  = "suggestionCoreName";
 
     public static int MAX_SUGGESTIONS                               = 15;
 
-    private static final String NO_CORRESPONDING_SUGGESTION_CORE   = "none";
-
     private SearchService searchService;
     private HDFSService hdfsService;
-    private SolrService solrService;
+    private SolrSchemaInfo schemaInfo;
 
     @Autowired
-    public SearchAPIController(SearchService searchService, HDFSService hdfsService, SolrService solrService) {
+    public SearchAPIController(SearchService searchService, HDFSService hdfsService, SolrSchemaInfo schemaInfo) {
         this.searchService = searchService;
-        this.hdfsService = hdfsService;
-        this.solrService = solrService;
+        this.hdfsService   = hdfsService;
+        this.schemaInfo    = schemaInfo;
     }
 
-    private FacetFieldEntryList getFacetFields(SolrCollectionSchemaInfo schemaInfo, String coreName, HttpSession session) {
+    private FacetFieldEntryList getFacetFields(FacetFieldEntryList allFacetFields, String coreName, HttpSession session) {
         String sessionKey = SESSION_HDFSDIR_TOKEN + SESSION_FACETFIELDS_TOKEN + coreName;
 
         FacetFieldEntryList facetFields = (FacetFieldEntryList) session.getAttribute(sessionKey);
         if (Utils.nullOrEmpty(facetFields)) {
-            String facetFieldInfo = searchService.getCoreInfoFieldValue(coreName, Constants.SOLR_FIELD_NAME_FACET_FIELDS);
+            JSONArray facetFieldArray = searchService.getCollectionInfoFieldValuesAsJSONArray(coreName, FieldNames.FACET_FIELDS);
 
-            if (Utils.nullOrEmpty(facetFieldInfo)) {
-                facetFieldInfo = hdfsService.getInfoFilesContents(coreName).get(Constants.SOLR_FIELD_NAME_FACET_FIELDS);
+            // If for some reason it's not in Solr, get from HDFS
+            if (Utils.nullOrEmpty(facetFieldArray)) {
+                String f = hdfsService.getInfoFileFieldContents(coreName, FieldNames.FACET_FIELDS);
+                facetFieldArray = JSONUtils.convertStringToJSONArray(f);
             }
-            facetFields = SolrUtils.constructFacetFieldEntryList(facetFieldInfo, schemaInfo);
+            facetFields = SolrUtils.constructFacetFieldEntryList(facetFieldArray, allFacetFields);
             session.setAttribute(sessionKey, facetFields);
         }
         return facetFields;
     }
 
-    private String getViewFields(SolrCollectionSchemaInfo schemaInfo, String coreName, HttpSession session) {
-        String sessionKey = SESSION_HDFSDIR_TOKEN + SESSION_VIEWFIELDS_TOKEN + coreName;
+    private String getViewFields(String schemaViewFieldNames, String collection, HttpSession session) {
+        String sessionKey = SESSION_HDFSDIR_TOKEN + SESSION_VIEWFIELDS_TOKEN + collection;
 
         String viewFields = (String) session.getAttribute(sessionKey);
         if (Utils.nullOrEmpty(viewFields)) {
-            Set<String> fieldList = new HashSet<String>();
-            fieldList.addAll(SolrUtils.getFieldsFromInfoString(searchService.getCoreInfoFieldValue(coreName, Constants.SOLR_FIELD_NAME_PREVIEW_FIELDS)));
-            fieldList.addAll(Arrays.asList(Constants.SOLR_FIELD_NAME_ID, Constants.SOLR_FIELD_NAME_URL));
-            viewFields = StringUtils.join(fieldList, ",");
+            viewFields = StringUtils.join(searchService.getViewFields(collection), ",");
 
             if (Utils.nullOrEmpty(viewFields)) {
-                viewFields = schemaInfo.getViewFieldNamesString();
+                viewFields = schemaViewFieldNames;
             }
             session.setAttribute(sessionKey, viewFields);
         }
@@ -90,24 +89,9 @@ public class SearchAPIController extends APIController {
         return viewFields;
     }
 
-    private String getSuggestionCoreName(String coreName, HttpSession session) {
-        String sessionKey = SESSION_HDFSDIR_TOKEN + SESSION_SUGGESTION_CORE_NAME_TOKEN;
-
-        List<String> suggestionCoreNames = (List<String>) session.getAttribute(sessionKey);
-        String suggestionCoreName = SolrUtils.getSuggestionCoreName(coreName);
-        if (suggestionCoreNames == null) {
-
-            // or maybe search in a solr field here
-            suggestionCoreNames = solrService.getCoreNames();
-            session.setAttribute(sessionKey, suggestionCoreNames);
-        }
-
-        return suggestionCoreNames.contains(suggestionCoreName) ? suggestionCoreName : NO_CORRESPONDING_SUGGESTION_CORE;
-    }
-
     @RequestMapping(value="/solrquery", method = RequestMethod.GET)
     public ResponseEntity<String> execSolrQuery(@RequestParam(value = PARAM_QUERY, required = true) String query,
-                                                @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
+                                                @RequestParam(value = PARAM_CORE_NAME, required = true) String collection,
                                                 @RequestParam(value = PARAM_SORT_FIELD, required = true) String sortField,
                                                 @RequestParam(value = PARAM_SORT_ORDER, required = true) String sortOrder,
                                                 @RequestParam(value = PARAM_START, required = false) Integer start,
@@ -117,34 +101,37 @@ public class SearchAPIController extends APIController {
 
         StringWriter writer = new StringWriter();
         HttpSession session = request.getSession();
-        SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, session);
+        SolrCollectionSchemaInfo info = schemaInfo.getSchema(collection);
 
-        if (schemaInfo.isFieldMultiValued(sortField)) {
-            sortField = Constants.SOLR_DEFAULT_VALUE_SORT_FIELD;
-        }
+        FacetFieldEntryList facetFields = getFacetFields(info.getFacetFieldEntryList(), collection, session);
+        String viewFields               = getViewFields(info.getViewFieldNamesString(), collection, session);
 
-        searchService.solrSearch(query, coreName, sortField, sortOrder,
-                (start == null) ? Constants.SOLR_DEFAULT_VALUE_START : start,
-                (rows == null)  ? Constants.SOLR_DEFAULT_VALUE_ROWS : rows, SolrUtils.composeFilterQuery(fq, schemaInfo),
-                getFacetFields(schemaInfo, coreName, session), getViewFields(schemaInfo, coreName, session),
-                schemaInfo.getDateFieldNames(), writer);
+        searchService.findAndWriteSearchResults(collection, query,
+                SolrUtils.getSortClauses(info.getSortFieldIfValid(sortField), sortOrder),
+                start, rows, SolrUtils.composeFilterQuery(fq, info),
+                facetFields, viewFields, false, info, writer);
 
         HttpHeaders httpHeaders = new HttpHeaders();
-
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
     }
 
     @RequestMapping(value="/solrfacets", method = RequestMethod.GET)
-    public ResponseEntity<String> findFacets(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
+    public ResponseEntity<String> findFacets(@RequestParam(value = PARAM_COLLECTION, required = true) String collection,
                                                 HttpServletRequest request) throws IOException {
 
         StringWriter writer = new StringWriter();
         HttpSession session = request.getSession();
-        SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, session);
+        SolrCollectionSchemaInfo info = schemaInfo.getSchema(collection);
 
-        FacetFieldEntryList facets = getFacetFields(schemaInfo, coreName, session);
-        searchService.writeFacets(coreName, facets, writer);
+        if (info.hasSuggestionCore()) {
+            String suggestionCore = info.getSuggestionCore();
+            List<String> fields = schemaInfo.getPrefixTokenFields(suggestionCore);
+            searchService.findAndWriteInitialFacetsFromSuggestionCore(suggestionCore, fields, writer);
+        } else {
+            FacetFieldEntryList facets = getFacetFields(info.getFacetFieldEntryList(), collection, session);
+            searchService.findAndWriteFacets(collection, facets, info, writer);
+        }
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
@@ -152,12 +139,12 @@ public class SearchAPIController extends APIController {
     }
 
     @RequestMapping(value="/fields/all", method = RequestMethod.GET)
-    public ResponseEntity<String> allFields(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
-                                            HttpServletRequest request) throws IOException {
-        SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, request.getSession());
+    public ResponseEntity<String> allFields(@RequestParam(value = PARAM_CORE_NAME, required = true) String collection)
+            throws IOException {
 
         JSONArray ret = new JSONArray();
-        ret.addAll(schemaInfo.getViewFieldNames());
+        SolrCollectionSchemaInfo info = schemaInfo.getSchema(collection);
+        ret.addAll(info.getViewFieldNames());
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
@@ -165,24 +152,20 @@ public class SearchAPIController extends APIController {
     }
 
     @RequestMapping(value="/suggest", method = RequestMethod.GET)
-    public ResponseEntity<String> suggest(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
+    public ResponseEntity<String> suggest(@RequestParam(value = PARAM_CORE_NAME, required = true) String collection,
                                           @RequestParam(value = PARAM_USER_INPUT, required = true) String userInput,
-                                          @RequestParam(value = PARAM_NUM_SUGGESTIONS_PER_FIELD, required = true) int n,
-                                          HttpServletRequest request) throws IOException {
-
-        HttpSession session = request.getSession();
-        SolrCollectionSchemaInfo info = getSolrCollectionSchemaInfo(coreName, session);
-        //String suggestionCoreName = getSuggestionCoreName(coreName, session);
-
+                                          @RequestParam(value = PARAM_NUM_SUGGESTIONS_PER_FIELD, required = true) int n)
+                                        throws IOException {
         JSONArray suggestions;
+        SolrCollectionSchemaInfo info = schemaInfo.getSchema(collection);
         if (info.hasSuggestionCore()) {
             suggestions = searchService.suggestUsingSeparateCore(info.getSuggestionCore(), userInput, MAX_SUGGESTIONS);
         } else {
-            suggestions = searchService.suggestUsingGrouping(coreName, userInput, info.getPrefixFieldMap(), n);
+            suggestions = searchService.suggestUsingGrouping(collection, userInput, info.getPrefixFieldMap(), n);
         }
 
         JSONObject ret = new JSONObject();
-        ret.put(Constants.SUGGESTION_RESPONSE_KEY, suggestions);
+        ret.put(Response.SUGGESTION_KEY, suggestions);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
@@ -190,25 +173,25 @@ public class SearchAPIController extends APIController {
     }
 
     @RequestMapping(value="/infofields", method = RequestMethod.GET)
-    public ResponseEntity<String> getInfoFields(@RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
-                                                @RequestParam(value = PARAM_INFO_FIELD_TYPE, required = true) String infoFieldName,
+    public ResponseEntity<String> getInfoFields(@RequestParam(value = PARAM_CORE_NAME, required = true) String collection,
+                                                @RequestParam(value = PARAM_INFO_FIELD_NAME, required = true) String infoFieldName,
                                                 @RequestParam(value = PARAM_GET_NON_NULL_COUNTS, required = false) boolean getNonNullCounts,
                                                 @RequestParam(value = PARAM_GET_SEPARATE_FIELD_COUNTS, required = false) boolean getFacetCounts,
                                                 @RequestParam(value = PARAM_QUERY, required = false) String queryStr,
-                                                @RequestParam(value = PARAM_FQ, required = false) String fq,
-                                                HttpServletRequest request) throws IOException {
+                                                @RequestParam(value = PARAM_FQ, required = false) String fq) throws IOException {
 
-        List<String> fields = searchService.getCoreInfoFieldValues(coreName, infoFieldName);
-        List<String> listValues = fields;
-
+        JSONArray fields = searchService.getCollectionInfoFieldValuesAsJSONArray(collection, infoFieldName);
+        SolrCollectionSchemaInfo info = schemaInfo.getSchema(collection);
         if (getNonNullCounts || getFacetCounts) {
-            SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, request.getSession());
-            fq = SolrUtils.composeFilterQuery(fq, schemaInfo);
-            listValues = searchService.getFieldCounts(coreName, queryStr, fq, fields, getFacetCounts);
+            List<String> listValues = searchService.getFieldCounts(collection, queryStr,
+                                                                   SolrUtils.composeFilterQuery(fq, info),
+                                                                   JSONUtils.convertJSONArrayToStringList(fields),
+                                                                   getFacetCounts);
+            fields = JSONUtils.convertCollectionToJSONArray(listValues);
         }
 
         JSONObject ret = new JSONObject();
-        ret.put(infoFieldName.toUpperCase(), JsonParsingUtils.convertStringListToJSONArray(listValues));
+        ret.put(infoFieldName.toUpperCase(), fields);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
@@ -217,22 +200,23 @@ public class SearchAPIController extends APIController {
 
     @RequestMapping(value="/plot", method = RequestMethod.GET)
     public ResponseEntity<String> getPlotPoints(@RequestParam(value = PARAM_QUERY, required = true) String query,
-                                                @RequestParam(value = PARAM_CORE_NAME, required = true) String coreName,
+                                                @RequestParam(value = PARAM_CORE_NAME, required = true) String collection,
                                                 @RequestParam(value = PARAM_X_AXIS_FIELD, required = true) String xAxisField,
                                                 @RequestParam(value = PARAM_Y_AXIS_FIELD, required = true) String yAxisField,
                                                 @RequestParam(value = PARAM_SERIES_FIELD, required = false) String seriesField,
                                                 @RequestParam(value = PARAM_NUM_FOUND, required = true) Integer numFound,
                                                 @RequestParam(value = PARAM_FQ, required = false) String fq,
-                                                HttpServletRequest request) throws IOException {
+                                                @RequestParam(value = PARAM_MAX_PLOT_POINTS, required = false) Integer maxPlotPoints,
+                                                @RequestParam(value = PARAM_DATE_RANGE_GAP, required = false) String dateRangeGap)
+            throws IOException {
 
-        HttpSession session = request.getSession();
-        SolrCollectionSchemaInfo schemaInfo = getSolrCollectionSchemaInfo(coreName, session);
-        fq = SolrUtils.composeFilterQuery(fq, schemaInfo);
+        SolrCollectionSchemaInfo info = schemaInfo.getSchema(collection);
 
-        SeriesPlot seriesPlot = searchService.getPlotData(coreName, query, fq, numFound, xAxisField,
-                schemaInfo.fieldTypeIsDate(xAxisField), yAxisField, schemaInfo.fieldTypeIsDate(yAxisField),
-                seriesField, schemaInfo.fieldTypeIsDate(seriesField));
-
+        SeriesPlot seriesPlot = searchService.getPlotData(collection, query, SolrUtils.composeFilterQuery(fq, info), numFound,
+                                        xAxisField,  info.fieldTypeIsDate(xAxisField),
+                                        yAxisField,  info.fieldTypeIsDate(yAxisField),
+                                        seriesField, info.fieldTypeIsDate(seriesField),
+                                        maxPlotPoints, dateRangeGap);
 
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));

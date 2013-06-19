@@ -1,5 +1,6 @@
 package GatesBigData.utils;
 
+import GatesBigData.constants.Constants;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;

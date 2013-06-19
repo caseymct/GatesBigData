@@ -138,7 +138,7 @@ version: 2.9.0
 			title: "YUI ProfilerViewer",
 			buttons: {
 				viewprofiler: "View Profiler Data",
-				hideprofiler: "Hide Profiler Report",
+				hideprofiler: "Hide Profiler ReportData",
 				showchart: "Show Chart",
 				hidechart: "Hide Chart",
 				refreshdata: "Refresh Data"

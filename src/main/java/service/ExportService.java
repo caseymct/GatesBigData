@@ -1,6 +1,6 @@
 package service;
 
-import GatesBigData.utils.Constants;
+import GatesBigData.constants.Constants;
 import GatesBigData.utils.Utils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
@@ -42,7 +42,10 @@ public abstract class ExportService {
         return this.delimiter;
     }
 
-    public void setExportFileName(String exportFileName) {
+    public void setExportFileName(String exportFileName, String fileType) {
+        if (!exportFileName.endsWith("." + fileType)) {
+            exportFileName += "." + fileType;
+        }
         this.exportFileName = exportFileName;
     }
 

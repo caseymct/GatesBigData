@@ -1,6 +1,7 @@
 package model;
 
-import GatesBigData.utils.Constants;
+import GatesBigData.constants.Constants;
+import GatesBigData.constants.solr.FieldNames;
 import GatesBigData.utils.SolrUtils;
 import GatesBigData.utils.Utils;
 import net.sf.json.JSONObject;
@@ -36,7 +37,7 @@ public class SolrRecord {
         String contentStr = jsonObject.toString(3).replaceAll("\n", Constants.DEFAULT_NEWLINE);
         content = contentStr.getBytes();
         contentType = SolrUtils.getDocumentContentType(doc);
-        id  = SolrUtils.getFieldStringValue(doc, Constants.SOLR_FIELD_NAME_ID, "not_found");
+        id  = SolrUtils.getFieldStringValue(doc, FieldNames.ID, "not_found");
         fileName = new File(id).getName();
     }
 

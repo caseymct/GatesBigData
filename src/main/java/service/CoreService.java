@@ -13,11 +13,7 @@ import java.util.List;
 
 public interface CoreService {
 
-    public SolrServer getCloudSolrServer(String coreName);
-
     public SolrServer getSolrServer(String collectionName);
-
-    public SolrServer getHttpSolrServer(String coreName);
 
     public int solrServerAdd(String coreName, List<SolrInputDocument> docs) throws IOException, SolrServerException;
 
@@ -29,7 +25,7 @@ public interface CoreService {
 
     public int update(String coreName) throws IOException, SolrServerException;
 
-    public int addInfoFiles(String coreName, HashMap<String, String> contents) throws IOException, SolrServerException;
+    public int addInfoFiles(String coreName, JSONObject contents) throws IOException, SolrServerException;
 
     public SolrInputDocument createSolrDocument(HashMap<String, Object> fields);
 
@@ -47,7 +43,9 @@ public interface CoreService {
 
     public int deleteByField(String coreName, String field, List<String> values) throws IOException, SolrServerException;
 
-    public JSONObject getCoreInfo(String coreName);
+    public String getSchemaXML(String collectionName);
 
-    public int doSolrOperation(String coreName, int operation, HashMap<String, String> params, StringWriter writer);
+    public JSONObject getCollectionInfo(String coreName);
+
+    public int doSolrOperation(String collection, int operation, JSONObject infoFileContents, StringWriter writer);
 }

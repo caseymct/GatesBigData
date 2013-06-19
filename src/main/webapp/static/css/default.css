@@ -279,7 +279,7 @@ form div.form-buttons {
 }
 
 .number {
-  color: #369;
+  color: blue;
 }
 
 .class, .special {
@@ -327,3 +327,16 @@ a:hover {
 .boolean { color: darkblue; }
 .null { color: magenta; }
 .key { color: black; }
+
+.info_div {
+    float : left;
+    text-align : right;
+    width : 100px;
+    padding-right : 10px;
+    font-weight : bold;
+}
+
+.info_div_value {
+    float : left;
+    width : 400px;
+}

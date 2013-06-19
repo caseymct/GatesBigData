@@ -11,7 +11,6 @@ FACET.util = {};
     var showOverlayButtonElName     = "show_overlay",       // from main.tag
         overlayDivElName            = "overlay",            // from main.tag
         contentContainerDivElName   = "content_container",  // from main.tag
-        facetContainerDivElName     = "facet_container",    // from main.tag
         treeViewDivElName           = "tree_view",          // from main.tag
         buttonDownOverlayCSSClass   = "button down-big-overlay",
         buttonUpOverlayCSSClass     = "button up-big-overlay",
@@ -27,9 +26,9 @@ FACET.util = {};
 
     function getFacetOptionDivId(nodeIndex)     { return "treeNodeDiv" + nodeIndex; }
     function getFacetOptionAnchorId(nodeIndex)  { return "treeNode" + nodeIndex; }
-    function makeVisible(el)                    { Dom.setStyle(el, "visibility", "visible"); }
 
-    makeVisible(facetContainerDivElName);
+
+    UI.changeFacetContainerVisibility(true);
 
     var facetTreeView  = new TreeView(treeViewDivElName);
 
@@ -38,6 +37,7 @@ FACET.util = {};
         visible: false
     });
     overlay.render(contentContainer);
+
 
     FACET.ui.init = function(names) {
         facetTreeUrl = names[UI.FACET_URL_KEY];
@@ -53,7 +53,7 @@ FACET.util = {};
 
     function adjustContentContainerHeight() {
         var oh = parseInt(Dom.getStyle(overlayDivElName, "height").replace("px", "")) + 300;
-        Dom.setStyle(contentContainer, "height", Math.max(oh, contentContainerMinHeight) + "px");
+        UI.setStyleOnElement(contentContainer, 'height', Math.max(oh, contentContainerMinHeight) + "px");
     }
 
     function showOverlay() {
@@ -82,7 +82,8 @@ FACET.util = {};
             success: function(o) {
                 var result = Json.parse(o.responseText);
                 FACET.allFacets = result[responseFacetKey][solrResponseFacetKey];
-                makeVisible(showOverlayButtonElName);
+
+                UI.changeVisibility(showOverlayButtonElName, true);
                 showOverlay();
                 buildFullFacetTree();
             },
@@ -149,7 +150,7 @@ FACET.util = {};
                 Event.addListener(facetOptionDivId, "click", function(e) {
                     UI.removeElement(facetOptionDivId);
 
-                    if (getDOMFacets().length == 0) {
+                    if (UI.getChildrenByTagName(UI.FACET.FACET_OPTIONS_DIV_EL_NAME).length == 0) {
                         buildFullFacetTree();
                     }
                 });
@@ -162,32 +163,5 @@ FACET.util = {};
             FACET.ui.buildFacetTree(FACET.allFacets);
         }
     }
-
-    function getDOMFacets() {
-        return Dom.get(UI.FACET.FACET_OPTIONS_DIV_EL_NAME).getElementsByTagName('a');
-    }
-
-    FACET.util.getFacetFilterQueryString = function() {
-        var i, t, facetOptions = {}, domFacets = getDOMFacets();
-
-        for (i = 0; i < domFacets.length; i++) {
-            t = domFacets[i].innerHTML.split(" : ");
-            var field = t[0], val = UI.date.formatFacetFieldIfDate(t[1]);
-
-            if (facetOptions.hasOwnProperty(field)) {
-                facetOptions[field] += UI.FACET_VALUE_OPTIONS_DELIMITER_KEY + val;
-            } else {
-                facetOptions[field] = val;
-            }
-        }
-
-        var fqStr = "";
-        var keys = Object.keys(facetOptions);
-        for (i = 0; i < keys.length; i++) {
-            fqStr += UI.FACET_FIELDS_DELIMITER_KEY + keys[i] + UI.FACET_VALUES_DELIMITER_KEY + facetOptions[keys[i]].encodeForRequest();
-        }
-
-        return fqStr;
-    };
 
 })();

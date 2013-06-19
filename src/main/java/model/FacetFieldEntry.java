@@ -1,7 +1,8 @@
 package model;
 
 
-import GatesBigData.utils.Constants;
+import GatesBigData.constants.Constants;
+import GatesBigData.constants.solr.FieldTypes;
 import GatesBigData.utils.SolrUtils;
 
 public class FacetFieldEntry {
@@ -36,7 +37,7 @@ public class FacetFieldEntry {
     }
 
     public boolean fieldTypeIsDate() {
-        return fieldType.equals(Constants.SOLR_FIELD_TYPE_DATE);
+        return fieldType.equals(FieldTypes.DATE);
     }
 
     public boolean isMultiValued() {
