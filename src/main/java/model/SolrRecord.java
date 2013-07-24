@@ -13,6 +13,10 @@ import org.apache.solr.common.SolrDocument;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import static GatesBigData.constants.Constants.*;
+import static GatesBigData.utils.SolrUtils.getFieldStringValue;
+import static GatesBigData.constants.solr.FieldNames.*;
+import static GatesBigData.utils.Utils.*;
 
 public class SolrRecord {
 
@@ -34,10 +38,10 @@ public class SolrRecord {
                 jsonObject.put(s, doc.get(s));
             }
         }
-        String contentStr = jsonObject.toString(3).replaceAll("\n", Constants.DEFAULT_NEWLINE);
+        String contentStr = jsonObject.toString(3).replaceAll("\n", DEFAULT_NEWLINE);
         content = contentStr.getBytes();
         contentType = SolrUtils.getDocumentContentType(doc);
-        id  = SolrUtils.getFieldStringValue(doc, FieldNames.ID, "not_found");
+        id  = getFieldStringValue(doc, ID, "not_found");
         fileName = new File(id).getName();
     }
 
@@ -72,11 +76,13 @@ public class SolrRecord {
         this.fileName = fileName;
     }
 
-    public void ifRecordIsJSONChangeToText() {
-        if (Utils.fileHasExtension(this.fileName, Constants.JSON_FILE_EXT)) {
-            this.fileName = Utils.changeFileExtension(this.fileName, Constants.TEXT_FILE_EXT, false);
-            this.contentType = Constants.TEXT_CONTENT_TYPE;
+    public SolrRecord modifyForWriting() {
+        if (fileHasExtension(this.fileName, JSON_FILE_EXT)) {
+            this.fileName = changeFileExtension(this.fileName, TEXT_FILE_EXT, false);
+            this.contentType = TEXT_CONTENT_TYPE;
         }
+
+        return this;
     }
 
     public final void write(DataOutput out) throws IOException {

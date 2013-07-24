@@ -1,24 +1,27 @@
 package GatesBigData.utils;
 
 import GatesBigData.constants.Constants;
-import GatesBigData.constants.solr.Solr;
 import model.ValueComparator;
-import org.apache.commons.httpclient.URIException;
-import org.apache.commons.httpclient.util.URIUtil;
-import org.apache.commons.lang.StringUtils;
+import model.schema.XmlProperty;
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.codehaus.jackson.JsonGenerator;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.util.*;
 
+import static GatesBigData.constants.Constants.*;
 
 public class Utils {
     private static final String FILE_ERROR_MESSAGE  = "<h1>ERROR</h1>";
@@ -31,8 +34,12 @@ public class Utils {
         } catch (UnknownHostException e) {
             logger.error(e.getMessage());
         }
+        return true;
+        //return SOLR_SERVER.contains(localhost);
+    }
 
-        return Solr.SOLR_SERVER.contains(localhost);
+    public static boolean isTag(String t1, String t2) {
+        return compareStringsIgnoreCaseAndWhitespace(t1, t2);
     }
 
     public static List<String> getTokens(String d, String delimiter) {
@@ -58,15 +65,7 @@ public class Utils {
         return tokens;
     }
 
-    public static Object getLastElement(List l) {
-        return l.get(l.size() - 1);
-    }
-
-    public static String escapeQuotes(String s) {
-        return s.replaceAll("\"", "\\\"");
-    }
-
-    public static <T> Object getObjectIfExists(HashMap<String, T> map, String key, T defaultValue) {
+    public static <T> Object returnValueIfFieldExists(Map map, String key, T defaultValue) {
         return map.containsKey(key) ? map.get(key) : defaultValue;
     }
 
@@ -76,26 +75,6 @@ public class Utils {
 
     public static String replaceHTMLAmpersands(String s) {
         return s.replaceAll("&amp;", "&");
-    }
-
-    public static <T> Object returnIfFieldExists(Map m, String field) {
-        return m.containsKey(field) ? m.get(field) : null;
-    }
-
-    public static <T> Object returnValueIfFieldExists(Map m, String field) {
-        return m.containsKey(field) ? m.get(field) : null;
-    }
-
-    public static <T> Object returnValueIfFieldExists(Map m, String field, Object defaultValue) {
-        return m.containsKey(field) ? m.get(field) : defaultValue;
-    }
-
-    public static boolean returnBoolValueIfExists(Map m, String field) {
-        return Boolean.parseBoolean(returnStringValueIfFieldExists(m, field, "false"));
-    }
-
-    public static String returnStringValueIfFieldExists(Map m, String field) {
-        return returnStringValueIfFieldExists(m, field, "");
     }
 
     public static String returnStringValueIfFieldExists(Map m, String field, String defaultValue) {
@@ -135,94 +114,6 @@ public class Utils {
         return file.endsWith(ext);
     }
 
-    public static String constructAddress(String protocol, String server, int port) {
-        return protocol + server + ":" + port;
-    }
-
-    public static String constructAddress(String protocol, String server, int port, String endpoint) {
-        return constructAddress(protocol, server, port, Arrays.asList(endpoint));
-    }
-
-    public static String constructAddress(String protocol, String server, int port, List<String> endpoints) {
-        String uri = constructAddress(protocol, server, port);
-        return constructAddress(uri, endpoints);
-    }
-
-    public static String constructAddress(String uri, String endpoint) {
-        return constructAddress(uri, Arrays.asList(endpoint));
-    }
-
-    public static String constructAddress(String uri, List<String> endpoints) {
-        for(String endpoint : endpoints) {
-            if (!nullOrEmpty(endpoint)) {
-                uri += "/" + endpoint.replaceAll("^/|/$", "");
-            }
-        }
-        return uri;
-    }
-
-    public static String constructAddress(String uri, List<String> endpoints, HashMap<String, String> params) {
-        return constructAddress(uri, endpoints) + constructUrlParams(params);
-    }
-
-    public static String constructAddress(String uri, HashMap<String, String> params) {
-        return uri + constructUrlParams(params);
-    }
-
-    private static List<String> getParamListFromHashMap(HashMap<String, String> params) {
-        List<String> paramList = new ArrayList<String>();
-        for(Map.Entry<String,String> entry : params.entrySet()) {
-            paramList.add(encodeUrlComponent(entry.getKey()) + "=" + encodeUrlComponent(entry.getValue()));
-        }
-        return paramList;
-    }
-
-    public static String constructUrlParams(HashMap<String, String> params) {
-        if (params == null) return "";
-        return "?" + StringUtils.join(getParamListFromHashMap(params), "&");
-    }
-
-    public static String constructUrlParams(HashMap<String, String> params, HashMap<String, List<String>> repeatKeyParams) {
-        if (params == null && repeatKeyParams == null) return "";
-
-        List<String> paramList = getParamListFromHashMap(params);
-
-        for(Map.Entry<String, List<String>> entry: repeatKeyParams.entrySet()) {
-            String key = encodeUrlComponent(entry.getKey());
-            for(String val : entry.getValue()) {
-                paramList.add(key + "=" + encodeUrlComponent(val));
-            }
-        }
-        return "?" + StringUtils.join(paramList, "&");
-    }
-
-    public static String decodeUrl(String url) {
-        try {
-            url = URLDecoder.decode(url, Constants.UTF8);
-        } catch (UnsupportedEncodingException e) {
-            logger.error("Could not decode URL: " + e.getMessage());
-        }
-        return url;
-    }
-
-    public static String encodeUrlComponent(String s) {
-        try {
-            return URLEncoder.encode(s, Constants.UTF8);
-        } catch (UnsupportedEncodingException e) {
-            logger.error("Could not encode string: " + e.getMessage());
-        }
-        return s;
-    }
-
-    public static String encodeQuery(String s) {
-        try {
-            s = URIUtil.encodeQuery(s);
-        } catch (URIException e) {
-            logger.error(e.getMessage());
-        }
-        return s;
-    }
-
     public static String getUTF8String(byte[] bytes) {
         try {
             return new String(bytes, Constants.UTF8);
@@ -235,11 +126,15 @@ public class Utils {
         return getUTF8String(s.getBytes());
     }
 
+    public static boolean compareStringsIgnoreCaseAndWhitespace(String s1, String s2) {
+        return s1 != null && s2 != null && s1.trim().toUpperCase().equals(s2.trim().toUpperCase());
+    }
+
     public static int getInteger(String s) {
         try {
             return Integer.parseInt(s);
         } catch (NumberFormatException e) {
-            return Constants.INVALID_INTEGER;
+            return INVALID_INTEGER;
         }
     }
 
@@ -305,8 +200,8 @@ public class Utils {
             FileInputStream fstream = new FileInputStream(fileName);
             DataInputStream in = new DataInputStream(fstream);
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
-            String line;
 
+            String line;
             while ((line = br.readLine()) != null)   {
                 sb.append(line);
             }
@@ -318,6 +213,48 @@ public class Utils {
         }
 
         return sb.toString();
+    }
+
+    public static Document getXmlDocumentFromString(String contents) {
+        if (nullOrEmpty(contents)) {
+            throw new NullPointerException("Cannot convert null string to Document.");
+        }
+
+        DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+
+        try {
+            DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
+            Document doc = docBuilder.parse(IOUtils.toInputStream(contents));
+            doc.getDocumentElement().normalize();
+            return doc;
+        } catch (SAXException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public static List<XmlProperty> getXmlProperties(NodeList nodes) {
+        List<XmlProperty> xmlProperties = new ArrayList<XmlProperty>();
+        for(int i = 0; i < nodes.getLength(); i++) {
+            XmlProperty xmlProperty = new XmlProperty(nodes.item(i));
+            if (xmlProperty.isValid()) {
+                xmlProperties.add(xmlProperty);
+            }
+        }
+        return xmlProperties;
+    }
+
+    public static Document getXmlDocumentFromFile(String filePath) {
+        File f = new File(filePath);
+        if (!f.exists() || !f.canRead()) {
+            throw new RuntimeException(filePath + " has an error; exists: " + f.exists() + ", canRead : " + f.canRead());
+        }
+        return getXmlDocumentFromString(readFileIntoString(filePath));
     }
 
     public static String stripFileExtension(String fileName) {

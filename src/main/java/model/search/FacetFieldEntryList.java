@@ -1,4 +1,4 @@
-package model;
+package model.search;
 
 import GatesBigData.utils.SolrUtils;
 
@@ -63,8 +63,7 @@ public class FacetFieldEntryList implements Iterable<FacetFieldEntry> {
 
     public boolean isFieldMultivalued(String name) {
         int index = names.indexOf(name);
-        FacetFieldEntry entry = facetFieldList.get(index);
-        return entry.isMultiValued();
+        return facetFieldList.get(index).isMultiValued();
     }
 
     public boolean containsKey(String name) {

@@ -1,23 +1,16 @@
 package service;
 
 
-import model.FacetFieldEntryList;
 import net.sf.json.JSONObject;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.MapFile;
-import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.Text;
 import org.apache.nutch.parse.ParseData;
-import org.apache.nutch.parse.ParseText;
 import org.apache.nutch.protocol.Content;
-import org.codehaus.jackson.JsonGenerator;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -31,12 +24,6 @@ public interface HDFSService {
     public Configuration getHDFSConfiguration();
 
     public Configuration getNutchConfiguration();
-
-    public JSONObject getInfoFileContents();
-
-    public JSONObject getInfoFileContents(String coreName);
-
-    public String getInfoFileFieldContents(String coreName, String fieldName);
 
     public boolean addFile(String remoteFilePath, String localFilePath);
 

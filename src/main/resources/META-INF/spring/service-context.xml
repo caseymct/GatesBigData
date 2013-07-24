@@ -15,11 +15,10 @@
 
     <bean id="hdfsService"                  class="service.HDFSServiceImpl"/>
     <bean id="solrService"                  class="service.SolrServiceImpl" />
-    <bean id="coreService"                  class="service.CoreServiceImpl" />
+    <bean id="coreService"                  class="service.CollectionServiceImpl" />
     <bean id="searchService"                class="service.SearchServiceImpl" />
     <bean id="exportCSVService"             class="service.ExportCSVServiceImpl" />
     <bean id="exportJSONService"            class="service.ExportJSONServiceImpl" />
     <bean id="exportZipService"             class="service.ExportZipServiceImpl" />
     <bean id="documentConversionService"    class="service.DocumentConversionServiceImpl" />
-    <bean id="jdbcService"                  class="service.JDBCServiceImpl" />
 </beans>

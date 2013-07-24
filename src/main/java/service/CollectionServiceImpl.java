@@ -1,15 +1,9 @@
 package service;
 
 import GatesBigData.constants.Constants;
-import GatesBigData.constants.solr.FieldNames;
-import GatesBigData.constants.solr.Operations;
-import GatesBigData.constants.solr.Response;
-import GatesBigData.constants.solr.Solr;
-import GatesBigData.utils.*;
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
-import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import org.apache.log4j.Logger;
 import org.apache.nutch.metadata.Metadata;
@@ -26,11 +20,17 @@ import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.util.*;
 
-public class CoreServiceImpl implements CoreService {
+import static GatesBigData.constants.solr.Operations.*;
+import static GatesBigData.constants.solr.Response.*;
+import static GatesBigData.constants.solr.FieldNames.*;
+import static GatesBigData.utils.JSONUtils.*;
+import static GatesBigData.utils.Utils.*;
+
+public class CollectionServiceImpl implements CollectionService {
 
     private SolrService solrService;
     private NtlmPasswordAuthentication auth;
-    private static final Logger logger = Logger.getLogger(CoreServiceImpl.class);    
+    private static final Logger logger = Logger.getLogger(CollectionServiceImpl.class);
 
     @Autowired
     public void setServices(SolrService solrService) {
@@ -98,51 +98,26 @@ public class CoreServiceImpl implements CoreService {
         return doc;
     }
 
-    public int addInfoFiles(String coreName, JSONObject contents) throws IOException, SolrServerException {
-        List<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
-        List<String> fieldsToDelete = new ArrayList<String>();
-
-        Iterator<?> keys = contents.keys();
-
-        while (keys.hasNext()) {
-            final String title   = (String) keys.next();
-            final String content = contents.getString(title);
-            fieldsToDelete.add(title);
-
-            HashMap<String, Object> params = new HashMap<String, Object>() {{
-                put(title, content);
-                put(FieldNames.TITLE, title);
-                put(FieldNames.ID, UUID.nameUUIDFromBytes(title.getBytes()));
-                put(FieldNames.URL, title);
-            }};
-            docs.add(createSolrDocument(params));
-        }
-
-        deleteByField(coreName, FieldNames.TITLE, fieldsToDelete);
-        return update(coreName, docs);
-    }
-
-
     private HashMap<String, Object> addParseMeta(HashMap<String, Object> params, Metadata metadata) {
-        List<String> names = Arrays.asList(metadata.names());
-        for (Map.Entry<String,String> entry : FieldNames.METADATA_TO_SOLRFIELDS.entrySet()) {
-            if (names.contains(entry.getKey())) {
-                params.put(entry.getValue(), metadata.get(entry.getKey()));
+        for (String name : Arrays.asList(metadata.names())) {
+            String solrField = getSolrFieldFromMetaData(name);
+            if (solrField != null) {
+                params.put(solrField, metadata.get(name));
             }
         }
         return params;
     }
 
     private HashMap<String, Object> addSMBDates(HashMap<String, Object> params, String url) {
-        boolean addLastModified = !params.containsKey(FieldNames.LAST_MODIFIED);
-        boolean addCreateTime   = !params.containsKey(FieldNames.CREATE_DATE);
+        boolean addLastModified = !params.containsKey(LAST_MODIFIED);
+        boolean addCreateTime   = !params.containsKey(CREATION_DATE);
 
         if (addCreateTime || addLastModified) {
             try {
                 SmbFile file = new SmbFile(url, getAuth());
                 if (file.exists()) {
-                    if (addLastModified) params.put(FieldNames.LAST_MODIFIED, DateField.formatExternal(new Date(file.getLastModified())));
-                    if (addCreateTime)   params.put(FieldNames.CREATE_DATE, DateField.formatExternal(new Date(file.createTime())));
+                    if (addLastModified) params.put(LAST_MODIFIED, DateField.formatExternal(new Date(file.getLastModified())));
+                    if (addCreateTime)   params.put(CREATION_DATE, DateField.formatExternal(new Date(file.createTime())));
                 }
             } catch (SmbException e) {
                 logger.error(e.getMessage());
@@ -159,29 +134,29 @@ public class CoreServiceImpl implements CoreService {
             return null;
         }
         HashMap<String, Object> params = new HashMap<String, Object>() {{
-            put(FieldNames.HDFSKEY, urlString);
-            put(FieldNames.HDFSSEGMENT, segment);
-            put(FieldNames.BOOST, 1.0);
-            put(FieldNames.ID, urlString);
-            put(FieldNames.URL, urlString);
-            put(FieldNames.TIMESTAMP, DateField.formatExternal(Calendar.getInstance().getTime()));
-            put(FieldNames.CONTENT_TYPE, contentType);
+            put(HDFSKEY, urlString);
+            put(HDFSSEGMENT, segment);
+            put(BOOST, 1.0);
+            put(ID, urlString);
+            put(URL, urlString);
+            put(TIMESTAMP, DateField.formatExternal(Calendar.getInstance().getTime()));
+            put(CONTENT_TYPE, contentType);
         }};
         params = addParseMeta(params, parseData.getParseMeta());
 
-        if (urlString.startsWith(Constants.SMB_PROTOCOL)) {
+        if (urlString.startsWith(SMB_PROTOCOL)) {
             params = addSMBDates(params, urlString);
         }
 
-        if (!params.containsKey(FieldNames.TITLE)) {
+        if (!params.containsKey(TITLE)) {
             String[] urlItems = urlString.split("/");
-            params.put(FieldNames.TITLE, urlItems[urlItems.length - 1]);
+            params.put(TITLE, urlItems[urlItems.length - 1]);
         }
 
-        if (contentType.equals(Constants.JSON_CONTENT_TYPE)) {
+        if (contentType.equals(JSON_CONTENT_TYPE)) {
             params = addFieldsFromJsonObject(params, content, "");
-        } else if (!Utils.nullOrEmpty(content)) {
-            params.put(FieldNames.CONTENT, content);
+        } else if (!nullOrEmpty(content)) {
+            params.put(CONTENT, content);
         }
 
         return createSolrDocument(params);
@@ -205,53 +180,32 @@ public class CoreServiceImpl implements CoreService {
     }
 
     private HashMap<String, Object> addFieldsFromJsonObject(HashMap<String, Object> params, String jsonObjectStr, String parentStr) {
-        try {
-            JSONObject jsonObject = JSONObject.fromObject(jsonObjectStr);
-            return addFieldsFromJsonObject(params, jsonObject, parentStr);
-        } catch (JSONException e) {
-            logger.error("Invalid json");
-        }
-        return params;
+        JSONObject o = convertStringToJSONObject(jsonObjectStr);
+        return o == null ? params : addFieldsFromJsonObject(params, o, parentStr);
     }
 
-    public String getSchemaXML(String collectionName) {
-        if (Utils.nullOrEmpty(collectionName)) return "";
-
-        String uri = SolrUtils.getSolrZkSchemaURI(collectionName);
-        String schemaStr = HttpClientUtils.httpGetRequest(uri);
-        JSONObject schema = JSONUtils.convertStringToJSONObject(schemaStr);
-        return (String) JSONUtils.extractJSONProperty(schema, Arrays.asList(Solr.ZK_NODE, "data"), String.class, "");
+    public JSONObject getCollectionInfo(String collection) {
+        return getJSONObjectValue(solrService.getCollectionInfo(), collection);
     }
 
-    public JSONObject getCollectionInfo(String collectionName) {
-        JSONObject collectionInfo = solrService.getCollectionInfo();
-        return JSONUtils.getJSONObjectValue(collectionInfo, collectionName);
-    }
-
-    public int doSolrOperation(String collection, int operation, JSONObject infoFieldParams, StringWriter writer) {
-        int success = Response.CODE_ERROR;
-        String msg = Operations.OPERATION_MSGS.get(operation);
+    public int doSolrOperation(String collection, int operation, StringWriter writer) {
+        int success = CODE_ERROR;
+        String msg = OPERATION_MSGS.get(operation);
 
         writer.write("Performing operation " + msg.toLowerCase() + " on core " + collection + ".\n");
 
         try {
-            if (operation == Operations.OPERATION_UPDATE) {
+            if (operation == OPERATION_UPDATE) {
                 success = update(collection);
-            } else if (operation == Operations.OPERATION_DELETE) {
+            } else if (operation == OPERATION_DELETE) {
                 success = deleteIndex(collection);
-            } else if (operation == Operations.OPERATION_ADD_INFOFILES) {
-                if (infoFieldParams != null) {
-                    success = addInfoFiles(collection, infoFieldParams);
-                } else {
-                    writer.write("Did not update info field parameters for " + collection + "\n");
-                }
-            } else if (operation == Operations.OPERATION_OPTIMIZE) {
+            } else if (operation == OPERATION_OPTIMIZE) {
                 success = optimizeIndex(collection);
             } else {
                 writer.write("Invalid operation code: " + operation + "\n");
             }
 
-            writer.write("\t" + msg + " success: " + Response.success(success) + "\n");
+            writer.write("\t" + msg + " success: " + success(success) + "\n");
         } catch (SolrServerException e) {
             writer.write("\t" + msg + " failed with SolrServerException: " + e.getMessage() + "\n");
         } catch (IOException e) {

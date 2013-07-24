@@ -95,7 +95,7 @@ a.add {
 a.delete {
     background: url(../images/delete.png) 5px 5px no-repeat #f3f3f3;
     padding-left: 30px;
-    background-size: 10px;
+    background-size: 2px;
 }
 a.save {
     background: url(../images/save.png) 5px 5px no-repeat #F3F3F3;

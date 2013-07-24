@@ -1,4 +1,4 @@
-package model;
+package model.schema;
 
 import GatesBigData.constants.Constants;
 import GatesBigData.constants.solr.FieldNames;

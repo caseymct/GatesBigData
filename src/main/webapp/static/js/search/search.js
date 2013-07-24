@@ -48,7 +48,8 @@ SEARCH.util = {};
         searchResultSubheadingCSSClass  = 'search_subheading',      searchResultElWidthStructured   = '56%',
         searchResultDivCSSClass         = 'search_result_div',      searchResultElWidthUnstructured = '100%',   
         yuiButtonLabelCSSClass          = 'yui-button-label',       previewDivCSSClass              = 'preview_result_div',
-        buttonZoomOutCSSClass           = 'button zoom_out',        buttonZoomInCSSClass           = 'button zoom_in';
+        buttonZoomOutCSSClass           = 'button zoom_out',        buttonZoomInCSSClass           = 'button zoom_in',
+        previewLoadingCSSClass          = 'preview_loading';
 
     var searchInputEls                  = [],       dataSourceFields                = [],
         thumbnailData                   = {},       initialSelectIndex              = 0,
@@ -56,8 +57,7 @@ SEARCH.util = {};
         numFound                        = 0,        urlSearchParams                 = "",
 
         // URLs
-        loadingImgUrl = "", thumbnailUrl  = "", analyzeUrl = "",
-        viewDocUrl    = "", searchUrl     = "", reportsUrl = "",
+        thumbnailUrl  = "", analyzeUrl = "", viewDocUrl    = "", searchUrl     = "", reportsUrl = "",
 
         // set in init
         unstructuredData                = false,    displayName                     = "",
@@ -102,7 +102,6 @@ SEARCH.util = {};
 
         var urls      = names[UI.URLS_KEY];
         viewDocUrl    = urls[UI.VIEW_DOC_URL_KEY];
-        loadingImgUrl = urls[UI.LOADING_IMG_URL_KEY];
         thumbnailUrl  = urls[UI.THUMBNAIL_URL_KEY];
         searchUrl     = urls[UI.SEARCH_URL_KEY];
         analyzeUrl    = urls[UI.ANALYZE_URL_KEY];
@@ -203,6 +202,7 @@ SEARCH.util = {};
     function updateDocsFromLastSearch(docs) {
         var i, docId, doc;
         docsFromLastSearch = {};
+
         for(i = 0; i < docs.length; i++) {
             doc = docs[i];
             docId = doc.id;
@@ -229,15 +229,15 @@ SEARCH.util = {};
     };
 
     var searchFailureCallback = function() {
-        alert("Could not connect to Solr");
+        alert("Could not connect.");
     };
 
     SEARCH.ui.search = function() {
         UI.showWait();
 
-        var fq = getFilterQueryFn();
-        var queryTerms = getQueryTerms();
-        urlSearchParams = constructUrlSearchParams(queryTerms, fq, 0);
+        //var fq = getFilterQueryFn();
+        //var queryTerms = getQueryTerms();
+        urlSearchParams = constructUrlSearchParams();
 
         clearPreviewContainerImage();
 
@@ -373,8 +373,9 @@ SEARCH.util = {};
 
     function setPreviewContainerData(title, dataStr, dataType) {
         UI.removeDivChildNodes(currPreviewContainerEl);
-        UI.setStyleOnElementId(currPreviewContainerEl, "border", "1px solid gray");
-        UI.setStyleOnElementId(currPreviewContainerEl, "background-image", "none");
+
+        UI.setStyleOnElement(currPreviewContainerEl, "border", "1px solid gray");
+        UI.setStyleOnElement(currPreviewContainerEl, "background-image", "none");
 
         if (dataStr == "" || dataStr == undefined) {
             dataType = "text";
@@ -391,9 +392,7 @@ SEARCH.util = {};
 
     function setPreviewContainerLoadingImage() {
         currPreviewContainerEl.innerHTML = "";
-        UI.setStyleOnElement(currPreviewContainerEl, "background-image", "url(\"" + loadingImgUrl + "\")");
-        UI.setStyleOnElement(currPreviewContainerEl, "background-position", "50% 10%");
-        UI.setStyleOnElement(currPreviewContainerEl, "background-repeat", "no-repeat");
+        UI.addCSSClass(currPreviewContainerEl, previewLoadingCSSClass);
     }
 
     function clearPreviewContainerImage() {
@@ -413,13 +412,13 @@ SEARCH.util = {};
     function getQueryTerms() {
         var val = searchInputEls[getSearchTabActiveIndex()].value;
         if (searchTab == null || val == "") {
-            return queryDefaultValue
+            return queryDefaultValue;
         }
         var match = val.match(/(.*:")(.*?)"$/);
         if (match != null) {
             val = match[1] + match[2].replace(/"/g, '\\"') + '"';
         }
-        return val;//.encodeForRequest();
+        return val.encodeForRequest();
     }
 
     /* Sort order button code */
@@ -515,20 +514,20 @@ SEARCH.util = {};
         Dom.get(showQueryElIdBody).innerHTML = s.join('&');
     }
 
-    function constructUrlSearchParams(queryTerms, fq, start) {
-        var sortType = sortBySelect.get("selectedMenuItem").value,
-            coreName = SEARCH.ui.coreName,
-            sortOrder = getSortOrder();
-
-        var urlParams = "?query=" + queryTerms + "&core=" + coreName + "&sort=" + sortType + "&order=" + sortOrder;
-        if (fq != "") {
-            urlParams += "&fq=" + fq;
+    function constructUrlSearchParams() {
+        var params = [
+            {key : UI.util.REQUEST_QUERY_KEY, value : getQueryTerms()},
+            {key : UI.util.REQUEST_COLLECTION_KEY,  value : SEARCH.ui.coreName},
+            {key : UI.util.REQUEST_SORT_KEY, value : sortBySelect.get("selectedMenuItem").value},
+            {key : UI.util.REQUEST_ORDER_KEY, value : getSortOrder()},
+            {key : UI.util.REQUEST_START_KEY, value : 0}
+        ];
+        var fq = getFilterQueryFn();
+        if (fq != '') {
+            params.push({key : UI.util.REQUEST_FQ_KEY, value : fq});
         }
-        if (start != undefined && start != "") {
-            urlParams += "&start=" + start;
-        }
 
-        return urlParams;
+        return UI.util.constructRequestString([], [], params);
     }
 
     /* Data table event handlers */
@@ -560,12 +559,12 @@ SEARCH.util = {};
             Event.stopEvent(e.event);
 
             var data = this.getRecord(e.target).getData();
-            var urlParams = "?core=" + SEARCH.ui.coreName + "&id=" + data.id + "&view=preview";
+            var urlParams = "?collection=" + SEARCH.ui.coreName + "&id=" + data.id + "&view=preview";
             window.open(viewDocUrl + urlParams, "_blank");
         });
 
         dataTable.on('rowMouseoverEvent', function (e) {
-            dataTableCellMouseoverEvent(e, dataTable, loadingImgUrl, thumbnailUrl);
+            dataTableCellMouseoverEvent(e, dataTable);
         });
     }
 
@@ -614,7 +613,7 @@ SEARCH.util = {};
 
         for(var i = 0; i < docs.length; i++) {
             var doc               = docs[i],
-                titleHref         = viewDocUrl + "?view=preview&core=" + SEARCH.ui.coreName + "&id=" + doc[solrDocIdFieldName],
+                titleHref         = viewDocUrl + "?view=preview&collection=" + SEARCH.ui.coreName + "&id=" + doc[solrDocIdFieldName],
                 titleId           = constructLinkDivId(i),
                 searchResultDivId = constructSearchResultDivId(i),
                 previewDivId      = constructPreviewDivId(i);

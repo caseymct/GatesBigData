@@ -1,15 +1,12 @@
-package model;
+package model.schema;
 
-import GatesBigData.constants.Constants;
+
 import GatesBigData.constants.solr.FieldNames;
 import GatesBigData.constants.solr.FieldTypes;
-import GatesBigData.constants.solr.Solr;
 import GatesBigData.utils.*;
+import model.search.FacetFieldEntryList;
 import net.sf.json.JSONObject;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
@@ -19,12 +16,16 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.util.*;
 
+import static GatesBigData.utils.HttpClientUtils.httpGetRequest;
+import static GatesBigData.utils.JSONUtils.*;
+import static GatesBigData.utils.SolrUtils.*;
+import static GatesBigData.utils.Utils.*;
+import static GatesBigData.constants.solr.Solr.*;
+import static GatesBigData.constants.solr.FieldNames.*;
 
-public class SolrCollectionSchemaInfo {
+public class CollectionSchemaInfo {
     static final String COPYFIELD_SOURCE_KEY = "source";
     static final String COPYFIELD_DEST_KEY   = "dest";
     static final String SCHEMA_FIELD_KEY     = "field";
@@ -32,7 +33,7 @@ public class SolrCollectionSchemaInfo {
 
     private Map<String, SchemaField> fieldInfoMap           = new HashMap<String, SchemaField>();
     private List<String> prefixTokens                       = new ArrayList<String>();
-    private List<String> viewFieldNames                     = new ArrayList<String>();
+    private List<String> viewFields                         = new ArrayList<String>();
     private List<String> dateFieldNames                     = new ArrayList<String>();
 
     private Map<String, String> prefixFieldToCopySourceMap  = new HashMap<String, String>();
@@ -41,47 +42,36 @@ public class SolrCollectionSchemaInfo {
     private DynamicDateFields dynamicDateFields             = null;
 
     private String coreTitle        = "";
-    private String schema           = "";
+    private Document schema;
     private boolean structuredData  = true;
     private String suggestionCore   = "";
 
-    private static Logger logger = Logger.getLogger(SolrCollectionSchemaInfo.class);
+    private static Logger logger = Logger.getLogger(CollectionSchemaInfo.class);
 
-    public SolrCollectionSchemaInfo() {}
+    public CollectionSchemaInfo() {}
 
-    public SolrCollectionSchemaInfo(String collection) {
-        setSchemaXML(collection);
+    public CollectionSchemaInfo(String collection) {
+        this.schema = this.getSchemaXMLDocument(collection);
         parseSchema();
 
+        this.dynamicDateFields = new DynamicDateFields(this.dateFieldNames);
         updateDynamicDateFieldDateRanges();
     }
 
-    private void setSchemaXML(String collection) {
-        if (Utils.nullOrEmpty(collection)) {
-            return;
-        }
-
-        String uri           = SolrUtils.getSolrZkSchemaURI(collection);
-        String schemaStr     = HttpClientUtils.httpGetRequest(uri);
-        JSONObject schemaObj = JSONUtils.convertStringToJSONObject(schemaStr);
-        schema = (String) JSONUtils.extractJSONProperty(schemaObj, Arrays.asList(Solr.ZK_NODE, "data"), String.class, "");
+    private Document getSchemaXMLDocument(String collection) {
+        String schemaStr     = httpGetRequest(getSolrZkSchemaURI(collection));
+        JSONObject schemaObj = convertStringToJSONObject(schemaStr);
+        String schemaXMLString = (String) extractJSONProperty(schemaObj, Arrays.asList(ZK_NODE, DATA_NODE), String.class, "");
+        return !nullOrEmpty(schemaXMLString) ? getXmlDocumentFromString(schemaXMLString) : null;
     }
 
     private void parseSchema() {
-        if (Utils.nullOrEmpty(schema)) {
+        if (nullOrEmpty(this.schema)) {
             return;
         }
-        try {
-            DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
-            Document doc = docBuilder.parse(IOUtils.toInputStream(schema));
-            doc.getDocumentElement().normalize();
 
-            populateFieldInfo(doc.getElementsByTagName(SCHEMA_FIELD_KEY));
-            populateCopyFieldInfo(doc.getElementsByTagName(SCHEMA_COPYFIELD_KEY));
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-        }
+        populateFieldInfo(this.schema.getElementsByTagName(SCHEMA_FIELD_KEY));
+        populateCopyFieldInfo(this.schema.getElementsByTagName(SCHEMA_COPYFIELD_KEY));
     }
 
     public void populateFieldInfo(NodeList fields) {
@@ -107,12 +97,9 @@ public class SolrCollectionSchemaInfo {
                 suggestionCore = schemaField.getDefaultValue();
             }
 
-            if (FieldNames.validFieldName(fieldName)) {
+            if (!ignoreFieldName(fieldName)) {
                 facetFieldEntryList.add(fieldName, schemaField.getType(), schemaField.isMultiValued());
-            }
-
-            if (!FieldNames.ignoreFieldName(fieldName)) {
-                viewFieldNames.add(fieldName);
+                viewFields.add(fieldName);
             }
 
             if (schemaField.isDateType()) {
@@ -124,7 +111,6 @@ public class SolrCollectionSchemaInfo {
             }
         }
     }
-
 
     public void populateCopyFieldInfo(NodeList copyFields) {
         for(int s = 0; s < copyFields.getLength() ; s++){
@@ -138,7 +124,7 @@ public class SolrCollectionSchemaInfo {
 
                 if (dest.endsWith(FieldNames.PREFIX_SUFFIX)) {
                     prefixFieldToCopySourceMap.put(dest, el.getAttribute(COPYFIELD_SOURCE_KEY));
-                } else if (dest.endsWith(FieldNames.FACET_SUFFIX)) {
+                } else if (dest.endsWith(FACET_SUFFIX)) {
                     copySourceToFacetFieldMap.put(el.getAttribute(COPYFIELD_SOURCE_KEY), dest);
                 }
             }
@@ -150,23 +136,29 @@ public class SolrCollectionSchemaInfo {
     }
 
     public void updateDynamicDateFieldDateRanges() {
-        this.dynamicDateFields = new DynamicDateFields(this.dateFieldNames);
+        if (!hasSuggestionCore()) {
+            return;
+        }
 
-        if (hasSuggestionCore()) {
-            SolrServer server = new HttpSolrServer(SolrUtils.getSolrServerURI(suggestionCore));
-            try {
-                QueryResponse rsp = server.query(dynamicDateFields.getDateSolrQuery());
-                if (rsp != null) {
-                    this.dynamicDateFields.update(rsp.getResults());
-                }
-            } catch (SolrServerException e) {
-                logger.error(e.getMessage());
+        SolrServer server = new HttpSolrServer(getSolrServerURI(suggestionCore));
+        try {
+            QueryResponse rsp = server.query(dynamicDateFields.getDateSolrQuery());
+            if (rsp != null) {
+                this.dynamicDateFields.update(rsp.getResults());
             }
+        } catch (SolrServerException e) {
+            logger.error(e.getMessage());
         }
     }
 
     public List<Date> getDateRange(String f) {
-        return Arrays.asList(getDateRangeStart(f), getDateRangeEnd(f));
+        if (!this.dynamicDateFields.hasDateRangeForField(f)) {
+            updateDynamicDateFieldDateRanges();
+        }
+
+        Date start = getDateRangeStart(f);
+        Date end   = getDateRangeEnd(f);
+        return (start != null && end != null) ? Arrays.asList(start, end) : null;
     }
 
     public Date getDateRangeStart(String f) {
@@ -175,10 +167,6 @@ public class SolrCollectionSchemaInfo {
 
     public Date getDateRangeEnd(String f) {
         return this.dynamicDateFields.getEnd(f);
-    }
-
-    public ExtendedSolrQuery getDynamicDateFieldsQuery() {
-        return this.dynamicDateFields.getDateSolrQuery();
     }
 
     public boolean containsField(String fieldName) {
@@ -248,12 +236,8 @@ public class SolrCollectionSchemaInfo {
         return schemaField != null && FieldTypes.NUMBER_FIELDS.contains(schemaField.getType());
     }
 
-    public List<String> getViewFieldNames() {
-        return viewFieldNames;
-    }
-
-    public String getViewFieldNamesString() {
-        return StringUtils.join(viewFieldNames, Constants.DEFAULT_DELIMETER);
+    public List<String> getViewFields() {
+        return viewFields;
     }
 
     public Map<String, String> getPrefixFieldMap() {
@@ -278,10 +262,11 @@ public class SolrCollectionSchemaInfo {
 
     public List<String> getFieldNamesSubset(List<String> indices, boolean include) {
         List<String> subList = new ArrayList<String>();
+        List<String> fields = new ArrayList<String>(viewFields);
 
-        for(int i = 0; i < viewFieldNames.size(); i++) {
+        for(int i = 0; i < fields.size(); i++) {
             if ((include && indices.contains(i + "")) || (!include && !indices.contains(i + ""))) {
-                subList.add(viewFieldNames.get(i));
+                subList.add(fields.get(i));
             }
         }
         return subList;

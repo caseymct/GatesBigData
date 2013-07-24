@@ -22,26 +22,31 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.*;
 
+import static GatesBigData.constants.solr.Solr.*;
+import static GatesBigData.utils.SolrUtils.*;
+import static GatesBigData.utils.Utils.*;
+import static GatesBigData.utils.URLUtils.*;
 
 public class SolrServiceImpl implements SolrService {
-
     public static final Logger logger = Logger.getLogger(SolrServiceImpl.class);
 
     public SolrServer getSolrServer() {
         return getSolrServer(null);
     }
 
-    public SolrServer getSolrServer(String collectionName) {
-        return Solr.USE_CLOUD_SOLR_SERVER ? getCloudSolrServer(collectionName) : getHttpSolrServer(collectionName);
+    public SolrServer getSolrServer(String collection) {
+        return USE_CLOUD_SOLR_SERVER ? getCloudSolrServer(collection) : getHttpSolrServer(collection);
     }
 
     public SolrServer getCloudSolrServer(String collectionName) {
         try {
-            CloudSolrServer solrServer = new CloudSolrServer(Solr.ZOOKEEPER_SERVER);
-            solrServer.setZkClientTimeout(Solr.ZK_CLIENT_TIMEOUT);
-            solrServer.setZkConnectTimeout(Solr.ZK_CONNECT_TIMEOUT);
+            CloudSolrServer solrServer = new CloudSolrServer(getZkServerURI());
+            solrServer.setZkClientTimeout(ZK_CLIENT_TIMEOUT);
+            solrServer.setZkConnectTimeout(ZK_CONNECT_TIMEOUT);
 
-            if (!Utils.nullOrEmpty(collectionName)) solrServer.setDefaultCollection(collectionName);
+            if (!nullOrEmpty(collectionName)) {
+                solrServer.setDefaultCollection(collectionName);
+            }
 
             return solrServer;
 
@@ -52,7 +57,7 @@ public class SolrServiceImpl implements SolrService {
     }
 
     public SolrServer getHttpSolrServer(String coreName) {
-        return new HttpSolrServer(SolrUtils.getSolrServerURI(coreName));
+        return new HttpSolrServer(getSolrServerURI(coreName));
     }
 
     public SolrServer getHttpSolrServer() {

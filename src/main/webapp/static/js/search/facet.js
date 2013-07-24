@@ -134,30 +134,23 @@ FACET.util = {};
             if (facetTreeView.getRoot() == e.node.parent) return;
 
             var node = e.node;
-            var anchorText = (!(node.parent.parent instanceof RootNode) ? node.parent.parent.label + "." : "")
-                + node.parent.label + " : " + node.label.substring(0, node.label.lastIndexOf("(") - 1);
+            var fieldName  = (!(node.parent.parent instanceof RootNode) ? node.parent.parent.label + "." : "") + node.parent.label;
+            var fieldValue = node.label.substring(0, node.label.lastIndexOf("(") - 1);
 
             var facetOptionDivId = getFacetOptionDivId(node.index);
-            var facetOptionAnchorId = getFacetOptionAnchorId(node.index);
 
             if (Dom.inDocument(facetOptionDivId) == false) {
-                var anchorDiv = UI.addDomElementChild("div", Dom.get(UI.FACET.FACET_OPTIONS_DIV_EL_NAME),
-                    { id : facetOptionDivId }, { float : "left" });
-                var anchor = UI.addDomElementChild("a", anchorDiv,
-                    { id: facetOptionAnchorId }, { margin: "2px", "class" : "button delete" });
-                anchor.appendChild(document.createTextNode(anchorText));
-
-                Event.addListener(facetOptionDivId, "click", function(e) {
-                    UI.removeElement(facetOptionDivId);
-
-                    if (UI.getChildrenByTagName(UI.FACET.FACET_OPTIONS_DIV_EL_NAME).length == 0) {
-                        buildFullFacetTree();
-                    }
-                });
+                UI.addDeleteButtonForIE(Dom.get(UI.FACET.FACET_OPTIONS_DIV_EL_NAME), facetOptionDivId,
+                    fieldName, fieldValue, rebuild);
             }
         });
     };
 
+    function rebuild() {
+        if (UI.getFiltersText(UI.FACET.FACET_OPTIONS_DIV_EL_NAME).length == 0) {
+            buildFullFacetTree();
+        }
+    }
     function buildFullFacetTree() {
         if (FACET.allFacets != undefined && FACET.allFacets != null) {
             FACET.ui.buildFacetTree(FACET.allFacets);

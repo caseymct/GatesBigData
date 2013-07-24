@@ -1921,7 +1921,7 @@
                 fn = queue.shift();
                 startLength--;
             }
-
+            if (hooks == undefined || hooks.length == 0) return;
             hooks.cur = fn;
             if ( fn ) {
 

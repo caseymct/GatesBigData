@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static GatesBigData.utils.URLUtils.*;
+
 public class HDFSNutchCoreFileIterator {
     private List<String> segments;
     private String currSegment;
@@ -81,7 +83,7 @@ public class HDFSNutchCoreFileIterator {
                         setCurrentReader();
                     }
                 } else if (value.getStatus() == CrawlDatum.STATUS_FETCH_SUCCESS) {
-                    if (!Utils.decodeUrl(key.toString()).endsWith("/")) {
+                    if (!decodeUrl(key.toString()).endsWith("/")) {
                         map.put(key.toString(), this.currSegment);
                     }
                 }

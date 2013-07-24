@@ -1,9 +1,12 @@
 package service;
 
-import GatesBigData.constants.Constants;
 import GatesBigData.constants.solr.*;
 import GatesBigData.utils.*;
-import model.*;
+import model.analysis.SeriesPlot;
+import model.schema.CollectionSchemaInfo;
+import model.search.ExtendedSolrQuery;
+import model.search.FacetFieldEntryList;
+import model.search.SuggestionList;
 import net.sf.json.JSONArray;
 import org.apache.commons.net.util.Base64;
 import org.apache.log4j.Logger;
@@ -24,30 +27,23 @@ import java.io.StringWriter;
 import java.util.*;
 import java.util.Date;
 
+import static GatesBigData.constants.solr.FieldNames.*;
+import static GatesBigData.constants.solr.Solr.*;
+import static GatesBigData.constants.solr.Defaults.*;
+import static GatesBigData.utils.DateUtils.*;
+import static GatesBigData.utils.SolrUtils.*;
+import static GatesBigData.utils.Utils.*;
+import static GatesBigData.constants.solr.Response.*;
+import static GatesBigData.constants.solr.QueryParams.*;
 
 public class SearchServiceImpl implements SearchService {
 
     private static final Logger logger = Logger.getLogger(SearchServiceImpl.class);
-    private CoreService coreService;
+    private CollectionService collectionService;
 
     @Autowired
-    public void setServices(CoreService coreService) {
-        this.coreService = coreService;
-    }
-
-    public List<String> getFieldsToWrite(SolrDocument originalDoc, String coreName, String viewType) {
-
-        if (Solr.isAuditViewOrPreview(viewType)) {
-            JSONArray fieldsStr = getCollectionInfoFieldValuesAsJSONArray(coreName, Solr.getInfoField(viewType));
-
-            if (!Utils.nullOrEmpty(fieldsStr)) {
-                List<String> fields = JSONUtils.convertJSONArrayToStringList(fieldsStr);
-                Collections.sort(fields);
-                return fields;
-            }
-        }
-
-        return SolrUtils.getAllViewFields(originalDoc);
+    public void setServices(CollectionService collectionService) {
+        this.collectionService = collectionService;
     }
 
     public SolrDocumentList getResultList(String collection, String queryStr, String fq, String sortField, SolrQuery.ORDER sortOrder,
@@ -82,51 +78,22 @@ public class SearchServiceImpl implements SearchService {
         return docs.size() >= 1 ? docs.get(0) : null;
     }
 
-    public String getCollectionInfoFieldValue(String collection, String fieldName) {
-        fieldName = fieldName.toUpperCase();
-        if (!FieldNames.isInfoField(fieldName)) {
-            return "";
-        }
-
-        SolrDocument doc = getRecord(collection, FieldNames.TITLE, fieldName);
-        return SolrUtils.getFieldStringValue(doc, fieldName, "").trim();
-    }
-
-    public JSONArray getCollectionInfoFieldValuesAsJSONArray(String collection, String fieldName) {
-        return JSONUtils.convertStringToJSONArray(getCollectionInfoFieldValue(collection, fieldName));
-    }
-
-    public List<String> getCollectionInfoFieldValues(String collection, String fieldName) {
-        JSONArray j = JSONUtils.convertStringToJSONArray(getCollectionInfoFieldValue(collection, fieldName));
-        return JSONUtils.convertJSONArrayToStringList(j);
-    }
-
-    /* Combine preview fields and table fields
-     */
-    public Set<String> getViewFields(String collection) {
-        Set<String> fieldList = new HashSet<String>();
-        fieldList.addAll(getCollectionInfoFieldValues(collection, FieldNames.PREVIEW_FIELDS));
-        fieldList.addAll(getCollectionInfoFieldValues(collection, FieldNames.TABLE_FIELDS));
-        fieldList.addAll(Arrays.asList(FieldNames.ID, FieldNames.URL));
-        return fieldList;
-    }
-
     private String getThumbnailRecord(String coreName, String id) {
         HashMap<String, String> queryParams = new HashMap<String, String>();
-        queryParams.put(FieldNames.ID, id);
-        queryParams.put(FieldNames.CORE, coreName);
+        queryParams.put(ID, id);
+        queryParams.put(CORE, coreName);
 
-        SolrDocument doc = getRecord(Solr.THUMBNAILS_COLLECTION_NAME, queryParams, Operations.BOOLEAN_UNION);
-        Object thumbnail = SolrUtils.getFieldValue(doc, FieldNames.THUMBNAIL);
+        SolrDocument doc = getRecord(THUMBNAILS_COLLECTION_NAME, queryParams, Operations.BOOLEAN_UNION);
+        Object thumbnail = getFieldValue(doc, THUMBNAIL);
 
-        if (!Utils.nullOrEmpty(thumbnail)) {
-            return Constants.BASE64_CONTENT_TYPE + "," + Base64.encodeBase64String((byte []) thumbnail);
+        if (!nullOrEmpty(thumbnail)) {
+            return BASE64_CONTENT_TYPE + "," + Base64.encodeBase64String((byte []) thumbnail);
         }
         return null;
     }
 
-    public void printRecord(String coreName, String id, String viewType, boolean isStructuredData, StringWriter writer) {
-        if (Utils.nullOrEmpty(id)) return;
+    public void printRecord(String coreName, String id, List<String> fl, boolean isStructuredData, StringWriter writer) {
+        if (nullOrEmpty(id)) return;
 
         try {
             JsonFactory f = new JsonFactory();
@@ -134,7 +101,7 @@ public class SearchServiceImpl implements SearchService {
             g.writeStartObject();
 
             if (isStructuredData) {
-                printRecord(coreName, id, viewType, g);
+                printRecord(coreName, id, fl, g);
             } else {
                 String thumbnailRecord = getThumbnailRecord(coreName, id);
                 if (thumbnailRecord != null) {
@@ -151,14 +118,14 @@ public class SearchServiceImpl implements SearchService {
         }
     }
 
-    private void printRecord(String coreName, String id, String viewType, JsonGenerator g) throws IOException {
+    private void printRecord(String coreName, String id, List<String> fl, JsonGenerator g) throws IOException {
         SolrDocument doc = getRecordById(coreName, id);
-        g.writeObjectFieldStart(FieldNames.CONTENT);
+        g.writeObjectFieldStart(CONTENT);
 
         String currParent = "";
         boolean writingSubObj = false;
 
-        for(String field : getFieldsToWrite(doc, coreName, viewType)) {
+        for(String field : fl) {
             String val;
             if (!doc.containsKey(field)) {
                 val = "<i>Field does not exist in this database</i>";
@@ -185,16 +152,16 @@ public class SearchServiceImpl implements SearchService {
                 }
             }
 
-            Utils.writeValueByType(field, val, g);
+            writeValueByType(field, val, g);
         }
 
         g.writeEndObject();
     }
 
     private void printThumbnailRecord(String thumbnailRecord, String id, JsonGenerator g) throws IOException {
-        Utils.writeValueByType(FieldNames.URL, id, g);
-        Utils.writeValueByType(FieldNames.CONTENT_TYPE, Constants.IMG_CONTENT_TYPE, g);
-        g.writeStringField(FieldNames.CONTENT, thumbnailRecord);
+        writeValueByType(URL, id, g);
+        writeValueByType(CONTENT_TYPE, IMG_CONTENT_TYPE, g);
+        g.writeStringField(CONTENT, thumbnailRecord);
     }
 
     private SuggestionList getTopNListings(GroupResponse response, String fullField, int n) {
@@ -207,8 +174,8 @@ public class SearchServiceImpl implements SearchService {
 
             SolrDocument doc = docList.get(0);
             long numFound = docList.getNumFound();
-            float score = (Float) doc.get(FieldNames.SCORE);
-            String text = Utils.getUTF8String((String) doc.get(fullField));
+            float score = (Float) doc.get(SCORE);
+            String text = getUTF8String(getFieldStringValue(doc, fullField, ""));
             suggestionList.add(text, fullField, numFound, score);
         }
 
@@ -221,11 +188,10 @@ public class SearchServiceImpl implements SearchService {
         for(Map.Entry<String, String> entry : fieldMap.entrySet()) {
             String prefixField = entry.getKey();
             String fullField   = entry.getValue();
-            String queryStr    = SolrUtils.getSuggestionQuery(prefixField, userInput);
-            String viewFields  = FieldNames.SCORE + "," + fullField;
+            String queryStr    = getSuggestionQuery(prefixField, userInput);
+            String viewFields  = SCORE + "," + fullField;
 
-            GroupResponse rsp = getGroupResponse(coreName, queryStr, null, Defaults.ROWS, viewFields,
-                    fullField, Defaults.SUGGESTION_GROUP_LIMIT);
+            GroupResponse rsp = getGroupResponse(coreName, queryStr, null, ROWS, viewFields, fullField, SUGGESTION_GROUP_LIMIT);
             if (rsp == null) continue;
 
             suggestions.concat(getTopNListings(rsp, fullField, listingsPerField));
@@ -237,19 +203,19 @@ public class SearchServiceImpl implements SearchService {
     public JSONArray suggestUsingSeparateCore(String coreName, String userInput, int n) {
         SuggestionList suggestions = new SuggestionList();
 
-        String queryString = SolrUtils.getSuggestionQuery(FieldNames.CONTENT, userInput);
+        String queryString = getSuggestionQuery(CONTENT, userInput);
         SolrDocumentList docs = getResultList(buildSuggestQuery(queryString, n), coreName);
 
         int listMaxSize = Math.min(docs.size(), n);
 
         for(int i = 0; i < listMaxSize && suggestions.size() < listMaxSize; i++) {
             SolrDocument doc = docs.get(i);
-            String field = SolrUtils.getRelevantSuggestionField(doc);
-            String fieldValue = SolrUtils.getFieldStringValue(doc, field, "");
-            long count = (Long) doc.getFieldValue(FieldNames.COUNT);
+            String field = getRelevantSuggestionField(doc);
+            String fieldValue = getFieldStringValue(doc, field, "");
+            long count = (Long) doc.getFieldValue(COUNT);
 
             if (!fieldValue.equals("") && count > 0) {
-                suggestions.add(fieldValue, FieldNames.getFacetDisplayName(field), count, 1.0);
+                suggestions.add(fieldValue, getFacetDisplayName(field), count, 1.0);
             }
         }
 
@@ -258,14 +224,14 @@ public class SearchServiceImpl implements SearchService {
 
     public QueryResponse findSearchResults(String collection, String queryString, String sortField, String sortOrder, Integer start, Integer rows,
                                            String fq, FacetFieldEntryList facetFields, String viewFields, boolean includeHighlighting,
-                                           SolrCollectionSchemaInfo info) {
-        return findSearchResults(collection, queryString, SolrUtils.createSortClauseList(sortField, sortOrder), start, rows, fq,
+                                           CollectionSchemaInfo info) {
+        return findSearchResults(collection, queryString, createSortClauseList(sortField, sortOrder), start, rows, fq,
                 facetFields, viewFields, includeHighlighting, info);
     }
 
     public QueryResponse findSearchResults(String collection, String queryString, List<SolrQuery.SortClause> sortClauses, Integer start, Integer rows,
                                            String fq, FacetFieldEntryList facetFields, String fl, boolean includeHighlighting,
-                                           SolrCollectionSchemaInfo info) {
+                                           CollectionSchemaInfo info) {
         ExtendedSolrQuery query = buildQuery(queryString, fq, sortClauses, start, rows, fl);
         query.addQueryFacets(facetFields, info);
         if (includeHighlighting) {
@@ -282,10 +248,10 @@ public class SearchServiceImpl implements SearchService {
 
     public void findAndWriteSearchResults(String collection, String query, List<SolrQuery.SortClause> sortClauses, Integer start, Integer rows,
                                           String fq, FacetFieldEntryList facetFields, String fl, boolean includeHighlighting,
-                                          SolrCollectionSchemaInfo info, StringWriter writer) throws IOException {
+                                          CollectionSchemaInfo info, StringWriter writer) throws IOException {
 
         QueryResponse rsp = findSearchResults(collection, query, sortClauses, start, rows, fq, facetFields,
-                fl, includeHighlighting, info);
+                                              fl, includeHighlighting, info);
 
         JsonGenerator g = writeSearchResponseStart(writer, query);
         writeSearchResponse(rsp, info.getDateFieldNames(), g);
@@ -361,7 +327,7 @@ public class SearchServiceImpl implements SearchService {
         throws IOException {
 
         JsonGenerator g = writeSearchResponseStart(writer, null);
-        g.writeArrayFieldStart(Response.FACET_KEY);
+        g.writeArrayFieldStart(FACET_KEY);
 
         for(String field : fields) {
             ExtendedSolrQuery query = buildSuggestionCoreFieldQuery(field);
@@ -373,18 +339,18 @@ public class SearchServiceImpl implements SearchService {
         writeSearchResponseEnd(g);
     }
 
-    public void findAndWriteFacets(String collection, FacetFieldEntryList facetFields, SolrCollectionSchemaInfo info,
+    public void findAndWriteFacets(String collection, FacetFieldEntryList facetFields, CollectionSchemaInfo info,
                                    StringWriter writer) throws IOException {
-        findAndWriteFacets(collection, Defaults.QUERY, null, facetFields, info, writer);
+        findAndWriteFacets(collection, QUERY_DEFAULT, null, facetFields, info, writer);
     }
 
     public void findAndWriteFacets(String collection, String queryStr, String fq, FacetFieldEntryList facetFields,
-                                   SolrCollectionSchemaInfo info, StringWriter writer) throws IOException {
+                                   CollectionSchemaInfo info, StringWriter writer) throws IOException {
         findAndWriteFacets(collection, queryStr, fq, facetFields, null, info, writer);
     }
 
     public void findAndWriteFacets(String collection, String queryStr, String fq, FacetFieldEntryList facetFields,
-                                   Map<String, Object> additionalFields, SolrCollectionSchemaInfo info,
+                                   Map<String, Object> additionalFields, CollectionSchemaInfo info,
                                    StringWriter writer) throws IOException {
         ExtendedSolrQuery query = buildFacetOnlyQuery(queryStr, fq, facetFields, info);
         QueryResponse rsp = execQuery(query, collection);
@@ -403,7 +369,7 @@ public class SearchServiceImpl implements SearchService {
 
     private ExtendedSolrQuery buildDateQuery(String field, boolean fieldIsDate, SolrQuery.ORDER order) {
         String fq = fieldIsDate ? field + ":[NOW-100YEARS TO NOW]" : null;  //If this is a date field, make sure we get reasonable responses
-        return buildQuery(Defaults.QUERY, fq, field, order, 0, 1, field);
+        return buildQuery(QUERY_DEFAULT, fq, field, order, 0, 1, field);
     }
 
     private List<Object> getFieldRangeForQuery(String collection, String queryStr, String fq, String field) {
@@ -414,7 +380,7 @@ public class SearchServiceImpl implements SearchService {
 
             SolrDocument doc = getRecord(query, collection);
             if (doc != null) {
-                range.add(SolrUtils.getFieldValue(doc, field));
+                range.add(getFieldValue(doc, field));
             }
         }
         return range;
@@ -480,7 +446,7 @@ public class SearchServiceImpl implements SearchService {
     }
 
     private ExtendedSolrQuery buildFacetOnlyQuery(String queryStr, String fq, FacetFieldEntryList facetFields,
-                                                  SolrCollectionSchemaInfo info) {
+                                                  CollectionSchemaInfo info) {
         ExtendedSolrQuery query = buildQuery(queryStr, fq, null, 0, 0, null);
         query.addQueryFacets(facetFields, info);
         return query;
@@ -488,8 +454,8 @@ public class SearchServiceImpl implements SearchService {
 
     private ExtendedSolrQuery buildSuggestQuery(String queryStr, Integer rows) {
         List<SolrQuery.SortClause> clauses = new ArrayList<SolrQuery.SortClause>();
-        clauses.add(new SolrQuery.SortClause(FieldNames.SCORE, SolrQuery.ORDER.desc));
-        clauses.add(new SolrQuery.SortClause(FieldNames.COUNT, SolrQuery.ORDER.desc));
+        clauses.add(new SolrQuery.SortClause(SCORE, SolrQuery.ORDER.desc));
+        clauses.add(new SolrQuery.SortClause(COUNT, SolrQuery.ORDER.desc));
         return buildQuery(queryStr, null, clauses, 0, rows, null);
     }
 
@@ -500,7 +466,7 @@ public class SearchServiceImpl implements SearchService {
     }
 
     private ExtendedSolrQuery buildRecordExistsQuery(HashMap<String, String> fqList) {
-        ExtendedSolrQuery query = new ExtendedSolrQuery(Defaults.QUERY);
+        ExtendedSolrQuery query = new ExtendedSolrQuery(QUERY_DEFAULT);
         query.setRows(0);
 
         if (!Utils.nullOrEmpty(fqList)) {
@@ -522,11 +488,11 @@ public class SearchServiceImpl implements SearchService {
 
     private ExtendedSolrQuery buildSuggestionCoreFieldQuery(String field) {
         List<SolrQuery.SortClause> sortClauses = new ArrayList<SolrQuery.SortClause>();
-        sortClauses.add(new SolrQuery.SortClause(FieldNames.COUNT, SolrQuery.ORDER.desc));
+        sortClauses.add(new SolrQuery.SortClause(COUNT, SolrQuery.ORDER.desc));
         sortClauses.add(new SolrQuery.SortClause(field, SolrQuery.ORDER.desc));
-        String fl = field + "," + FieldNames.COUNT;
+        String fl = field + "," + COUNT;
 
-        return buildQuery(field + ":*", null, sortClauses, 0, Defaults.MAX_FACET_RESULTS, fl);
+        return buildQuery(field + ":*", null, sortClauses, 0, MAX_FACET_RESULTS, fl);
     }
 
     private ExtendedSolrQuery buildGroupQuery(String queryStr, String fq, Integer rows, String fl,
@@ -555,24 +521,26 @@ public class SearchServiceImpl implements SearchService {
         return query;
     }
 
-    public List<Date> getSolrFieldDateRange(String collection, String field, SolrCollectionSchemaInfo info) {
+    public List<Date> getSolrFieldDateRange(String collection, String field, CollectionSchemaInfo info) {
+        List<Date> dates = new ArrayList<Date>();
         if (info.hasDynamicDateFieldDateRanges()) {
-            return info.getDateRange(field);
+            dates = info.getDateRange(field);
+            if (!nullOrEmpty(dates)) {
+                return dates;
+            }
         }
 
-        List<Date> dates = new ArrayList<Date>();
         boolean isDate = info.fieldTypeIsDate(field);
-
         for(SolrQuery.ORDER order : Arrays.asList(SolrQuery.ORDER.asc, SolrQuery.ORDER.desc)) {
             SolrDocument doc = getRecord(buildDateQuery(field, isDate, order), collection);
-            dates.add(SolrUtils.getFieldDateValue(doc, field));
+            dates.add(getFieldDateValue(doc, field));
         }
         return dates;
     }
 
     public QueryResponse execQuery(ExtendedSolrQuery query, String collection) {
         try {
-            return coreService.getSolrServer(collection).query(query);
+            return collectionService.getSolrServer(collection).query(query);
         } catch (SolrServerException e) {
             logger.error(e.getMessage());
         }
@@ -584,9 +552,9 @@ public class SearchServiceImpl implements SearchService {
         JsonGenerator g = f.createJsonGenerator(writer);
 
         g.writeStartObject();
-        g.writeObjectFieldStart(Response.RESPONSE_KEY);
+        g.writeObjectFieldStart(RESPONSE_KEY);
         if (queryString != null) {
-            g.writeStringField(QueryParams.QUERY, queryString);
+            g.writeStringField(QUERY, queryString);
         }
         return g;
     }
@@ -597,12 +565,12 @@ public class SearchServiceImpl implements SearchService {
     }
 
     private void writeAdditionalFields(Map<String, Object> additionalFields, JsonGenerator g) throws IOException {
-        if (Utils.nullOrEmpty(additionalFields)) {
+        if (nullOrEmpty(additionalFields)) {
             return;
         }
 
         for(Map.Entry<String, Object> entry : additionalFields.entrySet()) {
-            Utils.writeValueByType(entry.getKey(), entry.getValue(), g);
+            writeValueByType(entry.getKey(), entry.getValue(), g);
         }
     }
 
@@ -612,11 +580,11 @@ public class SearchServiceImpl implements SearchService {
 
         NamedList header = rsp.getHeader();
 
-        g.writeObjectFieldStart(Response.HIGHLIGHTING_KEY);
+        g.writeObjectFieldStart(HIGHLIGHTING_KEY);
 
-        NamedList params = (NamedList) header.get(Response.HEADER_PARAMS_KEY);
-        g.writeStringField(QueryParams.HIGHLIGHT_PRE, (String) params.get(QueryParams.HIGHLIGHT_PRE));
-        g.writeStringField(QueryParams.HIGHLIGHT_POST, (String) params.get(QueryParams.HIGHLIGHT_POST));
+        NamedList params = (NamedList) header.get(HEADER_PARAMS_KEY);
+        g.writeStringField(HIGHLIGHT_PRE, (String) params.get(HIGHLIGHT_PRE));
+        g.writeStringField(HIGHLIGHT_POST, (String) params.get(HIGHLIGHT_POST));
 
         for(Object keyObject : highlighting.keySet()) {
             String key = keyObject.toString();
@@ -625,7 +593,7 @@ public class SearchServiceImpl implements SearchService {
             for(Map.Entry<String, List<String>> entry : highlighting.get(key).entrySet()) {
                 g.writeArrayFieldStart(entry.getKey());
                 for(String val : entry.getValue()) {
-                    Utils.writeValueByType(val, g);
+                    writeValueByType(val, g);
                 }
                 g.writeEndArray();
             }
@@ -637,60 +605,38 @@ public class SearchServiceImpl implements SearchService {
     private void writeSearchResponse(QueryResponse rsp, List<String> dateFields, JsonGenerator g) throws IOException {
         SolrDocumentList docs = rsp.getResults();
 
-        g.writeStringField(QueryParams.FIELDLIST, (String) ((SimpleOrderedMap) rsp.getHeader().get(Response.HEADER_PARAMS_KEY)).get(QueryParams.FIELDLIST));
-        g.writeNumberField(Response.NUM_FOUND_KEY, docs.getNumFound());
-        g.writeArrayFieldStart(Response.DOCS_KEY);
+        g.writeStringField(FIELDLIST, (String) ((SimpleOrderedMap) rsp.getHeader().get(HEADER_PARAMS_KEY)).get(FIELDLIST));
+        g.writeNumberField(NUM_FOUND_KEY, docs.getNumFound());
+        g.writeArrayFieldStart(DOCS_KEY);
 
         for (SolrDocument doc : docs) {
-            if (!SolrUtils.isLocalDirectory(doc)) {
-                g.writeStartObject();
-                for(String fieldName : SolrUtils.getValidFieldNamesSubset(doc.getFieldNames())) {
-                    Object val = doc.getFieldValue(fieldName);
-                    if (dateFields.contains(fieldName) && val instanceof Date) {
-                        val = DateUtils.getFormattedDateString((Date) val, DateUtils.DAY_DATE_FORMAT);
-                    }
-                    Utils.writeValueByType(fieldName, val, g);
-                }
-                g.writeEndObject();
-            }
-        }
-        g.writeEndArray();
-    }
-
-    private void writeFieldStats(QueryResponse rsp, JsonGenerator g) throws IOException {
-        g.writeArrayFieldStart(Response.STATS_KEY);
-
-        for (Map.Entry<String, FieldStatsInfo> entry : rsp.getFieldStatsInfo().entrySet()) {
-            FieldStatsInfo info = entry.getValue();
-
             g.writeStartObject();
-            Utils.writeValueByType("name", info.getName(), g);
-            Utils.writeValueByType("min", info.getMin(), g);
-            Utils.writeValueByType("max", info.getMax(), g);
-            Utils.writeValueByType("count", info.getCount(), g);
-            Utils.writeValueByType("missing", info.getMissing(), g);
-            Utils.writeValueByType("sum", info.getSum(), g);
-            Utils.writeValueByType("mean", info.getMean(), g);
-            Utils.writeValueByType("stddev", info.getStddev(), g);
+            for(String fieldName : getValidFieldNamesSubset(doc.getFieldNames())) {
+                Object val = doc.getFieldValue(fieldName);
+                if (dateFields.contains(fieldName) && val instanceof Date) {
+                    val = getFormattedDateString((Date) val, DAY_DATE_FORMAT);
+                }
+                writeValueByType(fieldName, val, g);
+            }
             g.writeEndObject();
         }
         g.writeEndArray();
     }
 
     private void writeFacets(List<FacetField> facetFieldList, boolean isDate, JsonGenerator g) throws IOException {
-        if (Utils.nullOrEmpty(facetFieldList)) return;
+        if (nullOrEmpty(facetFieldList)) return;
 
         for(FacetField facetField : facetFieldList) {
             List<FacetField.Count> facetFieldValues = facetField.getValues();
             if (facetFieldValues == null) continue;
 
             g.writeStartObject();
-            g.writeStringField(Response.NAME_KEY, FieldNames.getFacetDisplayName(facetField.getName()));
+            g.writeStringField(NAME_KEY, getFacetDisplayName(facetField.getName()));
 
-            g.writeArrayFieldStart(Response.VALUES_KEY);
+            g.writeArrayFieldStart(VALUES_KEY);
             for(FacetField.Count count : facetFieldValues) {
-                String facetFieldDisplayStr = SolrUtils.getFacetFieldDisplayString(count, isDate);
-                if (Utils.nullOrEmpty(facetFieldDisplayStr)) continue;
+                String facetFieldDisplayStr = getFacetFieldDisplayString(count, isDate);
+                if (nullOrEmpty(facetFieldDisplayStr)) continue;
 
                 g.writeString(facetFieldDisplayStr);
             }
@@ -703,18 +649,18 @@ public class SearchServiceImpl implements SearchService {
         SolrDocumentList docs = rsp.getResults();
 
         g.writeStartObject();
-        g.writeStringField(Response.NAME_KEY, field);
-        g.writeArrayFieldStart(Response.VALUES_KEY);
+        g.writeStringField(NAME_KEY, field);
+        g.writeArrayFieldStart(VALUES_KEY);
 
         for (SolrDocument doc : docs) {
-            g.writeString(doc.getFieldValue(field) + " (" + doc.getFieldValue(FieldNames.COUNT) + ")");
+            g.writeString(doc.getFieldValue(field) + " (" + doc.getFieldValue(COUNT) + ")");
         }
         g.writeEndArray();
         g.writeEndObject();
     }
 
     private void writeFacetResponse(QueryResponse rsp, JsonGenerator g) throws IOException {
-        g.writeArrayFieldStart(Response.FACET_KEY);
+        g.writeArrayFieldStart(FACET_KEY);
         writeFacets(rsp.getFacetFields(), false, g);
         writeFacets(rsp.getFacetDates(), true, g);
         g.writeEndArray();

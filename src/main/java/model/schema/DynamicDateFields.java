@@ -1,20 +1,19 @@
-package model;
+package model.schema;
 
-import GatesBigData.utils.DateUtils;
-import GatesBigData.utils.SolrUtils;
-import GatesBigData.utils.Utils;
+import model.search.ExtendedSolrQuery;
 import org.apache.commons.lang.StringUtils;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 
 import java.util.*;
 
+import static GatesBigData.utils.SolrUtils.getFieldDateValue;
+import static GatesBigData.utils.Utils.nullOrEmpty;
+
 public class DynamicDateFields {
     public static final String DATE_SUFFIX              = "_DATE";
     public static final String DATE_RANGE_START_SUFFIX  = "_RANGE_START";
     public static final String DATE_RANGE_END_SUFFIX    = "_RANGE_END";
-    public static final String START_KEY                = "START";
-    public static final String END_KEY                  = "END";
 
     List<String> dateFields  = new ArrayList<String>();
     String dateQuery = "";
@@ -39,7 +38,12 @@ public class DynamicDateFields {
     }
 
     public boolean hasDateRanges() {
-        return Utils.nullOrEmpty(dateMap);
+        return nullOrEmpty(dateMap);
+    }
+
+    public boolean hasDateRangeForField(String field) {
+        List<String> dateFields = map.get(field);
+        return !nullOrEmpty(dateMap) && dateMap.containsKey(dateFields.get(0)) && dateMap.containsKey(dateFields.get(1));
     }
 
     public void update(SolrDocumentList docs) {
@@ -49,7 +53,7 @@ public class DynamicDateFields {
 
         for(SolrDocument doc : docs) {
             for(String field : doc.getFieldNames()) {
-                dateMap.put(field, SolrUtils.getFieldDateValue(doc, field));
+                this.dateMap.put(field, getFieldDateValue(doc, field));
             }
         }
     }

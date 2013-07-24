@@ -11,6 +11,7 @@
         <css>/static/css/jquery/jquery-ui.css</css>
         <js>/static/js/jquery/jquery-1.9.1.js</js>
         <js>/static/js/jquery/jquery-ui.js</js>
+        <js>/static/js/jquery/jquery.backgroundsize.js</js>
     </group>
 
     <group name="yui">

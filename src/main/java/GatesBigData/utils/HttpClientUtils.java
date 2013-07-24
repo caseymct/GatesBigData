@@ -16,10 +16,32 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import static GatesBigData.constants.Constants.*;
 public class HttpClientUtils {
+
+    public static boolean ping(String url) {
+        url = url.replaceFirst(HTTPS_PROTOCOL, HTTP_PROTOCOL);
+
+        HttpURLConnection connection = null;
+        try {
+            connection = (HttpURLConnection) new URL(url).openConnection();
+            connection.setRequestMethod("HEAD");
+            return connection.getResponseCode() == 200;
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+
+        return false;
+    }
 
     private static String getResponse(HttpEntity entity) throws IOException {
         StringBuilder sb = new StringBuilder();

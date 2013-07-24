@@ -2,9 +2,8 @@ package GatesBigData.api;
 
 import GatesBigData.constants.Constants;
 import GatesBigData.utils.SolrUtils;
-import GatesBigData.utils.Utils;
-import model.SolrCollectionSchemaInfo;
-import model.SolrSchemaInfo;
+import model.schema.CollectionSchemaInfo;
+import model.schema.CollectionsConfig;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.common.SolrDocumentList;
@@ -20,9 +19,11 @@ import service.SearchService;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static GatesBigData.utils.Utils.*;
 
 @Controller
 @SessionAttributes(value = {ExportAPIController.ATTRIBUTE_COMMAND})
@@ -32,7 +33,7 @@ public class ExportAPIController extends APIController {
     public static final String EXPORT_FILETYPE      = "type";
     public static final String EXPORT_FIELD_INDICES = "fields";
     public static final String EXPORT_FIELDLIST     = "fl";
-    public static final String ATTRIBUTE_COMMAND = "command";
+    public static final String ATTRIBUTE_COMMAND    = "command";
 
     public static final int PAGE_SIZE = 1000;
 
@@ -42,10 +43,10 @@ public class ExportAPIController extends APIController {
     private ExportService exportCSVService;
     private ExportService exportJSONService;
     private ExportService exportZipService;
-    private SolrSchemaInfo schemaInfo;
+    private CollectionsConfig schemaInfo;
 
     @Autowired
-    public ExportAPIController(SearchService searchService, SolrSchemaInfo schemaInfo,
+    public ExportAPIController(SearchService searchService, CollectionsConfig schemaInfo,
                                @Qualifier("exportCSVService")  ExportService exportCSVService,
                                @Qualifier("exportJSONService") ExportService exportJSONService,
                                @Qualifier("exportZipService")  ExportService exportZipService) {
@@ -110,12 +111,12 @@ public class ExportAPIController extends APIController {
         return contentType.equals(Constants.ZIP_CONTENT_TYPE) ? response.getOutputStream() : null;
     }
 
-    private List<String> getFieldList(String collection, String indicesString, String fl) {
-        if (Utils.nullOrEmpty(indicesString)) {
-            return Utils.nullOrEmpty(fl) ? schemaInfo.getViewFieldNames(collection) : Utils.getTokens(fl, ",");
+    private List<String> getFieldList(CollectionSchemaInfo info, String indicesString, String fl) {
+        if (nullOrEmpty(indicesString)) {
+            return nullOrEmpty(fl) ? new ArrayList<String>(info.getViewFields()) : getTokens(fl, ",");
         }
         List<String> indices = Arrays.asList(indicesString.substring(1).split(","));
-        return schemaInfo.getFieldNamesSubset(collection, indices, indicesString.startsWith("+"));
+        return info.getFieldNamesSubset(indices, indicesString.startsWith("+"));
     }
 
     @RequestMapping(value = "/export")
@@ -130,11 +131,11 @@ public class ExportAPIController extends APIController {
                                     @RequestParam(value = PARAM_FQ, required = false) String fq,
                                     HttpServletResponse response) throws IOException {
 
-        SolrCollectionSchemaInfo info = schemaInfo.getSchema(collection);
+        CollectionSchemaInfo info = schemaInfo.getSchema(collection);
         fq = SolrUtils.composeFilterQuery(fq, info);
 
         List<SolrQuery.SortClause> sortClauses = SolrUtils.getSortClauses(sortInfo, sortOrder);
-        List<String> fields = getFieldList(collection, indices, fl);
+        List<String> fields = getFieldList(info, indices, fl);
 
         ExportService exportService = getExportServiceByFileType(fileType);
         exportService.setExportFileName(fileName, fileType);

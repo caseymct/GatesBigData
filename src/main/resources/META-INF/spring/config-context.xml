@@ -12,11 +12,7 @@
         <property name="ignoreResourceNotFound" value="true"/>
     </bean>
 
-    <bean id="solrCollectionSchemaInfo" class="model.SolrSchemaInfo" scope="session">
-        <aop:scoped-proxy/>
-    </bean>
-
-    <bean id="reportData" class="model.reports.ReportData" scope="session">
-        <aop:scoped-proxy/>
+    <bean id="collectionsConfig" class="model.schema.CollectionsConfig">
+        <!--<aop:scoped-proxy/>-->
     </bean>
 </beans>

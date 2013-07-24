@@ -1,8 +1,5 @@
 package GatesBigData.api;
 
-import model.SolrCollectionSchemaInfo;
-import org.apache.solr.common.SolrDocumentList;
-
 public abstract class APIController {
     public static final String PARAM_CORE_NAME                  = "core";
     public static final String PARAM_COLLECTION                 = "collection";
@@ -41,7 +38,6 @@ public abstract class APIController {
     public static final String PARAM_SERIES_FIELD       		= "series";
     public static final String PARAM_MAX_PLOT_POINTS            = "maxplotpoints";
     public static final String PARAM_DATE_RANGE_GAP             = "daterangegap";
-    public static final String PARAM_TITLE                      = "title";
 
     public static final String PARAM_NUM_SUGGESTIONS_PER_FIELD  = "n";
 }

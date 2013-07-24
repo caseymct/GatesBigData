@@ -111,10 +111,6 @@ public class HDFSUtils {
         return new Path(getHDFSCrawlDBDir(includeURI, coreName), CrawlDb.CURRENT_NAME);
     }
 
-    public static Path getHDFSCollectionInfoFile() {
-        return new Path(getHDFSUserDirectory(true), HDFS.COLLECTIONINFO_FILE);
-    }
-
     public static Content fileDoesNotExistContent() {
         Content content = new Content();
         Metadata metadata = new Metadata();

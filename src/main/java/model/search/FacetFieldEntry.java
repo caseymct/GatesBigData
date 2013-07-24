@@ -1,4 +1,4 @@
-package model;
+package model.search;
 
 
 import GatesBigData.constants.Constants;

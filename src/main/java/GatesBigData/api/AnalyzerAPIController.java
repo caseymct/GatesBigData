@@ -4,15 +4,16 @@ import GatesBigData.constants.Constants;
 import GatesBigData.constants.solr.Defaults;
 import GatesBigData.constants.solr.FieldNames;
 import GatesBigData.constants.solr.QueryParams;
-import GatesBigData.constants.solr.Solr;
 import GatesBigData.utils.JSONUtils;
 import GatesBigData.utils.SolrUtils;
 import GatesBigData.utils.Utils;
-import model.SolrCollectionSchemaInfo;
-import model.SolrSchemaInfo;
-import model.WordTree;
+import model.schema.CollectionConfig;
+import model.schema.CollectionSchemaInfo;
+import model.schema.CollectionsConfig;
+import model.analysis.WordTree;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.solr.client.solrj.response.Group;
 import org.apache.solr.client.solrj.response.GroupCommand;
@@ -37,8 +38,12 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.*;
 
+import static GatesBigData.utils.Utils.*;
 import static java.util.Collections.singletonList;
 import static org.springframework.http.HttpStatus.OK;
+import static GatesBigData.constants.Constants.*;
+import static GatesBigData.constants.solr.QueryParams.*;
+import static GatesBigData.utils.SolrUtils.*;
 
 @Controller
 @RequestMapping("/analyze")
@@ -46,12 +51,12 @@ public class AnalyzerAPIController extends APIController {
 
     private static final Logger logger = Logger.getLogger(AnalyzerAPIController.class);
     private SearchService searchService;
-    private SolrSchemaInfo schemaInfo;
+    private CollectionsConfig collectionsConfig;
 
     @Autowired
-    public AnalyzerAPIController(SearchService searchService, SolrSchemaInfo schemaInfo) {
+    public AnalyzerAPIController(SearchService searchService, CollectionsConfig collectionsConfig) {
         this.searchService = searchService;
-        this.schemaInfo = schemaInfo;
+        this.collectionsConfig = collectionsConfig;
     }
 
     public Map<String, HashMap<String, String>> reconfigureHighlighting(JSONObject hlJson) {
@@ -96,7 +101,7 @@ public class AnalyzerAPIController extends APIController {
             for(GroupCommand command : rsp.getValues()) {
                 for(Group group : command.getValues()) {
                     String snippet = group.getGroupValue();
-                    if (Utils.nullOrEmpty(snippet)) continue;
+                    if (nullOrEmpty(snippet)) continue;
 
                     int idx = snippet.indexOf(" ");
                     String firstWord = (idx != -1 ? snippet.substring(0, idx) : snippet).toLowerCase();
@@ -113,7 +118,7 @@ public class AnalyzerAPIController extends APIController {
     }
 
     public List<WordTree> getWordTreeFromSearchResults(QueryResponse rsp) {
-        String hlPre  = SolrUtils.getResponseHeaderParam(rsp, QueryParams.HIGHLIGHT_PRE);
+        String hlPre  = SolrUtils.getResponseHeaderParam(rsp, HIGHLIGHT_PRE);
         String hlPost = SolrUtils.getResponseHeaderParam(rsp, QueryParams.HIGHLIGHT_POST);
         Map<String, Map<String, List<String>>> highlighting = rsp.getHighlighting();
 
@@ -154,10 +159,10 @@ public class AnalyzerAPIController extends APIController {
         ObjectMapper mapper = new ObjectMapper();
         Map<String, Object> map = mapper.readValue(body, TypeFactory.mapType(HashMap.class, String.class, Object.class));
 
-        String hlResponse                   = (String) map.get(QueryParams.HIGHLIGHT);
-        JSONObject hlJson                   = JSONObject.fromObject(hlResponse);
-        String hlPre                        = (String) hlJson.remove(QueryParams.HIGHLIGHT_PRE);
-        String hlPost                       = (String) hlJson.remove(QueryParams.HIGHLIGHT_POST);
+        String hlResponse  = (String) map.get(HIGHLIGHT);
+        JSONObject hlJson  = JSONObject.fromObject(hlResponse);
+        String hlPre       = (String) hlJson.remove(HIGHLIGHT_PRE);
+        String hlPost      = (String) hlJson.remove(HIGHLIGHT_POST);
 
         Map<String, HashMap<String, String>> highlighting = reconfigureHighlighting(hlJson);
 
@@ -190,18 +195,18 @@ public class AnalyzerAPIController extends APIController {
 
         List<WordTree> wordTrees;
         StringWriter writer = new StringWriter();
-        SolrCollectionSchemaInfo info = schemaInfo.getSchema(collection);
-        fq = SolrUtils.composeFilterQuery(fq, info);
+        CollectionSchemaInfo info = collectionsConfig.getSchema(collection);
+        CollectionConfig config = collectionsConfig.getCollectionConfig(collection);
+
+        fq = composeFilterQuery(fq, info);
 
         if (useHighlighting) {
-            JSONArray wordTreeArray = searchService.getCollectionInfoFieldValuesAsJSONArray(collection, FieldNames.WORDTREE_FIELDS);
-            String wordTreeFields = JSONUtils.convertJSONArrayToDelimitedString(wordTreeArray);
             QueryResponse rsp = searchService.findSearchResults(collection, queryStr, null, null, 0, rows, fq, null,
-                    wordTreeFields, true, info);
+                                                                StringUtils.join(config.getWordTreeFields(), ","), true, info);
 
             wordTrees = getWordTreeFromSearchResults(rsp);
         } else {
-            String field = schemaInfo.getCorrespondingFacetFieldIfExists(collection, analysisField);
+            String field = info.getCorrespondingFacetFieldIfExists(analysisField);
             GroupResponse rsp = searchService.getGroupResponse(collection, queryStr, fq, 100,//ReportConstants.SOLR_ANALYSIS_ROWS_LIMIT,
                                                                field, field, Defaults.ANALYSIS_GROUP_LIMIT);
             wordTrees = getWordTreesFromGroupResults(rsp);
@@ -210,7 +215,7 @@ public class AnalyzerAPIController extends APIController {
         printWordTrees(wordTrees, writer);
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
+        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
     }
 
@@ -238,7 +243,7 @@ public class AnalyzerAPIController extends APIController {
         g.flush();
 
         HttpHeaders httpHeaders = new HttpHeaders();
-        httpHeaders.put(Constants.CONTENT_TYPE_HEADER, singletonList(Constants.CONTENT_TYPE_VALUE));
+        httpHeaders.put(CONTENT_TYPE_HEADER, singletonList(CONTENT_TYPE_VALUE));
         return new ResponseEntity<String>(writer.toString(), httpHeaders, OK);
     }
 }

@@ -1,4 +1,4 @@
-package model;
+package model.analysis;
 
 import GatesBigData.utils.Utils;
 import org.apache.commons.lang.StringUtils;

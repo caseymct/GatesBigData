@@ -106,7 +106,7 @@
         function createAutoComplete(field, acInputElName, acContainerElName, acToggleElId) {
             var countsKey = (field == UI.INFO_FIELDS_SERIES_FIELDS_KEY) ? 'separatefieldcounts' : 'nonnullcounts';
             var url = infoFieldsUrl + UI.util.constructRequestString(requestParams,
-                    [UI.util.REQUEST_CORE_KEY, UI.util.REQUEST_QUERY_KEY, UI.util.REQUEST_FQ_KEY],
+                    [UI.util.REQUEST_COLLECTION_KEY, UI.util.REQUEST_QUERY_KEY, UI.util.REQUEST_FQ_KEY],
                     [ { key : UI.util.REQUEST_INFO_FIELD_KEY, value : field }, { key : countsKey, value : true }]);
 
             Connect.asyncRequest('GET', url, {
@@ -130,7 +130,7 @@
                 this.set("label", ("<em class=\"yui-button-label\">" + wordTreeSelected + "</em>"));
             };
 
-            var url = infoFieldsUrl + UI.util.constructRequestString(requestParams, [UI.util.REQUEST_CORE_KEY],
+            var url = infoFieldsUrl + UI.util.constructRequestString(requestParams, [UI.util.REQUEST_COLLECTION_KEY],
                         [{ key : UI.util.REQUEST_INFO_FIELD_KEY, value : UI.INFO_FIELDS_WORD_TREE_FIELDS_KEY }]);
             Connect.asyncRequest('GET', url, {
                 success: function(o) {

@@ -1,4 +1,4 @@
-package model;
+package model.analysis;
 
 import GatesBigData.utils.SolrUtils;
 import GatesBigData.utils.Utils;

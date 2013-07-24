@@ -15,7 +15,6 @@ UI.FACET = {};
     UI.URLS_KEY                       = 'urls';
     UI.QUERY_BUILDER_AC_URL_KEY       = 'queryBuilderAutoCompleteUrl';
     UI.VIEW_DOC_URL_KEY               = 'viewDocUrl';
-    UI.LOADING_IMG_URL_KEY            = 'loadingImgUrl';
     UI.THUMBNAIL_URL_KEY              = 'thumbnailUrl';
     UI.FIELD_NAMES_URL_KEY            = 'fieldNamesUrl';
     UI.TABLE_FIELD_NAMES_URL_KEY      = 'tableFieldNamesUrl';
@@ -90,14 +89,12 @@ UI.FACET = {};
 
     UI.STRUCTURED_DATA_EL_ID_KEY                        = 'structured';
     UI.UNSTRUCTURED_DATA_EL_ID_KEY                      = 'unstructured';
-    UI.INFO_FIELDS_TABLE_FIELDS_KEY                     = 'TABLEFIELDS';
-    UI.INFO_FIELDS_WORD_TREE_FIELDS_KEY                 = 'WORDTREEFIELDS';
-    UI.INFO_FIELDS_AUDIT_FIELDS_KEY                     = 'AUDITFIELDS';
-    UI.INFO_FIELDS_X_AXIS_FIELDS_KEY                    = 'XAXIS';
-    UI.INFO_FIELDS_Y_AXIS_FIELDS_KEY                    = 'YAXIS';
-    UI.INFO_FIELDS_SERIES_FIELDS_KEY                    = 'SERIES';
-    UI.INFO_FIELDS_REPORT_TITLES_FIELDS_KEY             = 'REPORT_TITLES';
-    UI.INFO_FIELDS_REPORT_DATA_FIELDS_KEY               = 'REPORT_DATA';
+    UI.INFO_FIELDS_TABLE_FIELDS_KEY                     = 'fields.table';
+    UI.INFO_FIELDS_WORD_TREE_FIELDS_KEY                 = 'fields.wordtree';
+    UI.INFO_FIELDS_AUDIT_FIELDS_KEY                     = 'fields.audit';
+    UI.INFO_FIELDS_X_AXIS_FIELDS_KEY                    = 'fields.xaxis';
+    UI.INFO_FIELDS_Y_AXIS_FIELDS_KEY                    = 'fields.yaxis';
+    UI.INFO_FIELDS_SERIES_FIELDS_KEY                    = 'fields.series';
 
     UI.FACET_FIELDS_DELIMITER_KEY                       = '<field>';
     UI.FACET_VALUES_DELIMITER_KEY                       = '<values>';
@@ -145,15 +142,14 @@ UI.FACET = {};
         urls[UI.SEARCH_BASE_URL_KEY]        = baseUrl + 'search/';
         urls[UI.FACET_URL_KEY]              = urls[UI.SEARCH_BASE_URL_KEY] + 'solrfacets?collection=' + collection;
         urls[UI.SEARCH_URL_KEY]             = urls[UI.SEARCH_BASE_URL_KEY] + 'solrquery';
-        urls[UI.SUGGEST_URL_KEY]            = urls[UI.SEARCH_BASE_URL_KEY] + 'suggest?core=' + collection;
-        urls[UI.QUERY_BUILDER_AC_URL_KEY]   = urls[UI.SEARCH_BASE_URL_KEY] + 'fields/all?core=' + collection;
-        urls[UI.TABLE_FIELD_NAMES_URL_KEY]  = urls[UI.SEARCH_BASE_URL_KEY] + 'infofields?core=' + collection + '&infofield=' + UI.INFO_FIELDS_TABLE_FIELDS_KEY;
+        urls[UI.SUGGEST_URL_KEY]            = urls[UI.SEARCH_BASE_URL_KEY] + 'suggest?collection=' + collection;
+        urls[UI.QUERY_BUILDER_AC_URL_KEY]   = urls[UI.SEARCH_BASE_URL_KEY] + 'fields/all?collection=' + collection;
+        urls[UI.TABLE_FIELD_NAMES_URL_KEY]  = urls[UI.SEARCH_BASE_URL_KEY] + 'infofields?collection=' + collection + '&infofield=' + UI.INFO_FIELDS_TABLE_FIELDS_KEY;
         urls[UI.ANALYZE_URL_KEY]            = urls[UI.SEARCH_BASE_URL_KEY] + 'analyze';
         urls[UI.REPORTS_URL_KEY]            = urls[UI.SEARCH_BASE_URL_KEY] + 'reports';
-        urls[UI.DATE_PICKER_URL_KEY]        = baseUrl + 'core/field/daterange?core=' + collection + '&field=' + dateField;
-        urls[UI.EXPORT_URL_KEY]             = baseUrl + 'core/export/structured';
-        urls[UI.VIEW_DOC_URL_KEY]           = baseUrl + 'core/document/' + (structured ? 'view' : 'prizmview');
-        urls[UI.LOADING_IMG_URL_KEY]        = baseUrl + 'static/images/loading.png';
+        urls[UI.DATE_PICKER_URL_KEY]        = baseUrl + 'collection/field/daterange?collection=' + collection + '&field=' + dateField;
+        urls[UI.EXPORT_URL_KEY]             = baseUrl + 'collection/export/structured';
+        urls[UI.VIEW_DOC_URL_KEY]           = baseUrl + 'collection/document/' + (structured ? 'view' : 'prizmview');
         urls[UI.THUMBNAIL_URL_KEY]          = baseUrl + 'document/thumbnail/get';
         return urls;
     };
@@ -246,9 +242,9 @@ UI.FACET = {};
         var params = {};
         params[UI.URLS_KEY] = {};
         params[UI.URLS_KEY][UI.EXPORT_URL_KEY]            = baseUrl + 'export';
-        params[UI.URLS_KEY][UI.FIELD_NAMES_URL_KEY]       = baseUrl + 'core/fieldnames';
+        params[UI.URLS_KEY][UI.FIELD_NAMES_URL_KEY]       = baseUrl + 'collection/fieldnames';
         params[UI.URLS_KEY][UI.AUDIT_FIELD_NAMES_URL_KEY] = baseUrl + 'search/infofields?infofield=' +
-                                                            UI.INFO_FIELDS_AUDIT_FIELDS_KEY + '&core=';
+                                                            UI.INFO_FIELDS_AUDIT_FIELDS_KEY + '&collection=';
         return params;
     };
 
@@ -298,6 +294,10 @@ UI.FACET = {};
         $(el).css(key, value);
     };
 
+    UI.addCSSClass = function(selector, cssClass) {
+        $(selector).addClass(cssClass);
+    };
+
     if ( !Array.prototype.indexOf ) {
         Array.prototype.indexOf = function(obj, start) {
             for (var i = (start || 0), j = this.length; i < j; i++) {
@@ -305,6 +305,33 @@ UI.FACET = {};
             }
             return -1;
         }
+    }
+
+    if ( !document.getElementsByClassName) {
+        var indexOf = [].indexOf || function(prop) {
+            for(var i = 0; i < this.length; i++) {
+                if (this[i] === prop) return i;
+            }
+            return -1;
+        };
+        getElementsByClassName = function(className,context) {
+            var elems = document.querySelectorAll ? context.querySelectorAll("." + className) : (function() {
+                var all = context.getElementsByTagName("*"),
+                    elements = [],
+                    i = 0;
+                for (; i < all.length; i++) {
+                    if (all[i].className && (" " + all[i].className + " ").indexOf(" " + className + " ") > -1 && indexOf.call(elements,all[i]) === -1) elements.push(all[i]);
+                }
+                return elements;
+            })();
+            return elems;
+        };
+        document.getElementsByClassName = function(className) {
+            return getElementsByClassName(className,document);
+        };
+        Element.prototype.getElementsByClassName = function(className) {
+            return getElementsByClassName(className,this);
+        };
     }
 
     if ( !Array.prototype.forEach ) {
@@ -473,17 +500,39 @@ UI.FACET = {};
         return f.replace(/"/g, '\\"');
     };
 
-    UI.getChildrenByTagName = function(f) {
-        return Dom.get(f).getElementsByTagName('a');
+    UI.addDeleteButtonForIE = function(parentElId, divId, fieldName, fieldValue, removeFn) {
+        var anchorId    = 'a_' + fieldName + '_val_' + fieldValue,
+            anchorText  = fieldName + ' : ' + fieldValue,
+            xId         = anchorId + '_delete_button';
+
+        var d = UI.addDomElementChild('div', Dom.get(parentElId), { id : divId }, { 'class' : 'button_delete_parent_div'});
+        var a = UI.addDomElementChild('a', d, { id: anchorId }, { 'class' : 'button' });
+        UI.addDomElementChild('div', a, { id : xId, innerHTML : 'x' }, { 'class' : 'button_delete_x' });
+        UI.addDomElementChild('div', a, { innerHTML : anchorText }, { 'class' : 'filter_label_text' });
+
+        Event.addListener(xId, 'click', function() {
+            UI.removeElement(divId);
+            if (removeFn != undefined) {
+                removeFn();
+            }
+        });
+    };
+
+    UI.getFiltersText = function(f) {
+        var filters = Dom.get(f).getElementsByClassName('filter_label_text');
+        var filtersText = [];
+        for(var i = 0; i < filters.length; i++) {
+            var t = filters[i].innerHTML.split(" : ");
+            filtersText.push({ field : t[0], val : UI.formatFacetField(t[1]) });
+        }
+        return filtersText;
     };
 
     UI.getFilterOptionsQueryString = function(div, combineValuesFn, formatFn) {
-        var i, t, filterOptions = {}, filters = UI.getChildrenByTagName(div);
+        var i, t, filterOptions = {}, f = UI.getFiltersText(div);
 
-        for (i = 0; i < filters.length; i++) {
-            t = filters[i].innerHTML.split(" : ");
-            var field = t[0], val = UI.formatFacetField(t[1]);
-            filterOptions[field] = combineValuesFn(filterOptions, field, val);
+        for (i = 0; i < f.length; i++) {
+            filterOptions[f[i].field] = combineValuesFn(filterOptions, f[i].field, f[i].val);
         }
 
         var fqStr = "";
@@ -678,10 +727,20 @@ UI.FACET = {};
     UI.util.REQUEST_FL_KEY          = 'fl';
     UI.util.REQUEST_TYPE_KEY        = 'type';
 
-    UI.util.SOLR_RESPONSE_KEYS = { response : 'response', facets : 'facet_counts', docs : 'docs', numfound : 'num_found',
-                                   highlighting : 'highlighting', filters : 'filters', datefilters : 'datefilters', title : 'title',
-                                   sortfilters : 'sortfilters', display : 'display', namestodisplaynames : 'namestodisplaynames',
-                                   exportfields : 'exportfields' };
+    UI.util.SOLR_RESPONSE_KEYS = {
+        response    : 'response',
+        facets      : 'facet_counts',
+        docs        : 'docs',
+        numfound    : 'num_found',
+        highlighting: 'highlighting',
+        filters     : 'report.filters.fields',
+        datefilters : 'report.filters.datefields',
+        title       : 'report.title',
+        sortfilters : 'report.filters.sortfields',
+        display     : 'report.display.fields',
+        namestodisplaynames : 'namestodisplaynames',
+        exportfields : 'report.export.fields'
+    };
     UI.util.SOLR_DOC_FIELD_KEYS = { id : 'id', content : 'content', contentType : 'content_type' };
 
     UI.util.CONTENT_TYPES = { text : 'text/html', image : 'image/png', json : 'application/json' };

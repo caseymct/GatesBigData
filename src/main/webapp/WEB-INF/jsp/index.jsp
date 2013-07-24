@@ -73,23 +73,9 @@
             return allDataStrings;
         }
 
-
-        function reindex()  {
-            var coreName = getCoreNameFromDlgDivId(this.id, REINDEX);
-            Connect.asyncRequest('GET', '<c:url value="/core/reindex" />' + "?core=" + coreName, {
-                success: function(o) {
-                    alert("Re-indexing solr core.....");
-                },
-                failure: function(o) {
-                    alert("Could not connect to re-index solr core.");
-                }
-            });
-            this.hide();
-        }
-
         function empty() {
             var coreName = getCoreNameFromDlgDivId(this.id, EMPTY);
-            Connect.asyncRequest('GET', '<c:url value="/core/empty" />' + "?core=" + coreName, {
+            Connect.asyncRequest('GET', '<c:url value="/collection/empty" />' + "?collection=" + coreName, {
                 success: function(o) {
                     alert("Emptying solr core.");
                 },
@@ -100,32 +86,6 @@
             this.hide();
         }
 
-        function createThumbnail() {
-            var coreName = getCoreNameFromDlgDivId(this.id, THUMB);
-            Connect.asyncRequest('GET', '<c:url value="/data/thumbnails" />' + "?core=" + coreName, {
-                success: function(o) {
-                    alert("Creating thumbnails....");
-                },
-                failure: function(o) {
-                    alert("Could not create thumbnails.");
-                }
-            });
-            this.hide();
-        }
-
-        function buildReindexDlgHtml(siblingElName, name) {
-            var sibling = Dom.get(siblingElName);
-            var divid = getDlgDivId(name, REINDEX);
-            var d = UI.insertDomElementAfter('div', sibling, {id : divid }, {class : dlgCSSClass });
-            UI.addDomElementChild('div', d, null, {class : "hd"});
-            var bd = UI.addDomElementChild('div', d, null, {class : "bd"});
-            UI.addDomElementChild('label', bd, { for: getNThreadsInputElNameFromDivId(divid), innerHTML: "Threads:"});
-            UI.addDomElementChild('input', bd, { id : getNThreadsInputElNameFromDivId(divid), type: "text", value: "10"}, { width: "100px"});
-            UI.addDomElementChild('label', bd, { for: getNFilesInputElNameFromDivId(divid), innerHTML: "Files processed/thread:"});
-            UI.addDomElementChild('input', bd, { id : getNFilesInputElNameFromDivId(divid), type: "text", value: "100"}, { width: "100px"});
-
-        }
-
         function buildOverlayHTML(parentNode, name) {
             var i, d, structured = collectionData[name][structuredDataKey];
 
@@ -133,8 +93,8 @@
             UI.addDomElementChild('p', d, { id: name + "_ops_div", innerHTML: "Operations: "},
                     { "font-weight" : "bold", float: "left", width: "100%", 'margin-top' : '10px' });
 
-            UI.addDomElementChild('input', d, { id: getButtonId(name, REINDEX), type: "button", value: "Reindex Solr Core from HDFS"}, { padding: "5px" });
-            UI.addDomElementChild('input', d, { id: getButtonId(name, EMPTY), type: "button", value: "Empty Index"}, { padding: "5px", "margin-left": "10px" });
+            UI.addDomElementChild('input', d, { id: getButtonId(name, EMPTY), type: "button", value: "Empty Index"},
+                    { padding: "5px", "margin-left": "10px" });
 
             if (structured == 'false') {
                 UI.addDomElementChild('input', d, { id: getButtonId(name, THUMB), type: "button", value: "Create Thumbnails"},
@@ -145,12 +105,6 @@
             d = UI.addDomElementChild('div', parentNode, null, { float: "left", width: "100%", 'margin-top' : '30px' });
             UI.addDomElementChild('p', d, { innerHTML: "Collection information: " }, { float: "left", width: "100%", 'font-weight' : 'bold' });
             UI.addDomElementChild('p', d, { innerHTML: UI.util.jsonSyntaxHighlight(s)}, { float: "left", width: "340px" });
-
-
-            buildReindexDlgHtml(parentNode, name);
-            //UI.insertDomElementAfter('div', parentNode, { id: getDlgDivId(name, REINDEX)});
-            var reindexDlg = UI.createSimpleDlg(getDlgDivId(name, REINDEX), "Confirm", "Reindex core " + name + "?", reindex);
-            Event.addListener(getButtonId(name, REINDEX), "click", function(e) { reindexDlg.show(); });
 
             UI.insertDomElementAfter('div', parentNode, { id: getDlgDivId(name, EMPTY)});
             var emptyDlg = UI.createSimpleDlg(getDlgDivId(name, EMPTY), "Confirm", "Empty core " + name + "?", empty);

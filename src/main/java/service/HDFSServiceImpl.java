@@ -1,6 +1,5 @@
 package service;
 
-import GatesBigData.constants.Constants;
 import GatesBigData.constants.HDFS;
 import GatesBigData.utils.*;
 import model.HDFSNutchCoreFileIterator;
@@ -26,6 +25,9 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static GatesBigData.constants.HDFS.*;
+import static GatesBigData.utils.Utils.closeResource;
+
 @Service
 public class HDFSServiceImpl implements HDFSService {
 
@@ -33,7 +35,7 @@ public class HDFSServiceImpl implements HDFSService {
 
     public FileSystem getHDFSFileSystem() {
         try {
-            return FileSystem.get(HDFS.HDFS_URI, new Configuration(), HDFS.USERNAME);
+            return FileSystem.get(HDFS_URI, new Configuration(), USERNAME);
         } catch (IOException e) {
             logger.error(e.getMessage());
         } catch (InterruptedException e) {
@@ -97,7 +99,7 @@ public class HDFSServiceImpl implements HDFSService {
                 success = fs.exists(dstPath);
             }
 
-            Utils.closeResource(fs);
+            closeResource(fs);
         } catch (IOException e) {
             logger.error(e.getMessage());
         }
@@ -114,7 +116,7 @@ public class HDFSServiceImpl implements HDFSService {
             if (fs.exists(path)) {
                 success = fs.delete(path, true);
             }
-            Utils.closeResource(fs);
+            closeResource(fs);
         }
         catch (IOException e) {
             System.err.println(e.getMessage());
@@ -161,19 +163,6 @@ public class HDFSServiceImpl implements HDFSService {
         }
 
         return new byte[0];
-    }
-
-    public JSONObject getInfoFileContents() {
-        String contents = getFileContents(HDFSUtils.getHDFSCollectionInfoFile());
-        return JSONUtils.convertStringToJSONObject(contents);
-    }
-
-    public JSONObject getInfoFileContents(String coreName) {
-        return JSONUtils.getJSONObjectValue(getInfoFileContents(), coreName);
-    }
-
-    public String getInfoFileFieldContents(String coreName, String field) {
-        return JSONUtils.getStringValue(getInfoFileContents(coreName), field);
     }
 
     public List<String> listFiles(Path path, boolean recurse, Pattern filter, FileSystem fs) {

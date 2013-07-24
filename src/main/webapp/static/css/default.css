@@ -174,7 +174,7 @@ form div.form-buttons {
 }
 #content_container {
     margin:30px auto 10px 40px;
-    width:980px;
+    width:1050px;
     background:#fff;
     color:#666666;
     position:relative;
@@ -184,7 +184,7 @@ form div.form-buttons {
     padding:25px 30px;
     background:#fff;
     color:#666666;
-    width:980px;
+    width:1050px;
     border:1px solid #f4f4f4;
     overflow:hidden;
 }
@@ -340,3 +340,29 @@ a:hover {
     float : left;
     width : 400px;
 }
+
+.button_delete_x {
+    padding: 0 10px 10px 2px;
+    margin-left: -12px;
+    margin-top: -8px;
+    color: darkred;
+    width: 10px;
+    float: left;
+}
+
+.button_delete_x:hover {
+    cursor: pointer;
+    text-shadow: 2px 2px black;
+    font-weight: bolder;
+}
+
+.filter_label_text {
+    font-weight: bold;
+    font: bold 12px Helvetica, Arial, sans-serif;
+    float:left;
+}
+
+.button_delete_parent_div {
+    float: left;
+}
+

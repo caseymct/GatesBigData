@@ -13,6 +13,9 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
 
+import static GatesBigData.utils.URLUtils.*;
+import static GatesBigData.constants.Constants.*;
+
 @Service
 public class DocumentConversionServiceImpl implements DocumentConversionService {
 
@@ -77,7 +80,7 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
         params.put("source", TMP_DIRECTORY + localFile.getName());
         params.put("target", TMP_DIRECTORY + swfFileName);
 
-        HttpClientUtils.httpGetRequest(CONVERT_URL + Utils.constructUrlParams(params));
+        HttpClientUtils.httpGetRequest(CONVERT_URL + constructUrlParams(params));
         cleanupTempDir(localFile);
 
         File localSwfFile = getSwfFile(localFile);
@@ -85,16 +88,15 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
     }
 
     public String getTempDocNameFromHDFSId(String hdfsPath) {
-        hdfsPath = Utils.decodeUrl(hdfsPath);
-        return hdfsPath.replaceAll("^.*:\\/\\/", "").replaceAll("/", "_").replaceAll(" |\\$|~", "");
+        return decodeUrl(hdfsPath).replaceAll("^.*:\\/\\/", "").replaceAll("/", "_").replaceAll(" |\\$|~", "");
     }
 
     public String getThumbnailNameFromHDFSPath(String hdfsPath) {
-        return Utils.changeFileExtension(getTempDocNameFromHDFSId(hdfsPath), Constants.IMG_FILE_EXT, false);
+        return Utils.changeFileExtension(getTempDocNameFromHDFSId(hdfsPath), IMG_FILE_EXT, false);
     }
 
     public String convertContentToThumbnail(Content content, String url) {
-        String uri = Utils.decodeUrl(url);
+        String uri = decodeUrl(url);
         if (uri.endsWith("/")) {
             return "";
         }
@@ -113,7 +115,7 @@ public class DocumentConversionServiceImpl implements DocumentConversionService 
                 //params.put("thumbnail", THUMBNAIL_SIZE);
                 params.put("pages", "1");
 
-                HttpClientUtils.httpGetRequest(CONVERT_URL + Utils.constructUrlParams(params));
+                HttpClientUtils.httpGetRequest(CONVERT_URL + constructUrlParams(params));
 
                 cleanupTempDir(localFile);
 

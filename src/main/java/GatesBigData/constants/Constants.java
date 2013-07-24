@@ -2,7 +2,6 @@ package GatesBigData.constants;
 
 public class Constants {
 
-    public static boolean USE_PRODUCTION_SOLR_SERVER 	= true;
     public static boolean USE_CLOUD_SOLR_SERVER 	    = false;
 
     // Invalid numbers
@@ -38,6 +37,7 @@ public class Constants {
     public static final String CONTENT_TYPE_VALUE       = JSON_CONTENT_TYPE + "; " + CHARSET_ENC_KEY + "=" + UTF8;
 
     public static final String HTTP_PROTOCOL            = "http://";
+    public static final String HTTPS_PROTOCOL           = "https://";
     public static final String JDBC_PROTOCOL            = "jdbc:";
     public static final String SMB_PROTOCOL             = "smb://";
     public static final String HDFS_PROTOCOL            = "hdfs://";

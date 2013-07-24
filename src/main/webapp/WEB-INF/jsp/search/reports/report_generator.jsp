@@ -7,9 +7,6 @@
 <layout:main>
 
     <link rel="stylesheet" type="text/css" href="<c:url value="/static/css/reports.css"/>" />
-    <!--<link rel="stylesheet" href="<c:url value="/static/css/jquery/jquery-ui.css" />" type="text/css" />
-    <script type="text/javascript" src="<c:url value="/static/js/jquery/jquery-1.9.1.js"/>"></script>
-    <script type="text/javascript" src="<c:url value="/static/js/jquery/jquery-ui.js"/>"></script>    -->
 
     <script type="text/javascript">
         (function() {
@@ -21,17 +18,18 @@
                 Json         = YAHOO.lang.JSON,           DataTable       = YAHOO.widget.ScrollingDataTable,
                 Overlay      = YAHOO.widget.Overlay;
 
+            function getRequestParam(f, defaultValue) { return f == undefined ? defaultValue : decodeURIComponent(f); };
+
             var requestParams           = UI.util.getRequestParameters(),
                 reportRequestParamKeys  = [UI.util.REQUEST_COLLECTION_KEY, UI.util.REQUEST_FQ_KEY, UI.util.REQUEST_QUERY_KEY],
                 searchRequestParamKeys  = [UI.util.REQUEST_COLLECTION_KEY, UI.util.REQUEST_QUERY_KEY],
                 infoDivKeys             = [UI.util.REQUEST_QUERY_KEY, UI.util.REQUEST_FQ_KEY, UI.util.REQUEST_NUM_FOUND_KEY, UI.util.REQUEST_SORT_KEY],
                 requestString           = UI.util.constructRequestString(requestParams, reportRequestParamKeys),
                 collection              = requestParams[UI.util.REQUEST_COLLECTION_KEY],
-                origFq                  = decodeURIComponent(UI.util.specifyReturnValueIfUndefined(requestParams[UI.util.REQUEST_FQ_KEY], '')),
-                origNumFound            = UI.util.specifyReturnValueIfUndefined(requestParams[UI.util.REQUEST_NUM_FOUND_KEY], 0),
-                origSortField           = UI.util.specifyReturnValueIfUndefined(requestParams[UI.util.REQUEST_SORT_KEY], 'score'),
-                origSortOrder           = UI.util.specifyReturnValueIfUndefined(requestParams[UI.util.REQUEST_ORDER_KEY], 'asc');
-
+                origFq                  = getRequestParam(requestParams[UI.util.REQUEST_FQ_KEY], ''),
+                origNumFound            = getRequestParam(requestParams[UI.util.REQUEST_NUM_FOUND_KEY], 0),
+                origSortField           = getRequestParam(requestParams[UI.util.REQUEST_SORT_KEY], 'score'),
+                origSortOrder           = getRequestParam(requestParams[UI.util.REQUEST_ORDER_KEY], 'asc');
 
             var baseUrl             = '<c:url value="/" />',
                 exportUrl           = baseUrl + 'export',
@@ -57,6 +55,8 @@
                 dateFilterFromToDivElId     = 'date_filter_from_to_div',    dateFilterFromElId          = 'date_filter_from',
                 dateFilterToElId            = 'date_filter_to',             dateFilterButtonElId        = 'date_filter_add',
                 accordionDivElId            = 'accordion',                  accordionDivEl              = null,
+                accordionInfoSectionElId    = 'accordion_info',             accordionFilterSectionElId  = 'accordion_filter',
+                accordionSearchSectionElId = 'accordion_search',
 
                 metricsElId                 = 'metrics_div',                metricsFieldsetElId         = 'metrics_fieldset',
 
@@ -95,7 +95,7 @@
 
                         initializeDisplayFieldVars();
                         initializeHeaderText();
-                        initializeNamesToDisplayNames();
+                        //initializeNamesToDisplayNames();
                         initializeFilters();
                         initializeDateRangeFilters();
                         search(0);
@@ -107,6 +107,7 @@
 
                 Event.addListener(applyFiltersButtonElId, 'click', function(e) {
                     Event.stopEvent(e);
+                    UI.showWait();
                     search(0);
                     getMetrics();
                 });
@@ -188,7 +189,6 @@
                         filterValue = Dom.get(filterSubSelectElId).value.match(/(.*?)\s\(\d+\)/)[1];
 
                     addFilter(filterField, filterValue, currentFiltersElId, getFilterDivId(filterField, filterValue));
-                    //getUpdatedFacetCounts();
                 });
 
                 Event.addListener(sortFilterButtonElId, 'click', function(e) {
@@ -207,7 +207,6 @@
                         filterValue = dateFrom + ' to ' + dateTo;
 
                     addFilter(filterField, dateFrom + ' to ' + dateTo, currentFiltersElId, getFilterDateId(filterField));
-                    //getUpdatedFacetCounts();
                 });
             }
 
@@ -351,13 +350,13 @@
             }
 
             function updateDataTable() {
+                debugger;
                 var dataSource = new LocalDataSource(solrResponse, {
                     responseSchema : {
                         resultsList: UI.util.SOLR_RESPONSE_KEYS.docs,
                         fields: dataSourceFields
                     }
                 });
-
                 new DataTable(searchResultsElId, columnDefs, dataSource, { width:"100%" });
             }
 
@@ -399,7 +398,7 @@
                     });
                 };
 
-                $("#" + accordionDivElId ).togglepanels();//{ active: 1, collapsible: true, heightStyle: "content" });
+                $("#" + accordionDivElId ).togglepanels();
 
                 UI.addDomElementChild('div', contentEl, { id : numFoundElId });
                 UI.addDomElementChild('div', contentEl, { id : searchResultsElId });
@@ -440,7 +439,7 @@
             function getInfoComponentId(r) { return 'info_' + r; }
 
             function buildInfoHtml() {
-                UI.addDomElementChild('h3', accordionDivEl, { innerHTML: "Query information" },
+                UI.addDomElementChild('h3', accordionDivEl, { id : accordionInfoSectionElId, innerHTML: "Query information" },
                                         { 'class' : accordionHdrCSSClass });
                 var infoEl = UI.addDomElementChild('div', accordionDivEl, { id : infoElId });
                 var div    = UI.addDomElementChild('div', infoEl);
@@ -459,17 +458,18 @@
                                          filterSubSelectElId, filterAddButtonElId) {
                     var f = UI.addDomElementChild('div', filterEl);
                     UI.addDomElementChild('span', f, { innerHTML : filterLabelText });
-                    UI.addDomElementChild('label', f, { for : filterSelectElId, innerHTML : select1LabelText });
+                    UI.addDomElementChild('label', f, { 'for' : filterSelectElId, innerHTML : select1LabelText });
                     UI.addDomElementChild('select', f, { id : filterSelectElId });
 
-                    UI.addDomElementChild('label', f, { for : filterSubSelectElId, innerHTML : select2LabelText });
+                    UI.addDomElementChild('label', f, { 'for' : filterSubSelectElId, innerHTML : select2LabelText });
                     UI.addDomElementChild('select', f, { id : filterSubSelectElId });
                     UI.addDomElementChild('a', f, { id : filterAddButtonElId, href : '#', innerHTML : 'Add' },
                             { 'class' : 'button small'});
                     UI.addClearBothDiv(f);
                 }
 
-                UI.addDomElementChild('h3', accordionDivEl, { innerHTML: "Search options" }, { 'class' : accordionHdrCSSClass });
+                UI.addDomElementChild('h3', accordionDivEl, { id : accordionFilterSectionElId, innerHTML: "Search options" },
+                        { 'class' : accordionHdrCSSClass });
                 var filterEl = UI.addDomElementChild('div', accordionDivEl, { id : filterDivElId });
 
                 var f = UI.addDomElementChild('div', filterEl);
@@ -485,7 +485,8 @@
             }
 
             function buildAppliedFiltersHTML() {
-                UI.addDomElementChild('h3', accordionDivEl, { innerHTML: "Search" }, { 'class' : accordionHdrCSSClass });
+                UI.addDomElementChild('h3', accordionDivEl, { id : accordionSearchSectionElId, innerHTML: "Search" },
+                                    { 'class' : accordionHdrCSSClass });
                 var f = UI.addDomElementChild('div', accordionDivEl, { id : appliedFiltersElId });
 
                 var div = UI.addDomElementChild('div', f, { id : currentFiltersContainerElId });
@@ -506,15 +507,15 @@
             function buildDateFilterHTML() {
                 var filterEl = UI.addDomElementChild('div', Dom.get(filterDivElId), { id : dateFieldFilterElId });
                 UI.addDomElementChild('span', filterEl, { innerHTML : 'Date filter' });
-                UI.addDomElementChild('label', filterEl, { for : dateFilterFieldSelectElId, innerHTML : 'Field name' });
+                UI.addDomElementChild('label', filterEl, { 'for' : dateFilterFieldSelectElId, innerHTML : 'Field name' });
                 UI.addDomElementChild('select', filterEl, { id : dateFilterFieldSelectElId });
 
                 var d = UI.addDomElementChild('div', filterEl, { id : dateFilterFromToDivElId });
                 var d2 = UI.addDomElementChild('div', d);
-                UI.addDomElementChild('label', d2, { for : dateFilterFromElId, innerHTML : 'From'});
+                UI.addDomElementChild('label', d2, { 'for' : dateFilterFromElId, innerHTML : 'From'});
                 UI.addDomElementChild('input', d2, { id : dateFilterFromElId });
                 d2 = UI.addDomElementChild('div', d);
-                UI.addDomElementChild('label', d2, { for : dateFilterToElId, innerHTML : 'to'});
+                UI.addDomElementChild('label', d2, { 'for' : dateFilterToElId, innerHTML : 'to'});
                 UI.addDomElementChild('input', d2, { id : dateFilterToElId });
                 UI.addClearBothDiv(d);
 
@@ -529,24 +530,11 @@
             function isFilterSortId(id)          { return id.endsWith('_sort'); }
 
             function addFilter(filterField, filterValue, filtersElId, filterDivId) {
-                function getFieldFromFilterDivId(id)    { return Dom.get(id).getElementsByTagName('a')[0].innerHTML.split(" : ")[0]; }
-                function getFilterAnchorId(field, val)  { return 'a_' + field + '_val_' + val; }
-
-                var filtersEl      = Dom.get(filtersElId),
-                    filterAnchorId = getFilterAnchorId(filterField, filterValue);
-
                 if (Dom.inDocument(filterDivId) == false) {
-                    var d = UI.addDomElementChild('div', filtersEl, { id : filterDivId });
-                    var a = UI.addDomElementChild('a', d, { id: filterAnchorId }, { 'class' : 'button delete' });
-                    a.appendChild(document.createTextNode(filterField + ' : ' + filterValue));
-
-                    Event.addListener(filterDivId, 'click', function(e) {
-                        UI.removeElement(this.id);
-
-                        /*if (!isFilterSortId(this.id)) {
-                            getUpdatedFacetCounts();
-                        } */
-                    });
+                    UI.addDeleteButtonForIE(filtersElId, filterDivId, filterField, filterValue);
+                }
+                if (!$("#" + accordionSearchSectionElId).hasClass('ui-accordion-header-active')) {
+                    $("#" + accordionSearchSectionElId).trigger('click');
                 }
             }
 
@@ -570,9 +558,6 @@
 
                 return UI.util.constructRequestString(requestParams, searchRequestParamKeys, addtlParams);
             }
-
-
-
         })();
     </script>
 

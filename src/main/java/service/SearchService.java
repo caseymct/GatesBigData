@@ -1,9 +1,9 @@
 package service;
 
-import model.ExtendedSolrQuery;
-import model.FacetFieldEntryList;
-import model.SeriesPlot;
-import model.SolrCollectionSchemaInfo;
+import model.schema.CollectionSchemaInfo;
+import model.search.ExtendedSolrQuery;
+import model.search.FacetFieldEntryList;
+import model.analysis.SeriesPlot;
 import net.sf.json.JSONArray;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.response.FieldStatsInfo;
@@ -19,9 +19,7 @@ import java.util.*;
 
 public interface SearchService {
 
-    public List<String> getFieldsToWrite(SolrDocument originalDoc, String coreName, String viewType);
-
-    public List<Date> getSolrFieldDateRange(String collection, String field, SolrCollectionSchemaInfo schemaInfo);
+    public List<Date> getSolrFieldDateRange(String collection, String field, CollectionSchemaInfo schemaInfo);
 
     public JSONArray suggestUsingSeparateCore(String coreName, String userInput, int n);
 
@@ -60,40 +58,29 @@ public interface SearchService {
     public List<String> getFieldCounts(String coreName, String queryString, String fq, List<String> facetFields,
                                        boolean separateFacetCount) throws IOException;
 
-    // get value of facetFields, viewFields, tableFields, etc
-    public String getCollectionInfoFieldValue(String coreName, String fieldName);
-
-    public JSONArray getCollectionInfoFieldValuesAsJSONArray(String coreName, String fieldName);
-
-    public List<String> getCollectionInfoFieldValues(String collection, String fieldName);
-
-    public Set<String> getViewFields(String collection);
-
-
-
-    public void printRecord(String collection, String id, String viewType, boolean isStructuredData, StringWriter writer);
+    public void printRecord(String collection, String id, List<String> fields, boolean isStructuredData, StringWriter writer);
 
 
     public QueryResponse findSearchResults(String collection, String queryString, String sortField, String sortOrder, Integer start, Integer rows,
                                            String fq, FacetFieldEntryList facetFields, String viewFields, boolean includeHighlighting,
-                                           SolrCollectionSchemaInfo info);
+                                           CollectionSchemaInfo info);
 
     /* Write search response methods */
     public void findAndWriteSearchResults(String collection, String query, List<SolrQuery.SortClause> sortClauses, Integer start, Integer rows,
                                           String fq, FacetFieldEntryList facetFields, String fl, boolean includeHighlighting,
-                                          SolrCollectionSchemaInfo info, StringWriter writer) throws IOException;
+                                          CollectionSchemaInfo info, StringWriter writer) throws IOException;
 
     public void findAndWriteInitialFacetsFromSuggestionCore(String collection, List<String> fields, StringWriter writer)
             throws IOException;
 
-    public void findAndWriteFacets(String collection, FacetFieldEntryList facetFields, SolrCollectionSchemaInfo info,
+    public void findAndWriteFacets(String collection, FacetFieldEntryList facetFields, CollectionSchemaInfo info,
                                    StringWriter writer) throws IOException;
 
     public void findAndWriteFacets(String collection, String queryStr, String fq, FacetFieldEntryList facetFields,
-                                   SolrCollectionSchemaInfo info, StringWriter writer) throws IOException;
+                                   CollectionSchemaInfo info, StringWriter writer) throws IOException;
 
     public void findAndWriteFacets(String collection, String queryStr, String fq, FacetFieldEntryList facetFields,
-                                   Map<String, Object> additionalFields, SolrCollectionSchemaInfo info, StringWriter writer) throws IOException;
+                                   Map<String, Object> additionalFields, CollectionSchemaInfo info, StringWriter writer) throws IOException;
 
     public Map<String, FieldStatsInfo> getStatsResults(String collection, String queryStr, String fq, List<String> statsFields);
 

@@ -1,4 +1,4 @@
-package model;
+package model.search;
 
 import GatesBigData.utils.JSONUtils;
 import net.sf.json.JSONArray;

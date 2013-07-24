@@ -196,9 +196,9 @@ EXPORTOPTIONS.util = {};
     }
 
     function buildFieldsHtml() {
-        Connect.asyncRequest('GET', urls[UI.FIELD_NAMES_URL_KEY] + "?core=" + collection, {
+        Connect.asyncRequest('GET', urls[UI.FIELD_NAMES_URL_KEY] + "?collection=" + collection, {
             success : function(o) {
-                var names = Json.parse(o.responseText).names, i;
+                var names = Json.parse(o.responseText)['fieldnames'], i;
                 var currOverlay = null, currCheckboxParent = null;
 
                 for(i = 0; i < names.length; i++) {

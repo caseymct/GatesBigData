@@ -1,4 +1,4 @@
-package model;
+package model.analysis;
 
 import GatesBigData.constants.Constants;
 import GatesBigData.utils.*;

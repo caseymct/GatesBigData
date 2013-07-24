@@ -1,4 +1,4 @@
-package model;
+package model.search;
 
 import GatesBigData.constants.solr.Defaults;
 import GatesBigData.constants.solr.Operations;
@@ -6,6 +6,7 @@ import GatesBigData.constants.solr.QueryParams;
 import GatesBigData.utils.DateUtils;
 import GatesBigData.utils.SolrUtils;
 import GatesBigData.utils.Utils;
+import model.schema.CollectionSchemaInfo;
 import org.apache.commons.lang.StringUtils;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.schema.DateField;
@@ -19,7 +20,7 @@ public class ExtendedSolrQuery extends SolrQuery {
 
     public ExtendedSolrQuery() {
         super();
-        this.setQuery(Defaults.QUERY);
+        this.setQuery(Defaults.QUERY_DEFAULT);
         this.add(QueryParams.WT, Defaults.WT);
     }
 
@@ -63,8 +64,8 @@ public class ExtendedSolrQuery extends SolrQuery {
 
     public void setHighlightDefaults() {
         this.setHighlight(true);
-        this.setHighlightSimplePre(Defaults.HIGHLIGHT_PRE);
-        this.setHighlightSimplePost(Defaults.HIGHLIGHT_POST);
+        this.setHighlightSimplePre(Defaults.HIGHLIGHT_PRE_DEFAULT);
+        this.setHighlightSimplePost(Defaults.HIGHLIGHT_POST_DEFAULT);
         this.setHighlightSnippets(Defaults.HIGHLIGHT_SNIPPETS);
         this.setHighlightFragsize(Defaults.HIGHLIGHT_FRAGSIZE);
     }
@@ -109,7 +110,7 @@ public class ExtendedSolrQuery extends SolrQuery {
         }
     }
 
-    public void addQueryFacets(FacetFieldEntryList facetFields, SolrCollectionSchemaInfo info) {
+    public void addQueryFacets(FacetFieldEntryList facetFields, CollectionSchemaInfo info) {
         if (Utils.nullOrEmpty(facetFields)) {
             return;
         }
@@ -180,7 +181,7 @@ public class ExtendedSolrQuery extends SolrQuery {
 
     public void addSortClauses(List<SortClause> clauses) {
         if (Utils.nullOrEmpty(clauses)) {
-            this.addSortClause(Defaults.SORT_FIELD, Defaults.SORT_ORDER);
+            this.addSortClause(Defaults.SORT_FIELD_DEFAULT, Defaults.SORT_ORDER);
         } else {
             for(SortClause clause : clauses) {
                 this.addSort(clause);
